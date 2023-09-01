@@ -341,6 +341,26 @@ impl TableRow {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum EntityType {
+    USER,
+    GROUP,
+    ORGANIZATION,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Entity {
+    #[serde(rename = "type")]
+    pub type_: EntityType,
+    pub code: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ThreadComment {
+    pub text: String,
+    pub mentions: Vec<Entity>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CalcFieldProperty {
     pub code: String,

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use base64::Engine;
 use reqwest::{blocking::Client as ReqwestClient, Method};
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use url::Url;
 
 pub struct KintoneClient {
@@ -23,24 +23,34 @@ impl KintoneClient {
         })
     }
 
-    pub fn call<Resp: DeserializeOwned>(&self, req: Request) -> crate::Result<Resp> {
+    pub fn call<Resp, Body>(&self, req: Request<Body>) -> crate::Result<Resp>
+    where
+        Resp: DeserializeOwned,
+        Body: Serialize,
+    {
         let mut u = self.base_url.join(req.path)?;
-        for (name, value) in req.form {
+        for (name, value) in req.query_params {
             u.query_pairs_mut().append_pair(name, value);
         }
-        let mut req = self.http_client.request(req.method, u);
-        //.header("content-type", "application/json");
+        let mut builder = self.http_client.request(req.method, u);
+        if let Some(body) = req.body {
+            builder = builder.header("content-type", "application/json");
+            builder = builder.json(&body);
+        }
         match &self.auth {
             Auth::Password { username, password } => {
                 let body = format!("{username}:{password}");
                 let header_value = base64::engine::general_purpose::STANDARD_NO_PAD.encode(body);
-                req = req.header("x-cybozu-authorization", header_value);
+                builder = builder.header("x-cybozu-authorization", header_value);
             }
             Auth::ApiToken { tokens } => {
-                req = req.header("x-cybozu-api-token", tokens.join(","));
+                builder = builder.header("x-cybozu-api-token", tokens.join(","));
             }
         }
-        let resp = self.http_client.execute(req.build()?)?.error_for_status()?;
+        let resp = self
+            .http_client
+            .execute(builder.build()?)?
+            .error_for_status()?;
         Ok(resp.json()?)
     }
 }
@@ -82,40 +92,47 @@ impl Debug for Auth {
 }
 
 #[derive(Debug, Clone)]
-pub struct Request<'a> {
+pub struct Request<'a, Body> {
     method: Method,
     path: &'a str,
-    form: Vec<(&'a str, &'a str)>,
+    query_params: Vec<(&'a str, &'a str)>,
+    body: Option<Body>,
 }
 
-impl Request<'_> {
-    pub fn builder<'a>(method: Method, path: &'a str) -> RequestBuilder<'a> {
+impl<Body> Request<'_, Body> {
+    pub fn builder<'a>(method: Method, path: &'a str) -> RequestBuilder<'a, Body> {
         RequestBuilder::new(method, path)
     }
 }
 
 #[derive(Clone)]
-pub struct RequestBuilder<'a> {
-    req: Request<'a>,
+pub struct RequestBuilder<'a, Body> {
+    req: Request<'a, Body>,
 }
 
-impl<'a> RequestBuilder<'a> {
+impl<'a, Body> RequestBuilder<'a, Body> {
     pub fn new(method: Method, path: &'a str) -> Self {
         Self {
             req: Request {
                 method,
                 path,
-                form: Vec::new(),
+                query_params: Vec::new(),
+                body: None,
             },
         }
     }
 
     pub fn query_param(mut self, key: &'a str, value: &'a str) -> Self {
-        self.req.form.push((key, value));
+        self.req.query_params.push((key, value));
         self
     }
 
-    pub fn build(self) -> Request<'a> {
+    pub fn body(mut self, body: Body) -> Self {
+        self.req.body = Some(body);
+        self
+    }
+
+    pub fn build(self) -> Request<'a, Body> {
         self.req
     }
 }
