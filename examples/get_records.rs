@@ -9,7 +9,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let records = kintone::v1::record::get_records(5).call(&client)?;
 
     for record in records {
-        println!("* {record:?}");
+        println!("{{");
+        for (field_code, field_value) in record.fields() {
+            println!("    '{field_code}' = {field_value:?}");
+        }
+        println!("}}");
     }
     Ok(())
 }

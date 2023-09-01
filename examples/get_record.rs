@@ -8,6 +8,8 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = KintoneClient::new(&base_url, Auth::api_token(api_token))?;
     let record = kintone::v1::record::get_record(5, 1).call(&client)?;
 
-    println!("{record:?}");
+    for (field_code, field_value) in record.fields() {
+        println!("'{field_code}' = {field_value:?}");
+    }
     Ok(())
 }

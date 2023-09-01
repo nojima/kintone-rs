@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map};
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
@@ -24,6 +24,63 @@ impl Record {
 
     pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
+    }
+
+    pub fn fields(&self) -> FieldIter {
+        FieldIter {
+            inner: self.fields.iter(),
+        }
+    }
+
+    pub fn field_codes(&self) -> FieldCodeIter {
+        FieldCodeIter {
+            inner: self.fields.keys(),
+        }
+    }
+
+    pub fn field_values(&self) -> FieldValueIter {
+        FieldValueIter {
+            inner: self.fields.values(),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct FieldIter<'a> {
+    inner: hash_map::Iter<'a, String, FieldValue>,
+}
+
+impl<'a> Iterator for FieldIter<'a> {
+    type Item = (&'a String, &'a FieldValue);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+#[derive(Clone)]
+pub struct FieldCodeIter<'a> {
+    inner: hash_map::Keys<'a, String, FieldValue>,
+}
+
+impl<'a> Iterator for FieldCodeIter<'a> {
+    type Item = &'a String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+#[derive(Clone)]
+pub struct FieldValueIter<'a> {
+    inner: hash_map::Values<'a, String, FieldValue>,
+}
+
+impl<'a> Iterator for FieldValueIter<'a> {
+    type Item = &'a FieldValue;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
     }
 }
 
