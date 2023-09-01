@@ -24,7 +24,7 @@ pub struct GetRecordResponse {
 }
 
 impl GetRecordRequest {
-    pub fn call(self, client: &KintoneClient) -> crate::Result<GetRecordResponse> {
+    pub fn send(self, client: &KintoneClient) -> crate::Result<GetRecordResponse> {
         let app_str = self.app.to_string();
         let id_str = self.id.to_string();
         let req: Request<'_, ()> = Request::builder(Method::GET, "/k/v1/record.json")
@@ -76,7 +76,7 @@ impl GetRecordsRequest {
         self
     }
 
-    pub fn call(self, client: &KintoneClient) -> crate::Result<GetRecordsResponse> {
+    pub fn send(self, client: &KintoneClient) -> crate::Result<GetRecordsResponse> {
         let app_str = self.app.to_string();
         let mut req: RequestBuilder<'_, ()> =
             Request::builder(Method::GET, "/k/v1/records.json").query_param("app", &app_str);

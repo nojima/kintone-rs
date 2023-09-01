@@ -20,7 +20,7 @@ pub struct AddThreadCommentResponse {
 }
 
 impl AddThreadCommentRequest {
-    pub fn call(self, client: &KintoneClient) -> crate::Result<AddThreadCommentResponse> {
+    pub fn send(self, client: &KintoneClient) -> crate::Result<AddThreadCommentResponse> {
         let req: Request<'_, AddThreadCommentRequest> =
             Request::builder(Method::POST, "/k/v1/space/thread/comment.json")
                 .body(self)
