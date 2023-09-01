@@ -10,6 +10,7 @@ pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
     GetRecordRequest { app, id }
 }
 
+#[must_use]
 #[derive(Clone)]
 pub struct GetRecordRequest {
     app: u64,
@@ -34,7 +35,6 @@ impl GetRecordRequest {
     }
 }
 
-#[must_use]
 pub fn get_records<'a>(app: u64) -> GetRecordsRequest {
     GetRecordsRequest {
         app,
@@ -42,6 +42,7 @@ pub fn get_records<'a>(app: u64) -> GetRecordsRequest {
     }
 }
 
+#[must_use]
 #[derive(Clone, Default)]
 pub struct GetRecordsRequest {
     app: u64,

@@ -4,6 +4,7 @@ use crate::models::ThreadComment;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
+#[must_use]
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddThreadCommentRequest {
