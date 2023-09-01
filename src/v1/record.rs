@@ -1,10 +1,9 @@
 use reqwest::Method;
 use serde::Deserialize;
 
-use crate::{
-    client::{KintoneClient, Request},
-    models::Record,
-};
+use crate::client::{KintoneClient, Request};
+use crate::internal::serde_helper::as_str;
+use crate::models::Record;
 
 #[must_use]
 pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
@@ -17,21 +16,21 @@ pub struct GetRecordRequest {
     id: u64,
 }
 
-#[derive(Deserialize)]
-struct GetRecordResponse {
-    record: Record,
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetRecordResponse {
+    pub record: Record,
 }
 
 impl GetRecordRequest {
-    pub fn call(self, client: &KintoneClient) -> crate::Result<Record> {
+    pub fn call(self, client: &KintoneClient) -> crate::Result<GetRecordResponse> {
         let app_str = self.app.to_string();
         let id_str = self.id.to_string();
         let req = Request::builder(Method::GET, "/k/v1/record.json")
             .query_param("app", &app_str)
             .query_param("id", &id_str)
             .build();
-        let resp: GetRecordResponse = client.call(req)?;
-        Ok(resp.record)
+        Ok(client.call(req)?)
     }
 }
 
@@ -51,9 +50,13 @@ pub struct GetRecordsRequest {
     total_count: Option<bool>,
 }
 
-#[derive(Deserialize)]
-struct GetRecordsResponse {
-    records: Vec<Record>,
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetRecordsResponse {
+    pub records: Vec<Record>,
+
+    #[serde(with = "as_str")]
+    pub total_count: usize,
 }
 
 impl GetRecordsRequest {
@@ -72,7 +75,7 @@ impl GetRecordsRequest {
         self
     }
 
-    pub fn call(self, client: &KintoneClient) -> crate::Result<Vec<Record>> {
+    pub fn call(self, client: &KintoneClient) -> crate::Result<GetRecordsResponse> {
         let app_str = self.app.to_string();
         let mut req =
             Request::builder(Method::GET, "/k/v1/records.json").query_param("app", &app_str);
@@ -80,7 +83,6 @@ impl GetRecordsRequest {
         for field in &fields {
             req = req.query_param("fields[]", &field);
         }
-        let resp: GetRecordsResponse = client.call(req.build())?;
-        Ok(resp.records)
+        Ok(client.call(req.build())?)
     }
 }

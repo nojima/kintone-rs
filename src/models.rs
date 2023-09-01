@@ -1,9 +1,11 @@
-use std::collections::{HashMap, hash_map};
+use std::collections::{hash_map, HashMap};
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
+
+use crate::internal::serde_helper::as_str;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -351,28 +353,4 @@ pub struct CalcFieldProperty {
     pub hide_expression: bool,
     pub unit: String,
     //pub unit_position: UnitPosition,
-}
-
-mod as_str {
-    use serde::Deserialize;
-
-    // cf. https://stackoverflow.com/questions/75527167/serde-deserialize-string-into-u64
-    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-        T: std::str::FromStr,
-        <T as std::str::FromStr>::Err: std::fmt::Display,
-    {
-        Ok(String::deserialize(deserializer)?
-            .parse()
-            .map_err(serde::de::Error::custom)?)
-    }
-
-    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        T: std::fmt::Display,
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&value.to_string())
-    }
 }
