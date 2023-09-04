@@ -30,10 +30,6 @@ impl Record {
         Record { fields }
     }
 
-    pub fn put_field(&mut self, field_code: String, value: FieldValue) -> Option<FieldValue> {
-        self.fields.insert(field_code, value)
-    }
-
     pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
@@ -54,6 +50,28 @@ impl Record {
         FieldValueIter {
             inner: self.fields.values(),
         }
+    }
+
+    pub fn put_field(&mut self, field_code: String, value: FieldValue) -> Option<FieldValue> {
+        self.fields.insert(field_code, value)
+    }
+
+    pub fn remove_field(&mut self, field_code: &str) -> Option<FieldValue> {
+        self.fields.remove(field_code)
+    }
+
+    pub fn id(&self) -> Option<u64> {
+        let FieldValue::__ID__ { value } = self.get_field_value("$id")? else {
+            return None;
+        };
+        Some(*value)
+    }
+
+    pub fn revision(&self) -> Option<u64> {
+        let FieldValue::__REVISION__ { value } = self.get_field_value("$revision")? else {
+            return None;
+        };
+        Some(*value)
     }
 }
 
