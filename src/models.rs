@@ -20,6 +20,16 @@ impl Record {
         }
     }
 
+    pub fn clone_without_builtins(&self) -> Self {
+        let mut fields = HashMap::new();
+        for (field_code, field_value) in self.fields() {
+            if !field_value.field_type().is_builtin() {
+                fields.insert(field_code.clone(), field_value.clone());
+            }
+        }
+        Record { fields }
+    }
+
     pub fn put_field(&mut self, field_code: String, value: FieldValue) -> Option<FieldValue> {
         self.fields.insert(field_code, value)
     }
@@ -129,6 +139,9 @@ pub enum FieldType {
     #[assoc(is_builtin = false)]
     Label,
 
+    #[assoc(is_builtin = false)]
+    Link,
+
     #[assoc(is_builtin = true)]
     Modifier,
 
@@ -191,7 +204,7 @@ pub enum FieldType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
-#[assoc(pub const fn field_type(&self) -> FieldType)]
+#[func(pub const fn field_type(&self) -> FieldType)]
 pub enum FieldValue {
     #[assoc(field_type = FieldType::Calc)]
     Calc { value: String },
@@ -219,7 +232,7 @@ pub enum FieldValue {
     #[assoc(field_type = FieldType::DropDown)]
     DropDown { value: Option<String> },
 
-    #[assoc(filed_type = FieldType::File)]
+    #[assoc(field_type = FieldType::File)]
     File { value: Vec<FileBody> },
 
     #[assoc(field_type = FieldType::File)]
@@ -255,11 +268,11 @@ pub enum FieldValue {
     #[assoc(field_type = FieldType::SingleLineText)]
     SingleLineText { value: String },
 
-    #[assoc(field_type = FieldType::StatusAssignee)]
-    StatusAssignee { value: Vec<User> },
-
     #[assoc(field_type = FieldType::Status)]
     Status { value: String },
+
+    #[assoc(field_type = FieldType::StatusAssignee)]
+    StatusAssignee { value: Vec<User> },
 
     #[assoc(field_type = FieldType::Subtable)]
     Subtable { value: Vec<TableRow> },
