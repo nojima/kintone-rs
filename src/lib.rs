@@ -4,4 +4,5 @@ pub mod v1;
 
 mod internal;
 
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+pub type Result<T> = std::result::Result<T, BoxError>;
