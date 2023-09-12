@@ -21,10 +21,11 @@ impl Record {
     }
 
     pub fn clone_without_builtins(&self) -> Self {
-        let mut fields = HashMap::new();
-        for (field_code, field_value) in self.fields() {
-            if !field_value.field_type().is_builtin() {
-                fields.insert(field_code.clone(), field_value.clone());
+        let size = self.field_values().filter(|v| !v.field_type().is_builtin()).count();
+        let mut fields = HashMap::with_capacity(size);
+        for (code, value) in self.fields() {
+            if !value.field_type().is_builtin() {
+                fields.insert(code.clone(), value.clone());
             }
         }
         Record { fields }
