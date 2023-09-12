@@ -61,14 +61,14 @@ impl Record {
     }
 
     pub fn id(&self) -> Option<u64> {
-        let FieldValue::__ID__ { value } = self.get_field_value("$id")? else {
+        let FieldValue::__ID__(value) = self.get_field_value("$id")? else {
             return None;
         };
         Some(*value)
     }
 
     pub fn revision(&self) -> Option<u64> {
-        let FieldValue::__REVISION__ { value } = self.get_field_value("$revision")? else {
+        let FieldValue::__REVISION__(value) = self.get_field_value("$revision")? else {
             return None;
         };
         Some(*value)
@@ -221,102 +221,94 @@ pub enum FieldType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
-#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
 pub enum FieldValue {
     #[assoc(field_type = FieldType::Calc)]
-    Calc { value: String },
+    Calc(String),
 
     #[assoc(field_type = FieldType::Category)]
-    Category { value: Vec<String> },
+    Category(Vec<String>),
 
     #[assoc(field_type = FieldType::CheckBox)]
-    CheckBox { value: Vec<String> },
+    CheckBox(Vec<String>),
 
     #[assoc(field_type = FieldType::CreatedTime)]
-    CreatedTime { value: DateTime<FixedOffset> },
+    CreatedTime(DateTime<FixedOffset>),
 
     #[assoc(field_type = FieldType::Creator)]
-    Creator { value: User },
+    Creator(User),
 
     #[assoc(field_type = FieldType::Date)]
-    Date { value: Option<NaiveDate> },
+    Date(Option<NaiveDate>),
 
     #[assoc(field_type = FieldType::Datetime)]
-    DateTime {
-        value: Option<DateTime<FixedOffset>>,
-    },
+    DateTime(Option<DateTime<FixedOffset>>),
 
     #[assoc(field_type = FieldType::DropDown)]
-    DropDown { value: Option<String> },
+    DropDown(Option<String>),
 
     #[assoc(field_type = FieldType::File)]
-    File { value: Vec<FileBody> },
+    File(Vec<FileBody>),
 
     #[assoc(field_type = FieldType::File)]
-    GroupSelect { value: Vec<Group> },
+    GroupSelect(Vec<Group>),
 
     #[assoc(field_type = FieldType::Link)]
-    Link { value: String },
+    Link(String),
 
     #[assoc(field_type = FieldType::Modifier)]
-    Modifier { value: User },
+    Modifier(User),
 
     #[assoc(field_type = FieldType::MultiLineText)]
-    MultiLineText { value: String },
+    MultiLineText(String),
 
     #[assoc(field_type = FieldType::MultiSelect)]
-    MultiSelect { value: Vec<String> },
+    MultiSelect(Vec<String>),
 
     #[assoc(field_type = FieldType::Number)]
-    Number { value: BigDecimal },
+    Number(BigDecimal),
 
     #[assoc(field_type = FieldType::OrganizationSelect)]
-    OrganizationSelect { value: Vec<Organization> },
+    OrganizationSelect(Vec<Organization>),
 
     #[assoc(field_type = FieldType::RadioButton)]
-    RadioButton { value: Option<String> },
+    RadioButton(Option<String>),
 
     #[assoc(field_type = FieldType::RecordNumber)]
-    RecordNumber { value: String },
+    RecordNumber(String),
 
     #[assoc(field_type = FieldType::ReferenceTable)]
-    RichText { value: String },
+    RichText(String),
 
     #[assoc(field_type = FieldType::SingleLineText)]
-    SingleLineText { value: String },
+    SingleLineText(String),
 
     #[assoc(field_type = FieldType::Status)]
-    Status { value: String },
+    Status(String),
 
     #[assoc(field_type = FieldType::StatusAssignee)]
-    StatusAssignee { value: Vec<User> },
+    StatusAssignee(Vec<User>),
 
     #[assoc(field_type = FieldType::Subtable)]
-    Subtable { value: Vec<TableRow> },
+    Subtable(Vec<TableRow>),
 
     #[assoc(field_type = FieldType::Time)]
-    Time { value: NaiveTime },
+    Time(NaiveTime),
 
     #[assoc(field_type = FieldType::UpdatedTime)]
-    UpdatedTime { value: DateTime<FixedOffset> },
+    UpdatedTime(DateTime<FixedOffset>),
 
     #[assoc(field_type = FieldType::UserSelect)]
-    UserSelect { value: Vec<User> },
+    UserSelect(Vec<User>),
 
     #[serde(rename = "__ID__")]
     #[assoc(field_type = FieldType::__ID__)]
-    __ID__ {
-        #[serde(with = "as_str")]
-        value: u64,
-    },
+    __ID__(#[serde(with = "as_str")] u64),
 
     #[serde(rename = "__REVISION__")]
     #[assoc(field_type = FieldType::__REVISION__)]
-    __REVISION__ {
-        #[serde(with = "as_str")]
-        value: u64,
-    },
+    __REVISION__(#[serde(with = "as_str")] u64),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
