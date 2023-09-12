@@ -5,7 +5,7 @@ use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 
-use crate::internal::serde_helper::as_str;
+use crate::internal::serde_helper::stringified;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -21,7 +21,10 @@ impl Record {
     }
 
     pub fn clone_without_builtins(&self) -> Self {
-        let size = self.field_values().filter(|v| !v.field_type().is_builtin()).count();
+        let size = self
+            .field_values()
+            .filter(|v| !v.field_type().is_builtin())
+            .count();
         let mut fields = HashMap::with_capacity(size);
         for (code, value) in self.fields() {
             if !value.field_type().is_builtin() {
@@ -305,11 +308,11 @@ pub enum FieldValue {
 
     #[serde(rename = "__ID__")]
     #[assoc(field_type = FieldType::__ID__)]
-    __ID__(#[serde(with = "as_str")] u64),
+    __ID__(#[serde(with = "stringified")] u64),
 
     #[serde(rename = "__REVISION__")]
     #[assoc(field_type = FieldType::__REVISION__)]
-    __REVISION__(#[serde(with = "as_str")] u64),
+    __REVISION__(#[serde(with = "stringified")] u64),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -318,7 +321,7 @@ pub struct FileBody {
     pub content_type: String,
     pub file_key: String,
     pub name: String,
-    #[serde(with = "as_str")]
+    #[serde(with = "stringified")]
     pub size: usize,
 }
 

@@ -1,5 +1,5 @@
 use crate::client::{KintoneClient, Request};
-use crate::internal::serde_helper::as_str;
+use crate::internal::serde_helper::stringified;
 use crate::models::ThreadComment;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub struct AddThreadCommentRequest {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AddThreadCommentResponse {
-    #[serde(with = "as_str")]
+    #[serde(with = "stringified")]
     pub id: u64,
 }
 

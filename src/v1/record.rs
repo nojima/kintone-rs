@@ -2,7 +2,7 @@ use reqwest::Method;
 use serde::Deserialize;
 
 use crate::client::{KintoneClient, Request, RequestBuilder};
-use crate::internal::serde_helper::as_str;
+use crate::internal::serde_helper::stringified;
 use crate::models::Record;
 
 #[must_use]
@@ -56,7 +56,7 @@ pub struct GetRecordsRequest {
 pub struct GetRecordsResponse {
     pub records: Vec<Record>,
 
-    #[serde(with = "as_str")]
+    #[serde(with = "stringified")]
     pub total_count: usize,
 }
 

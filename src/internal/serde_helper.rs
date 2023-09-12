@@ -1,4 +1,4 @@
-pub(crate) mod as_str {
+pub(crate) mod stringified {
     use std::{fmt::Display, str::FromStr};
 
     use serde::Deserialize;
