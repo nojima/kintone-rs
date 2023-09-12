@@ -398,3 +398,23 @@ pub struct CalcFieldProperty {
     pub unit: String,
     //pub unit_position: UnitPosition,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const RECORD_JSON1: &str = include_str!("testdata/record1.json");
+
+    fn assert_json_eq(json1: &str, json2: &str) {
+        let value1: serde_json::Value = serde_json::from_str(json1).unwrap();
+        let value2: serde_json::Value = serde_json::from_str(json2).unwrap();
+        assert_eq!(value1, value2);
+    }
+
+    #[test]
+    fn deserialize_and_serialize_record() {
+        let record: Record = serde_json::from_str(RECORD_JSON1).unwrap();
+        let serialized = serde_json::to_string_pretty(&record).unwrap();
+        assert_json_eq(RECORD_JSON1, &serialized);
+    }
+}

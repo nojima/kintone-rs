@@ -1,0 +1,60 @@
+{
+  "レコード番号": {
+    "type": "RECORD_NUMBER",
+    "value": "1"
+  },
+  "更新者": {
+    "type": "MODIFIER",
+    "value": {
+      "code": "cybozu",
+      "name": "cybozu"
+    }
+  },
+  "作成者": {
+    "type": "CREATOR",
+    "value": {
+      "code": "cybozu",
+      "name": "cybozu"
+    }
+  },
+  "ラジオボタン": {
+    "type": "RADIO_BUTTON",
+    "value": "達成"
+  },
+  "ドロップダウン": {
+    "type": "DROP_DOWN",
+    "value": null
+  },
+  "$revision": {
+    "type": "__REVISION__",
+    "value": "1"
+  },
+  "更新日時": {
+    "type": "UPDATED_TIME",
+    "value": "2023-09-01T05:22:00Z"
+  },
+  "文字列__複数行__0": {
+    "type": "MULTI_LINE_TEXT",
+    "value": "あいうえおかきくけこ"
+  },
+  "文字列__複数行_": {
+    "type": "MULTI_LINE_TEXT",
+    "value": "あいうえお"
+  },
+  "添付ファイル": {
+    "type": "FILE",
+    "value": []
+  },
+  "作成日時": {
+    "type": "CREATED_TIME",
+    "value": "2023-09-01T05:22:00Z"
+  },
+  "日付": {
+    "type": "DATE",
+    "value": "2023-09-01"
+  },
+  "$id": {
+    "type": "__ID__",
+    "value": "1"
+  }
+}
