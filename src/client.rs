@@ -92,26 +92,26 @@ impl Debug for Auth {
 }
 
 #[derive(Debug, Clone)]
-pub struct Request<'a, Body> {
+pub struct Request<'req, Body> {
     method: Method,
-    path: &'a str,
-    query_params: Vec<(&'a str, &'a str)>,
+    path: &'req str,
+    query_params: Vec<(&'req str, &'req str)>,
     body: Option<Body>,
 }
 
 impl<Body> Request<'_, Body> {
-    pub fn builder<'a>(method: Method, path: &'a str) -> RequestBuilder<'a, Body> {
+    pub fn builder<'req>(method: Method, path: &'req str) -> RequestBuilder<'req, Body> {
         RequestBuilder::new(method, path)
     }
 }
 
 #[derive(Clone)]
-pub struct RequestBuilder<'a, Body> {
-    req: Request<'a, Body>,
+pub struct RequestBuilder<'req, Body> {
+    req: Request<'req, Body>,
 }
 
-impl<'a, Body> RequestBuilder<'a, Body> {
-    pub fn new(method: Method, path: &'a str) -> Self {
+impl<'req, Body> RequestBuilder<'req, Body> {
+    pub fn new(method: Method, path: &'req str) -> Self {
         Self {
             req: Request {
                 method,
@@ -122,7 +122,7 @@ impl<'a, Body> RequestBuilder<'a, Body> {
         }
     }
 
-    pub fn query_param(mut self, key: &'a str, value: &'a str) -> Self {
+    pub fn query_param(mut self, key: &'req str, value: &'req str) -> Self {
         self.req.query_params.push((key, value));
         self
     }
@@ -132,7 +132,7 @@ impl<'a, Body> RequestBuilder<'a, Body> {
         self
     }
 
-    pub fn build(self) -> Request<'a, Body> {
+    pub fn build(self) -> Request<'req, Body> {
         self.req
     }
 }

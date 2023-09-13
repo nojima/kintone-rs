@@ -2,6 +2,7 @@ use reqwest::Method;
 use serde::Deserialize;
 
 use crate::client::{KintoneClient, Request, RequestBuilder};
+use crate::internal::convert::bool_to_str;
 use crate::internal::serde_helper::stringified;
 use crate::models::Record;
 
@@ -35,7 +36,7 @@ impl GetRecordRequest {
     }
 }
 
-pub fn get_records<'a>(app: u64) -> GetRecordsRequest {
+pub fn get_records<'req>(app: u64) -> GetRecordsRequest<'req> {
     GetRecordsRequest {
         app,
         ..Default::default()
@@ -44,10 +45,10 @@ pub fn get_records<'a>(app: u64) -> GetRecordsRequest {
 
 #[must_use]
 #[derive(Clone, Default)]
-pub struct GetRecordsRequest {
+pub struct GetRecordsRequest<'req> {
     app: u64,
-    fields: Option<Vec<String>>,
-    query: Option<String>,
+    fields: Option<&'req [&'req str]>,
+    query: Option<&'req str>,
     total_count: Option<bool>,
 }
 
@@ -60,13 +61,13 @@ pub struct GetRecordsResponse {
     pub total_count: usize,
 }
 
-impl GetRecordsRequest {
-    pub fn fields(mut self, fields: Vec<String>) -> Self {
+impl<'req> GetRecordsRequest<'req> {
+    pub fn fields(mut self, fields: &'req [&'req str]) -> Self {
         self.fields = Some(fields);
         self
     }
 
-    pub fn query(mut self, query: String) -> Self {
+    pub fn query(mut self, query: &'req str) -> Self {
         self.query = Some(query);
         self
     }
@@ -80,9 +81,12 @@ impl GetRecordsRequest {
         let app_str = self.app.to_string();
         let mut req: RequestBuilder<'_, ()> =
             Request::builder(Method::GET, "/k/v1/records.json").query_param("app", &app_str);
-        let fields = self.fields.unwrap_or(vec![]);
-        for field in &fields {
-            req = req.query_param("fields[]", &field);
+        let fields = self.fields.unwrap_or(&[]);
+        for field in fields {
+            req = req.query_param("fields[]", field);
+        }
+        if let Some(total_count) = self.total_count {
+            req = req.query_param("totalCount", bool_to_str(total_count));
         }
         Ok(client.call(req.build())?)
     }
