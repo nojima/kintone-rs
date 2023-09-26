@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
 use base64::Engine;
-use reqwest::{
-    blocking::{Client as ReqwestClient, RequestBuilder as ReqwestRequestBuilder},
-    Method,
-};
-use serde::{de::DeserializeOwned, Serialize};
+use reqwest::blocking::{Client as ReqwestClient, RequestBuilder as ReqwestRequestBuilder};
+use reqwest::Method;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use url::Url;
 
 pub struct KintoneClient {

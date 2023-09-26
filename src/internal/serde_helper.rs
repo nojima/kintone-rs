@@ -1,5 +1,6 @@
 pub(crate) mod stringified {
-    use std::{fmt::Display, str::FromStr};
+    use std::fmt::Display;
+    use std::str::FromStr;
 
     use serde::Deserialize;
 

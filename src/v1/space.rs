@@ -1,8 +1,9 @@
-use crate::client::KintoneClient;
-use crate::models::ThreadComment;
-use crate::{client::RequestBuilder, internal::serde_helper::stringified};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
+
+use crate::client::{KintoneClient, RequestBuilder};
+use crate::internal::serde_helper::stringified;
+use crate::models::ThreadComment;
 
 #[must_use]
 pub struct AddThreadCommentRequest {
