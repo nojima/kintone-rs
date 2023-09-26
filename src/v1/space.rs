@@ -1,13 +1,18 @@
-use crate::client::{KintoneClient, Request};
-use crate::internal::serde_helper::stringified;
+use crate::client::KintoneClient;
 use crate::models::ThreadComment;
+use crate::{client::RequestBuilder, internal::serde_helper::stringified};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 #[must_use]
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct AddThreadCommentRequest {
+    builder: RequestBuilder,
+    body: AddThreadCommentRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddThreadCommentRequestBody {
     space: u64,
     thread: u64,
     comment: ThreadComment,
@@ -20,24 +25,24 @@ pub struct AddThreadCommentResponse {
 }
 
 impl AddThreadCommentRequest {
-    pub fn send(self, client: &KintoneClient) -> crate::Result<AddThreadCommentResponse> {
-        let req: Request<'_, AddThreadCommentRequest> =
-            Request::builder(Method::POST, "/k/v1/space/thread/comment.json")
-                .body(self)
-                .build();
-        Ok(client.call(req)?)
+    pub fn send(self) -> crate::Result<AddThreadCommentResponse> {
+        Ok(self.builder.body(&self.body).send()?)
     }
 }
 
 #[must_use]
 pub fn add_thread_comment(
+    client: &KintoneClient,
     space: u64,
     thread: u64,
     comment: ThreadComment,
 ) -> AddThreadCommentRequest {
     AddThreadCommentRequest {
-        space,
-        thread,
-        comment,
+        builder: client.request(Method::POST, "/k/v1/space/thread/comment.json"),
+        body: AddThreadCommentRequestBody {
+            space,
+            thread,
+            comment,
+        },
     }
 }

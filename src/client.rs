@@ -1,7 +1,10 @@
 use std::fmt::Debug;
 
 use base64::Engine;
-use reqwest::{blocking::Client as ReqwestClient, Method};
+use reqwest::{
+    blocking::{Client as ReqwestClient, RequestBuilder as ReqwestRequestBuilder},
+    Method,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use url::Url;
 
@@ -23,35 +26,8 @@ impl KintoneClient {
         })
     }
 
-    pub fn call<Resp, Body>(&self, req: Request<Body>) -> crate::Result<Resp>
-    where
-        Resp: DeserializeOwned,
-        Body: Serialize,
-    {
-        let mut u = self.base_url.join(req.path)?;
-        for (name, value) in req.query_params {
-            u.query_pairs_mut().append_pair(name, value);
-        }
-        let mut builder = self.http_client.request(req.method, u);
-        if let Some(body) = req.body {
-            builder = builder.header("content-type", "application/json");
-            builder = builder.json(&body);
-        }
-        match &self.auth {
-            Auth::Password { username, password } => {
-                let body = format!("{username}:{password}");
-                let header_value = base64::engine::general_purpose::STANDARD_NO_PAD.encode(body);
-                builder = builder.header("x-cybozu-authorization", header_value);
-            }
-            Auth::ApiToken { tokens } => {
-                builder = builder.header("x-cybozu-api-token", tokens.join(","));
-            }
-        }
-        let resp = self
-            .http_client
-            .execute(builder.build()?)?
-            .error_for_status()?;
-        Ok(resp.json()?)
+    pub fn request(&self, method: Method, path: &str) -> RequestBuilder {
+        RequestBuilder::new(&self.http_client, &self.base_url, &self.auth, method, path)
     }
 }
 
@@ -91,48 +67,54 @@ impl Debug for Auth {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Request<'req, Body> {
-    method: Method,
-    path: &'req str,
-    query_params: Vec<(&'req str, &'req str)>,
-    body: Option<Body>,
+pub struct RequestBuilder {
+    builder: ReqwestRequestBuilder,
 }
 
-impl<Body> Request<'_, Body> {
-    pub fn builder<'req>(method: Method, path: &'req str) -> RequestBuilder<'req, Body> {
-        RequestBuilder::new(method, path)
-    }
-}
-
-#[derive(Clone)]
-pub struct RequestBuilder<'req, Body> {
-    req: Request<'req, Body>,
-}
-
-impl<'req, Body> RequestBuilder<'req, Body> {
-    pub fn new(method: Method, path: &'req str) -> Self {
-        Self {
-            req: Request {
-                method,
-                path,
-                query_params: Vec::new(),
-                body: None,
-            },
+impl RequestBuilder {
+    pub(crate) fn new(
+        client: &ReqwestClient,
+        base_url: &Url,
+        auth: &Auth,
+        method: Method,
+        path: &str,
+    ) -> Self {
+        let u = base_url.join(path).unwrap();
+        let mut builder = client.request(method, u);
+        match auth {
+            Auth::Password { username, password } => {
+                let body = format!("{username}:{password}");
+                let header_value = base64::engine::general_purpose::STANDARD_NO_PAD.encode(body);
+                builder = builder.header("x-cybozu-authorization", header_value);
+            }
+            Auth::ApiToken { tokens } => {
+                builder = builder.header("x-cybozu-api-token", tokens.join(","));
+            }
         }
+        Self { builder }
     }
 
-    pub fn query_param(mut self, key: &'req str, value: &'req str) -> Self {
-        self.req.query_params.push((key, value));
+    pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
+        self.builder = self.builder.query(&[(key, value)]);
         self
     }
 
-    pub fn body(mut self, body: Body) -> Self {
-        self.req.body = Some(body);
+    pub fn query_array<V: Serialize>(mut self, key: &str, values: &[V]) -> Self {
+        for (i, v) in values.iter().enumerate() {
+            let name = format!("{}[{}]", key, i);
+            self.builder = self.builder.query(&[(name, v)]);
+        }
         self
     }
 
-    pub fn build(self) -> Request<'req, Body> {
-        self.req
+    pub fn body<T: Serialize>(mut self, body: &T) -> Self {
+        self.builder = self.builder.header("content-type", "application/json");
+        self.builder = self.builder.json(body);
+        self
+    }
+
+    pub fn send<Resp: DeserializeOwned>(self) -> crate::Result<Resp> {
+        let resp = self.builder.send()?.error_for_status()?;
+        Ok(resp.json()?)
     }
 }
