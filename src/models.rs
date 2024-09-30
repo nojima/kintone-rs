@@ -79,6 +79,12 @@ impl Record {
     }
 }
 
+impl Default for Record {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone)]
 pub struct FieldIter<'a> {
     inner: hash_map::Iter<'a, String, FieldValue>,
@@ -365,6 +371,12 @@ impl TableRow {
 
     pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
+    }
+}
+
+impl Default for TableRow {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -1,14 +1,12 @@
-use reqwest::Method;
 use serde::Deserialize;
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::Record;
 
-#[must_use]
 pub fn get_record(client: &KintoneClient, app: u64, id: u64) -> GetRecordRequest {
     let builder = client
-        .request(Method::GET, "/k/v1/record.json")
+        .request(http::Method::GET, "/k/v1/record.json")
         .query("app", app)
         .query("id", id);
     GetRecordRequest { builder }
@@ -27,15 +25,15 @@ pub struct GetRecordResponse {
 
 impl GetRecordRequest {
     pub fn send(self) -> crate::Result<GetRecordResponse> {
-        Ok(self.builder.send()?)
+        Ok(self.builder.call()?)
     }
 }
 
-pub fn get_records<'req>(client: &KintoneClient, app: u64) -> GetRecordsRequest {
+pub fn get_records(client: &KintoneClient, app: u64) -> GetRecordsRequest {
     let builder = client
-        .request(Method::GET, "/k/v1/records.json")
+        .request(http::Method::GET, "/k/v1/records.json")
         .query("app", app);
-    GetRecordsRequest { builder: builder }
+    GetRecordsRequest { builder }
 }
 
 #[must_use]
@@ -69,6 +67,6 @@ impl GetRecordsRequest {
     }
 
     pub fn send(self) -> crate::Result<GetRecordsResponse> {
-        Ok(self.builder.send()?)
+        Ok(self.builder.call()?)
     }
 }

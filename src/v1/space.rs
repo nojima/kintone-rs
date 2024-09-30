@@ -1,4 +1,3 @@
-use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
@@ -27,11 +26,10 @@ pub struct AddThreadCommentResponse {
 
 impl AddThreadCommentRequest {
     pub fn send(self) -> crate::Result<AddThreadCommentResponse> {
-        Ok(self.builder.body(&self.body).send()?)
+        Ok(self.builder.send(self.body)?)
     }
 }
 
-#[must_use]
 pub fn add_thread_comment(
     client: &KintoneClient,
     space: u64,
@@ -39,7 +37,7 @@ pub fn add_thread_comment(
     comment: ThreadComment,
 ) -> AddThreadCommentRequest {
     AddThreadCommentRequest {
-        builder: client.request(Method::POST, "/k/v1/space/thread/comment.json"),
+        builder: client.request(http::Method::POST, "/k/v1/space/thread/comment.json"),
         body: AddThreadCommentRequestBody {
             space,
             thread,
