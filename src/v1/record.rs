@@ -3,6 +3,7 @@ use serde::Deserialize;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::Record;
+use crate::ApiResult;
 
 pub fn get_record(client: &KintoneClient, app: u64, id: u64) -> GetRecordRequest {
     let builder = client
@@ -24,8 +25,8 @@ pub struct GetRecordResponse {
 }
 
 impl GetRecordRequest {
-    pub fn send(self) -> crate::Result<GetRecordResponse> {
-        Ok(self.builder.call()?)
+    pub fn send(self) -> ApiResult<GetRecordResponse> {
+        self.builder.call()
     }
 }
 
@@ -66,7 +67,7 @@ impl GetRecordsRequest {
         self
     }
 
-    pub fn send(self) -> crate::Result<GetRecordsResponse> {
-        Ok(self.builder.call()?)
+    pub fn send(self) -> ApiResult<GetRecordsResponse> {
+        self.builder.call()
     }
 }

@@ -5,6 +5,8 @@ use base64::Engine;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::ApiResult;
+
 pub struct KintoneClient {
     base_url: url::Url,
     auth: Auth,
@@ -12,7 +14,7 @@ pub struct KintoneClient {
 }
 
 impl KintoneClient {
-    pub fn new(base_url: &str, auth: Auth) -> crate::Result<Self> {
+    pub fn new(base_url: &str, auth: Auth) -> crate::BoxResult<Self> {
         let base_url = url::Url::parse(base_url)?;
         let user_agent = "kintone-rs/0.1.0";
         let http_client = ureq::AgentBuilder::new().user_agent(user_agent).build();
@@ -106,14 +108,12 @@ impl RequestBuilder {
         self
     }
 
-    pub fn call<Resp: DeserializeOwned>(self) -> Result<Resp, crate::ApiError> {
+    pub fn call<Resp: DeserializeOwned>(self) -> ApiResult<Resp> {
         let resp = self.builder.call()?;
         Ok(resp.into_json()?)
     }
-    pub fn send<Body: Serialize, Resp: DeserializeOwned>(
-        self,
-        body: Body,
-    ) -> Result<Resp, crate::ApiError> {
+
+    pub fn send<Body: Serialize, Resp: DeserializeOwned>(self, body: Body) -> ApiResult<Resp> {
         let resp = self.builder.send_json(body)?;
         Ok(resp.into_json()?)
     }
