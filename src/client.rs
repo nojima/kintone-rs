@@ -101,7 +101,7 @@ impl RequestBuilder {
 
     pub fn query_array<V: Serialize>(mut self, key: &str, values: &[V]) -> Self {
         for (i, v) in values.iter().enumerate() {
-            let name = format!("{}[{}]", key, i);
+            let name = format!("{key}[{i}]");
             let value_str = serde_json::to_string(v).unwrap();
             self.builder = self.builder.query(&name, &value_str);
         }
