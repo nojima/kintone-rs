@@ -1,9 +1,9 @@
 use serde::Deserialize;
 
+use crate::ApiResult;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::Record;
-use crate::ApiResult;
 
 pub fn get_record(client: &KintoneClient, app: u64, id: u64) -> GetRecordRequest {
     let builder = client

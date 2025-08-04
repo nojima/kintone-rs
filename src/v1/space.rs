@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+use crate::ApiResult;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::ThreadComment;
-use crate::ApiResult;
 
 #[must_use]
 pub struct AddThreadCommentRequest {

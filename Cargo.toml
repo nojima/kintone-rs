@@ -1,7 +1,7 @@
 [package]
 name = "kintone"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 license = "MIT"
 authors = ["Yusuke Nojima <nojima@ynojima.com>"]
 homepage = "https://github.com/nojima/kintone-rs"

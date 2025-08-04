@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use base64::engine::general_purpose::STANDARD_NO_PAD as BASE64;
 use base64::Engine;
-use serde::de::DeserializeOwned;
+use base64::engine::general_purpose::STANDARD_NO_PAD as BASE64;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use crate::ApiResult;
 
