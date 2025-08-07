@@ -409,7 +409,10 @@ pub struct RecordComment {
 
 impl RecordComment {
     pub fn from_text(s: impl Into<String>) -> Self {
-        Self { text: s.into(), mentions: vec![] }
+        Self {
+            text: s.into(),
+            mentions: vec![],
+        }
     }
 }
 

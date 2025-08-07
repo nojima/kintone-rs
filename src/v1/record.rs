@@ -317,3 +317,52 @@ impl DeleteCommentRequest {
 }
 
 //-----------------------------------------------------------------------------
+
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/update-assignees/
+pub fn update_assignees(app: u64, id: u64, assignees: Vec<String>) -> UpdateAssigneesRequest {
+    let builder = RequestBuilder::new(http::Method::PUT, "/v1/record/assignees.json");
+    UpdateAssigneesRequest {
+        builder,
+        body: UpdateAssigneesRequestBody {
+            app,
+            id,
+            assignees,
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct UpdateAssigneesRequest {
+    builder: RequestBuilder,
+    body: UpdateAssigneesRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateAssigneesRequestBody {
+    app: u64,
+    id: u64,
+    assignees: Vec<String>,
+    revision: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateAssigneesResponse {
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+impl UpdateAssigneesRequest {
+    pub fn revision(mut self, revision: u64) -> Self {
+        self.body.revision = Some(revision);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> ApiResult<UpdateAssigneesResponse> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------

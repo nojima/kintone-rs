@@ -33,8 +33,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         mentions,
     };
 
-    let resp = kintone::v1::record::add_comment(1, 1, comment)
-        .send(&client)?;
+    let resp = kintone::v1::record::add_comment(1, 1, comment).send(&client)?;
 
     println!("Comment with mentions added with ID: {}", resp.id);
 
