@@ -36,6 +36,7 @@ pub struct AddThreadCommentRequestBody {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AddThreadCommentResponse {
     #[serde(with = "stringified")]
     pub id: u64,

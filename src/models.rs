@@ -400,6 +400,32 @@ pub struct ThreadComment {
     pub mentions: Vec<Entity>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordComment {
+    pub text: String,
+    pub mentions: Vec<Entity>,
+}
+
+impl From<PostedRecordComment> for RecordComment {
+    fn from(c: PostedRecordComment) -> Self {
+        RecordComment {
+            text: c.text,
+            mentions: c.mentions,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostedRecordComment {
+    pub id: u64,
+    pub text: String,
+    pub created_at: DateTime<FixedOffset>,
+    pub user: User,
+    pub mentions: Vec<Entity>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CalcFieldProperty {
     pub code: String,
@@ -412,6 +438,13 @@ pub struct CalcFieldProperty {
     pub hide_expression: bool,
     pub unit: String,
     //pub unit_position: UnitPosition,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Order {
+    Asc,
+    Desc,
 }
 
 #[cfg(test)]
