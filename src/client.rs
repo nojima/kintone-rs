@@ -100,7 +100,7 @@ impl Debug for Auth {
     }
 }
 
-pub struct RequestBuilder {
+pub(crate) struct RequestBuilder {
     method: http::Method,
     api_path: String,                 // DO NOT include "/k" prefix
     headers: HashMap<String, String>, // keys and values are NOT encoded
@@ -161,7 +161,7 @@ impl RequestBuilder {
     }
 }
 
-pub struct UploadRequest {
+pub(crate) struct UploadRequest {
     method: http::Method,
     api_path: String, // DO NOT include "/k" prefix
     name: String,
@@ -208,13 +208,13 @@ impl UploadRequest {
     }
 }
 
-pub struct DownloadRequest {
+pub(crate) struct DownloadRequest {
     method: http::Method,
     api_path: String,               // DO NOT include "/k" prefix
     query: HashMap<String, String>, // keys and values are NOT encoded
 }
 
-pub struct DownloadResponse {
+pub(crate) struct DownloadResponse {
     pub mime_type: String,
     pub content: Box<dyn Read + Send + Sync + 'static>,
 }
