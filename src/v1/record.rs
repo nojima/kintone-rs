@@ -6,20 +6,20 @@ use crate::internal::serde_helper::stringified;
 use crate::models::{Order, PostedRecordComment, Record, RecordComment};
 
 /// Retrieves a single record from a Kintone app by its ID.
-/// 
+///
 /// This function creates a request to get a specific record from the specified app.
 /// The record is identified by its unique ID within the app.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `id` - The ID of the record to retrieve
-/// 
+///
 /// # Example
 /// ```rust
 /// let response = get_record(123, 456).send(&client)?;
 /// println!("Record: {:?}", response.record);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/>
 pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
@@ -49,16 +49,16 @@ pub struct GetRecordResponse {
 //-----------------------------------------------------------------------------
 
 /// Retrieves multiple records from a Kintone app with optional filtering and pagination.
-/// 
+///
 /// This function creates a request to get records from the specified app. The request
 /// can be configured with query conditions, field selection, and pagination options.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app to retrieve records from
 /// * `fields` (optional) - An array of field codes to include in the response
 /// * `query` (optional) - A query string following Kintone's query syntax (e.g., "status = \"Active\" and priority > 3")
 /// * `total_count` (optional) - If true, includes the total count; if false, excludes it for better performance
-/// 
+///
 /// # Example
 /// ```rust
 /// let response = get_records(123)
@@ -67,7 +67,7 @@ pub struct GetRecordResponse {
 ///     .send(&client)?;
 /// println!("Found {} records", response.records.len());
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records/>
 pub fn get_records(app: u64) -> GetRecordsRequest {
@@ -113,25 +113,25 @@ impl GetRecordsRequest {
 //-----------------------------------------------------------------------------
 
 /// Creates a new record in a Kintone app.
-/// 
+///
 /// This function creates a request to add a new record to the specified app.
 /// The record data can be provided using the `record()` method on the returned request.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app to add the record to
 /// * `record` (optional) - A Record containing the field data for the new record
-/// 
+///
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
 /// record.put_field("name".to_string(), FieldValue::SingleLineText("John Doe".to_string()));
-/// 
+///
 /// let response = add_record(123)
 ///     .record(record)
 ///     .send(&client)?;
 /// println!("Created record with ID: {}", response.id);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/add-record/>
 pub fn add_record(app: u64) -> AddRecordRequest {
@@ -178,23 +178,23 @@ impl AddRecordRequest {
 //-----------------------------------------------------------------------------
 
 /// Updates an existing record in a Kintone app.
-/// 
+///
 /// This function creates a request to update a record in the specified app.
 /// The record can be identified either by its ID or by a unique key field.
 /// Only the fields specified in the record data will be updated.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app containing the record to update
 /// * `id` (optional) - The ID of the record to update
 /// * `update_key` (optional) - A unique key field and value to identify the record to update
 /// * `record` (optional) - A Record containing the field data to update (only specified fields will be updated)
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
-/// 
+///
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
 /// record.put_field("status".to_string(), FieldValue::SingleLineText("Completed".to_string()));
-/// 
+///
 /// let response = update_record(123)
 ///     .id(456)
 ///     .record(record)
@@ -202,7 +202,7 @@ impl AddRecordRequest {
 ///     .send(&client)?;
 /// println!("Updated to revision: {}", response.revision);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-record/>
 pub fn update_record(app: u64) -> UpdateRecordRequest {
@@ -278,17 +278,17 @@ impl UpdateRecordRequest {
 //-----------------------------------------------------------------------------
 
 /// Retrieves comments for a specific record in a Kintone app.
-/// 
+///
 /// This function creates a request to get all comments associated with a specific record.
 /// The comments can be ordered, paginated, and filtered using the available methods.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `record` - The ID of the record to get comments for
 /// * `order` (optional) - The order to sort comments
 /// * `offset` (optional) - The number of comments to skip
 /// * `limit` (optional) - The maximum number of comments to return
-/// 
+///
 /// # Example
 /// ```rust
 /// let response = get_comments(123, 456)
@@ -297,7 +297,7 @@ impl UpdateRecordRequest {
 ///     .send(&client)?;
 /// println!("Found {} comments", response.comments.len());
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-comments/>
 pub fn get_comments(app: u64, record: u64) -> GetCommentsRequest {
@@ -344,22 +344,22 @@ impl GetCommentsRequest {
 //-----------------------------------------------------------------------------
 
 /// Adds a new comment to a specific record in a Kintone app.
-/// 
+///
 /// This function creates a request to add a comment to a record. The comment
 /// can include text and mentions of other users.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `record` - The ID of the record to add the comment to
 /// * `comment` - The comment data including text and mentions
-/// 
+///
 /// # Example
 /// ```rust
 /// let comment = RecordComment::from_text("This task is now complete.");
 /// let response = add_comment(123, 456, comment).send(&client)?;
 /// println!("Added comment with ID: {}", response.id);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/add-comment/>
 pub fn add_comment(app: u64, record: u64, comment: RecordComment) -> AddCommentRequest {
@@ -404,21 +404,21 @@ impl AddCommentRequest {
 //-----------------------------------------------------------------------------
 
 /// Deletes a specific comment from a record in a Kintone app.
-/// 
+///
 /// This function creates a request to delete a comment from a record. Only the
 /// comment author or users with appropriate permissions can delete comments.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `record` - The ID of the record containing the comment
 /// * `comment` - The ID of the comment to delete
-/// 
+///
 /// # Example
 /// ```rust
 /// let response = delete_comment(123, 456, 789).send(&client)?;
 /// println!("Comment deleted successfully");
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-comment/>
 pub fn delete_comment(app: u64, record: u64, comment: u64) -> DeleteCommentRequest {
@@ -461,16 +461,16 @@ impl DeleteCommentRequest {
 //-----------------------------------------------------------------------------
 
 /// Updates the assignees of a record in a Kintone app.
-/// 
+///
 /// This function creates a request to update the list of users assigned to a record.
 /// This is typically used in workflow processes where tasks need to be reassigned.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `id` - The ID of the record to update assignees for
 /// * `assignees` - A vector of user login names to assign to the record
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
-/// 
+///
 /// # Example
 /// ```rust
 /// let assignees = vec!["user1".to_string(), "user2".to_string()];
@@ -479,7 +479,7 @@ impl DeleteCommentRequest {
 ///     .send(&client)?;
 /// println!("Updated assignees, new revision: {}", response.revision);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-assignees/>
 pub fn update_assignees(app: u64, id: u64, assignees: Vec<String>) -> UpdateAssigneesRequest {
@@ -531,18 +531,18 @@ impl UpdateAssigneesRequest {
 //-----------------------------------------------------------------------------
 
 /// Updates the status of a record in a Kintone app workflow.
-/// 
+///
 /// This function creates a request to change the status of a record by executing
 /// a workflow action. The action moves the record from its current status to the next
 /// status in the workflow.
-/// 
+///
 /// # Arguments
 /// * `app` - The ID of the Kintone app
 /// * `id` - The ID of the record to update the status for
 /// * `action` - The name of the workflow action to execute
 /// * `assignee` (optional) - The login name or code of the user to assign the record to
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
-/// 
+///
 /// # Example
 /// ```rust
 /// let response = update_status(123, 456, "Submit for Review".to_string())
@@ -551,7 +551,7 @@ impl UpdateAssigneesRequest {
 ///     .send(&client)?;
 /// println!("Status updated, new revision: {}", response.revision);
 /// ```
-/// 
+///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-status/>
 pub fn update_status(app: u64, id: u64, action: String) -> UpdateStatusRequest {
