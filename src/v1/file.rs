@@ -17,7 +17,7 @@ use crate::client::{DownloadRequest, KintoneClient, UploadRequest};
 /// ```rust
 /// use std::fs::File;
 ///
-/// let file = File::open("document.pdf")?;
+/// let file = File::open("./document.pdf")?;
 /// let response = upload("document.pdf").send(&client, file)?;
 /// println!("Uploaded file key: {}", response.file_key);
 /// ```
@@ -77,7 +77,7 @@ impl UploadFileRequest {
 /// let response = download("file_key_from_upload")
 ///     .send(&client)?;
 ///
-/// let mut output_file = File::create("downloaded_file.pdf")?;
+/// let mut output_file = File::create("./downloaded_file.pdf")?;
 /// copy(&mut response.content, &mut output_file)?;
 /// println!("Downloaded file with MIME type: {}", response.mime_type);
 /// ```
