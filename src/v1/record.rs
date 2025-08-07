@@ -366,3 +366,59 @@ impl UpdateAssigneesRequest {
 }
 
 //-----------------------------------------------------------------------------
+
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/update-status/
+pub fn update_status(app: u64, id: u64, action: String) -> UpdateStatusRequest {
+    let builder = RequestBuilder::new(http::Method::PUT, "/v1/record/status.json");
+    UpdateStatusRequest {
+        builder,
+        body: UpdateStatusRequestBody {
+            app,
+            id,
+            action,
+            assignee: None,
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct UpdateStatusRequest {
+    builder: RequestBuilder,
+    body: UpdateStatusRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatusRequestBody {
+    app: u64,
+    id: u64,
+    action: String,
+    assignee: Option<String>,
+    revision: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatusResponse {
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+impl UpdateStatusRequest {
+    pub fn assignee(mut self, assignee: String) -> Self {
+        self.body.assignee = Some(assignee);
+        self
+    }
+
+    pub fn revision(mut self, revision: u64) -> Self {
+        self.body.revision = Some(revision);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> ApiResult<UpdateStatusResponse> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
