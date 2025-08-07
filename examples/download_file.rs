@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     }
 
     writer.flush()?;
-    println!("Downloaded {} bytes to downloaded_file.bin", total_bytes);
+    println!("Downloaded {total_bytes} bytes to downloaded_file.bin");
 
     Ok(())
 }

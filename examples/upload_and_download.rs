@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // 4. ファイル内容を確認
     let downloaded_content = std::fs::read_to_string("downloaded_sample.txt")?;
     println!("Downloaded content:");
-    println!("{}", downloaded_content);
+    println!("{downloaded_content}");
 
     Ok(())
 }
