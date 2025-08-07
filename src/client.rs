@@ -90,12 +90,16 @@ impl Debug for Auth {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Auth::Password { username, .. } => {
-                write!(
-                    f,
-                    "Password {{ username: {username:?}, password: <hidden> }}"
-                )
+                f.debug_struct("Password")
+                    .field("username", username)
+                    .field("password", &"<hidden>")
+                    .finish()
             }
-            Auth::ApiToken { .. } => write!(f, "ApiToken {{ tokens: <hidden> }}"),
+            Auth::ApiToken { .. } => {
+                f.debug_struct("ApiToken")
+                    .field("tokens", &"<hidden>")
+                    .finish()
+            }
         }
     }
 }

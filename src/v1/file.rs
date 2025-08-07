@@ -61,3 +61,11 @@ pub struct DownloadFileResponse {
     pub mime_type: String,
     pub content: Box<dyn Read + Send + Sync + 'static>,
 }
+
+impl std::fmt::Debug for DownloadFileResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DownloadFileResponse")
+            .field("mime_type", &self.mime_type)
+            .finish()
+    }
+}
