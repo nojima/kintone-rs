@@ -124,7 +124,7 @@ impl GetRecordsRequest {
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
-/// record.put_field("name".to_string(), FieldValue::SingleLineText("John Doe".to_string()));
+/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
 ///
 /// let response = add_record(123)
 ///     .record(record)
@@ -193,7 +193,7 @@ impl AddRecordRequest {
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
-/// record.put_field("status".to_string(), FieldValue::SingleLineText("Completed".to_string()));
+/// record.put_field("status", FieldValue::SingleLineText("Completed".to_string()));
 ///
 /// let response = update_record(123)
 ///     .id(456)

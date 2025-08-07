@@ -18,19 +18,18 @@ use crate::client::{DownloadRequest, KintoneClient, UploadRequest};
 /// use std::fs::File;
 ///
 /// let file = File::open("document.pdf")?;
-/// let response = upload("document.pdf".to_string())
-///     .send(&client, file)?;
+/// let response = upload("document.pdf").send(&client, file)?;
 /// println!("Uploaded file key: {}", response.file_key);
 /// ```
 ///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/files/upload-file/>
-pub fn upload(filename: String) -> UploadFileRequest {
+pub fn upload(filename: impl Into<String>) -> UploadFileRequest {
     let upload_request = UploadRequest::new(
         http::Method::POST,
         "/v1/file.json",
         "file".to_string(),
-        filename,
+        filename.into(),
     );
     UploadFileRequest { upload_request }
 }
@@ -76,7 +75,7 @@ impl UploadFileRequest {
 /// use std::io::copy;
 /// use std::fs::File;
 ///
-/// let response = download("file_key_from_upload".to_string())
+/// let response = download("file_key_from_upload")
 ///     .send(&client)?;
 ///
 /// let mut output_file = File::create("downloaded_file.pdf")?;
@@ -86,9 +85,9 @@ impl UploadFileRequest {
 ///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/files/download-file/>
-pub fn download(file_key: String) -> DownloadFileRequest {
+pub fn download(file_key: impl Into<String>) -> DownloadFileRequest {
     let download_request =
-        DownloadRequest::new(http::Method::GET, "/v1/file.json").query("fileKey", file_key);
+        DownloadRequest::new(http::Method::GET, "/v1/file.json").query("fileKey", file_key.into());
     DownloadFileRequest { download_request }
 }
 

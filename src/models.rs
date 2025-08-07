@@ -56,8 +56,12 @@ impl Record {
         }
     }
 
-    pub fn put_field(&mut self, field_code: String, value: FieldValue) -> Option<FieldValue> {
-        self.fields.insert(field_code, value)
+    pub fn put_field(
+        &mut self,
+        field_code: impl Into<String>,
+        value: FieldValue,
+    ) -> Option<FieldValue> {
+        self.fields.insert(field_code.into(), value)
     }
 
     pub fn remove_field(&mut self, field_code: &str) -> Option<FieldValue> {
@@ -365,8 +369,12 @@ impl TableRow {
         }
     }
 
-    pub fn put_field(&mut self, field_code: String, value: FieldValue) -> Option<FieldValue> {
-        self.fields.insert(field_code, value)
+    pub fn put_field(
+        &mut self,
+        field_code: impl Into<String>,
+        value: FieldValue,
+    ) -> Option<FieldValue> {
+        self.fields.insert(field_code.into(), value)
     }
 
     pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
