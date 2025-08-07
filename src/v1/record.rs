@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::ApiResult;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
-use crate::models::{Order, PostedRecordComment, Record};
+use crate::models::{Order, PostedRecordComment, Record, RecordComment};
 
 // https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/
 pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
@@ -231,6 +231,48 @@ impl GetCommentsRequest {
 
     pub fn send(self, client: &KintoneClient) -> ApiResult<GetCommentsResponse> {
         self.builder.call(client)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/add-comment/
+pub fn add_comment(app: u64, record: u64, comment: RecordComment) -> AddCommentRequest {
+    let builder = RequestBuilder::new(http::Method::POST, "/v1/record/comment.json");
+    AddCommentRequest {
+        builder,
+        body: AddCommentRequestBody {
+            app,
+            record,
+            comment,
+        },
+    }
+}
+
+#[must_use]
+pub struct AddCommentRequest {
+    builder: RequestBuilder,
+    body: AddCommentRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddCommentRequestBody {
+    app: u64,
+    record: u64,
+    comment: RecordComment,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddCommentResponse {
+    #[serde(with = "stringified")]
+    pub id: u64,
+}
+
+impl AddCommentRequest {
+    pub fn send(self, client: &KintoneClient) -> ApiResult<AddCommentResponse> {
+        self.builder.send(client, self.body)
     }
 }
 
