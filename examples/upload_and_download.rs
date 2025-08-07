@@ -17,20 +17,26 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let reader = BufReader::new(file);
 
     let upload_resp = kintone::v1::file::upload("sample.txt".to_string()).send(&client, reader)?;
-    println!("File uploaded successfully. File key: {}", upload_resp.file_key);
+    println!(
+        "File uploaded successfully. File key: {}",
+        upload_resp.file_key
+    );
 
     // 2. アップロードしたファイルをダウンロード
     let download_resp = kintone::v1::file::download(upload_resp.file_key).send(&client)?;
-    println!("Downloaded file with MIME type: {}", download_resp.mime_type);
+    println!(
+        "Downloaded file with MIME type: {}",
+        download_resp.mime_type
+    );
 
     // 3. ダウンロードしたファイルを保存
     let output_file = File::create("downloaded_sample.txt")?;
     let mut writer = BufWriter::new(output_file);
-    
+
     let mut buffer = [0; 8192];
     let mut total_bytes = 0;
     let mut content = download_resp.content;
-    
+
     loop {
         let bytes_read = content.read(&mut buffer)?;
         if bytes_read == 0 {
@@ -39,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         writer.write_all(&buffer[..bytes_read])?;
         total_bytes += bytes_read;
     }
-    
+
     writer.flush()?;
     println!("Downloaded {total_bytes} bytes to downloaded_sample.txt");
 

@@ -1,8 +1,8 @@
-use std::io::Read;
 use serde::Deserialize;
+use std::io::Read;
 
 use crate::ApiResult;
-use crate::client::{KintoneClient, UploadRequest, DownloadRequest};
+use crate::client::{DownloadRequest, KintoneClient, UploadRequest};
 
 // https://cybozu.dev/ja/kintone/docs/rest-api/files/upload-file/
 pub fn upload(filename: String) -> UploadFileRequest {
@@ -37,8 +37,8 @@ impl UploadFileRequest {
 
 // https://cybozu.dev/ja/kintone/docs/rest-api/files/download-file/
 pub fn download(file_key: String) -> DownloadFileRequest {
-    let download_request = DownloadRequest::new(http::Method::GET, "/v1/file.json")
-        .query("fileKey", file_key);
+    let download_request =
+        DownloadRequest::new(http::Method::GET, "/v1/file.json").query("fileKey", file_key);
     DownloadFileRequest { download_request }
 }
 
