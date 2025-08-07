@@ -185,7 +185,11 @@ impl UploadRequest {
         }
     }
 
-    pub fn send(self, client: &KintoneClient, content: impl Read) -> ApiResult<ureq::Response> {
+    pub fn send<Resp: DeserializeOwned>(
+        self,
+        client: &KintoneClient,
+        content: impl Read,
+    ) -> ApiResult<Resp> {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
@@ -206,7 +210,7 @@ impl UploadRequest {
         let body = header.chain(content).chain(&*footer);
 
         let resp = req.send(body)?;
-        Ok(resp)
+        Ok(resp.into_json()?)
     }
 }
 

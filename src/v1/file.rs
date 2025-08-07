@@ -55,8 +55,7 @@ impl UploadFileRequest {
     /// # Returns
     /// A Result containing the UploadFileResponse with the file key or an error
     pub fn send(self, client: &KintoneClient, content: impl Read) -> ApiResult<UploadFileResponse> {
-        let resp = self.upload_request.send(client, content)?;
-        Ok(resp.into_json()?)
+        self.upload_request.send(client, content)
     }
 }
 
