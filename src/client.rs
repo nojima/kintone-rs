@@ -9,21 +9,56 @@ use serde::de::DeserializeOwned;
 use crate::ApiResult;
 
 pub struct KintoneClient {
+    http_client: ureq::Agent,
     base_url: url::Url,
     auth: Auth,
-    http_client: ureq::Agent,
+    guest_space_id: Option<u64>,
 }
 
 impl KintoneClient {
-    pub fn new(base_url: &str, auth: Auth) -> crate::BoxResult<Self> {
-        let base_url = url::Url::parse(base_url)?;
-        let user_agent = "kintone-rs/0.1.0";
-        let http_client = ureq::AgentBuilder::new().user_agent(user_agent).build();
-        Ok(Self {
+    pub fn new(base_url: &str, auth: Auth) -> Self {
+        KintoneClientBuilder::new(base_url, auth).build()
+    }
+}
+
+pub struct KintoneClientBuilder {
+    base_url: url::Url,
+    auth: Auth,
+    user_agent: Option<String>,
+    guest_space_id: Option<u64>,
+}
+
+impl KintoneClientBuilder {
+    pub fn new(base_url: &str, auth: Auth) -> Self {
+        let base_url = url::Url::parse(base_url).unwrap();
+        Self {
             base_url,
             auth,
+            user_agent: None,
+            guest_space_id: None,
+        }
+    }
+
+    pub fn guest_space_id(mut self, guest_space_id: u64) -> Self {
+        self.guest_space_id = Some(guest_space_id);
+        self
+    }
+
+    pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = Some(user_agent.into());
+        self
+    }
+
+    pub fn build(self) -> KintoneClient {
+        let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_string());
+        let http_client = ureq::AgentBuilder::new().user_agent(&user_agent).build();
+
+        KintoneClient {
             http_client,
-        })
+            base_url: self.base_url,
+            auth: self.auth,
+            guest_space_id: self.guest_space_id,
+        }
     }
 }
 
@@ -65,16 +100,16 @@ impl Debug for Auth {
 
 pub struct RequestBuilder {
     method: http::Method,
-    path: String,
+    api_path: String,                 // DO NOT include "/k" prefix
     headers: HashMap<String, String>, // keys and values are NOT encoded
     query: HashMap<String, String>,   // keys and values are NOT encoded
 }
 
 impl RequestBuilder {
-    pub fn new(method: http::Method, path: impl Into<String>) -> Self {
+    pub fn new(method: http::Method, api_path: impl Into<String>) -> Self {
         Self {
             method,
-            path: path.into(),
+            api_path: api_path.into(),
             headers: HashMap::new(),
             query: HashMap::new(),
         }
@@ -95,6 +130,20 @@ impl RequestBuilder {
         self
     }
 
+    pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> ApiResult<Resp> {
+        let resp = self.make_request(client).call()?;
+        Ok(resp.into_json()?)
+    }
+
+    pub fn send<Body: Serialize, Resp: DeserializeOwned>(
+        self,
+        client: &KintoneClient,
+        body: Body,
+    ) -> ApiResult<Resp> {
+        let resp = self.make_request(client).send_json(body)?;
+        Ok(resp.into_json()?)
+    }
+
     fn make_request(mut self, client: &KintoneClient) -> ureq::Request {
         match client.auth {
             Auth::Password {
@@ -111,7 +160,15 @@ impl RequestBuilder {
                     .insert("x-cybozu-api-token".to_string(), tokens.join(","));
             }
         }
-        let u = client.base_url.join(&self.path).unwrap();
+
+        let mut u = client.base_url.clone();
+        if let Some(guest_space_id) = client.guest_space_id {
+            u = u.join(&format!("/k/guest/{guest_space_id}")).unwrap();
+        } else {
+            u = u.join("/k").unwrap();
+        }
+        u = u.join(&self.api_path).unwrap();
+
         let mut req = client.http_client.request(self.method.as_str(), u.as_str());
         for (key, value) in self.query {
             req = req.query(&key, &value);
@@ -120,19 +177,5 @@ impl RequestBuilder {
             req = req.set(&key, &value);
         }
         req
-    }
-
-    pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> ApiResult<Resp> {
-        let resp = self.make_request(client).call()?;
-        Ok(resp.into_json()?)
-    }
-
-    pub fn send<Body: Serialize, Resp: DeserializeOwned>(
-        self,
-        client: &KintoneClient,
-        body: Body,
-    ) -> ApiResult<Resp> {
-        let resp = self.make_request(client).send_json(body)?;
-        Ok(resp.into_json()?)
     }
 }

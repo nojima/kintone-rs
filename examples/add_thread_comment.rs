@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let username = std::env::var("KINTONE_USERNAME").expect("KINTONE_USERNAME is not set");
     let password = std::env::var("KINTONE_PASSWORD").expect("KINTONE_PASSWORD is not set");
 
-    let client = KintoneClient::new(&base_url, Auth::password(username, password))?;
+    let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
     let comment = ThreadComment {
         text: "Hello, World!".to_owned(),

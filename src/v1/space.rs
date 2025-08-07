@@ -12,7 +12,7 @@ pub fn add_thread_comment(
     comment: ThreadComment,
 ) -> AddThreadCommentRequest {
     AddThreadCommentRequest {
-        builder: RequestBuilder::new(http::Method::POST, "/k/v1/space/thread/comment.json"),
+        builder: RequestBuilder::new(http::Method::POST, "/v1/space/thread/comment.json"),
         body: AddThreadCommentRequestBody {
             space,
             thread,

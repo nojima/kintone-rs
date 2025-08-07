@@ -7,7 +7,7 @@ use crate::models::Record;
 
 // https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/
 pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
-    let builder = RequestBuilder::new(http::Method::GET, "/k/v1/record.json")
+    let builder = RequestBuilder::new(http::Method::GET, "/v1/record.json")
         .query("app", app)
         .query("id", id);
     GetRecordRequest { builder }
@@ -32,8 +32,7 @@ pub struct GetRecordResponse {
 
 // https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records/
 pub fn get_records(app: u64) -> GetRecordsRequest {
-    let builder = RequestBuilder::new(http::Method::GET, "/k/v1/records.json")
-        .query("app", app);
+    let builder = RequestBuilder::new(http::Method::GET, "/v1/records.json").query("app", app);
     GetRecordsRequest { builder }
 }
 
