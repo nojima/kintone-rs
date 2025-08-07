@@ -277,3 +277,43 @@ impl AddCommentRequest {
 }
 
 //-----------------------------------------------------------------------------
+
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-comment/
+pub fn delete_comment(app: u64, record: u64, comment: u64) -> DeleteCommentRequest {
+    let builder = RequestBuilder::new(http::Method::DELETE, "/v1/record/comment.json");
+    DeleteCommentRequest {
+        builder,
+        body: DeleteCommentRequestBody {
+            app,
+            record,
+            comment,
+        },
+    }
+}
+
+#[must_use]
+pub struct DeleteCommentRequest {
+    builder: RequestBuilder,
+    body: DeleteCommentRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteCommentRequestBody {
+    app: u64,
+    record: u64,
+    comment: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeleteCommentResponse {
+    // Empty response body
+}
+
+impl DeleteCommentRequest {
+    pub fn send(self, client: &KintoneClient) -> ApiResult<DeleteCommentResponse> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
