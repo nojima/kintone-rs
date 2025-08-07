@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         text: "Hello, World!".to_owned(),
         mentions: vec![],
     };
-    let resp = kintone::v1::space::add_thread_comment(&client, 2, 4, comment).send()?;
+    let resp = kintone::v1::space::add_thread_comment(2, 4, comment).send(&client)?;
 
     println!("resp = {resp:?}");
     Ok(())

@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let api_token = std::env::var("KINTONE_API_TOKEN").expect("KINTONE_API_TOKEN is not set");
 
     let client = KintoneClient::new(&base_url, Auth::api_token(api_token))?;
-    let resp = kintone::v1::record::get_records(&client, 5).send()?;
+    let resp = kintone::v1::record::get_records(5).send(&client)?;
 
     for record in resp.records {
         println!("{{");

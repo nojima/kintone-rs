@@ -5,9 +5,9 @@ use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::Record;
 
-pub fn get_record(client: &KintoneClient, app: u64, id: u64) -> GetRecordRequest {
-    let builder = client
-        .request(http::Method::GET, "/k/v1/record.json")
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/
+pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
+    let builder = RequestBuilder::new(http::Method::GET, "/k/v1/record.json")
         .query("app", app)
         .query("id", id);
     GetRecordRequest { builder }
@@ -18,21 +18,21 @@ pub struct GetRecordRequest {
     builder: RequestBuilder,
 }
 
+impl GetRecordRequest {
+    pub fn send(self, client: &KintoneClient) -> ApiResult<GetRecordResponse> {
+        self.builder.call(client)
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetRecordResponse {
     pub record: Record,
 }
 
-impl GetRecordRequest {
-    pub fn send(self) -> ApiResult<GetRecordResponse> {
-        self.builder.call()
-    }
-}
-
-pub fn get_records(client: &KintoneClient, app: u64) -> GetRecordsRequest {
-    let builder = client
-        .request(http::Method::GET, "/k/v1/records.json")
+// https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records/
+pub fn get_records(app: u64) -> GetRecordsRequest {
+    let builder = RequestBuilder::new(http::Method::GET, "/k/v1/records.json")
         .query("app", app);
     GetRecordsRequest { builder }
 }
@@ -67,7 +67,7 @@ impl GetRecordsRequest {
         self
     }
 
-    pub fn send(self) -> ApiResult<GetRecordsResponse> {
-        self.builder.call()
+    pub fn send(self, client: &KintoneClient) -> ApiResult<GetRecordsResponse> {
+        self.builder.call(client)
     }
 }

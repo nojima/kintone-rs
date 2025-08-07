@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use base64::Engine;
@@ -23,10 +24,6 @@ impl KintoneClient {
             auth,
             http_client,
         })
-    }
-
-    pub fn request(&self, method: http::Method, path: &str) -> RequestBuilder {
-        RequestBuilder::new(&self.http_client, &self.base_url, &self.auth, method, path)
     }
 }
 
@@ -67,35 +64,25 @@ impl Debug for Auth {
 }
 
 pub struct RequestBuilder {
-    builder: ureq::Request,
+    method: http::Method,
+    path: String,
+    headers: HashMap<String, String>, // keys and values are NOT encoded
+    query: HashMap<String, String>,   // keys and values are NOT encoded
 }
 
 impl RequestBuilder {
-    pub(crate) fn new(
-        client: &ureq::Agent,
-        base_url: &url::Url,
-        auth: &Auth,
-        method: http::Method,
-        path: &str,
-    ) -> Self {
-        let u = base_url.join(path).unwrap();
-        let mut builder = client.request_url(method.as_str(), &u);
-        match auth {
-            Auth::Password { username, password } => {
-                let body = format!("{username}:{password}");
-                let header_value = BASE64.encode(body);
-                builder = builder.set("x-cybozu-authorization", &header_value);
-            }
-            Auth::ApiToken { tokens } => {
-                builder = builder.set("x-cybozu-api-token", &tokens.join(","));
-            }
+    pub fn new(method: http::Method, path: impl Into<String>) -> Self {
+        Self {
+            method,
+            path: path.into(),
+            headers: HashMap::new(),
+            query: HashMap::new(),
         }
-        Self { builder }
     }
 
     pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
         let value_str = serde_json::to_string(&value).unwrap();
-        self.builder = self.builder.query(key, &value_str);
+        self.query.insert(key.to_string(), value_str);
         self
     }
 
@@ -103,18 +90,49 @@ impl RequestBuilder {
         for (i, v) in values.iter().enumerate() {
             let name = format!("{key}[{i}]");
             let value_str = serde_json::to_string(v).unwrap();
-            self.builder = self.builder.query(&name, &value_str);
+            self.query.insert(name, value_str);
         }
         self
     }
 
-    pub fn call<Resp: DeserializeOwned>(self) -> ApiResult<Resp> {
-        let resp = self.builder.call()?;
+    fn make_request(mut self, client: &KintoneClient) -> ureq::Request {
+        match client.auth {
+            Auth::Password {
+                ref username,
+                ref password,
+            } => {
+                let body = format!("{username}:{password}");
+                let header_value = BASE64.encode(body);
+                self.headers
+                    .insert("x-cybozu-authorization".to_string(), header_value);
+            }
+            Auth::ApiToken { ref tokens } => {
+                self.headers
+                    .insert("x-cybozu-api-token".to_string(), tokens.join(","));
+            }
+        }
+        let u = client.base_url.join(&self.path).unwrap();
+        let mut req = client.http_client.request(self.method.as_str(), u.as_str());
+        for (key, value) in self.query {
+            req = req.query(&key, &value);
+        }
+        for (key, value) in self.headers {
+            req = req.set(&key, &value);
+        }
+        req
+    }
+
+    pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> ApiResult<Resp> {
+        let resp = self.make_request(client).call()?;
         Ok(resp.into_json()?)
     }
 
-    pub fn send<Body: Serialize, Resp: DeserializeOwned>(self, body: Body) -> ApiResult<Resp> {
-        let resp = self.builder.send_json(body)?;
+    pub fn send<Body: Serialize, Resp: DeserializeOwned>(
+        self,
+        client: &KintoneClient,
+        body: Body,
+    ) -> ApiResult<Resp> {
+        let resp = self.make_request(client).send_json(body)?;
         Ok(resp.into_json()?)
     }
 }
