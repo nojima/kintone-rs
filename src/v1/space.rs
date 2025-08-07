@@ -5,7 +5,28 @@ use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::ThreadComment;
 
-// https://cybozu.dev/ja/kintone/docs/rest-api/spaces/add-thread-comment/
+/// Adds a new comment to a specific thread in a Kintone space.
+/// 
+/// This function creates a request to add a comment to a thread within a space.
+/// The comment can include text and mentions of other users.
+/// 
+/// # Arguments
+/// * `space` - The ID of the Kintone space
+/// * `thread` - The ID of the thread to add the comment to
+/// * `comment` - The comment data including text and mentions
+/// 
+/// # Example
+/// ```rust
+/// let comment = ThreadComment {
+///     text: "This is a thread comment.".to_string(),
+///     mentions: vec![],
+/// };
+/// let response = add_thread_comment(123, 456, comment).send(&client)?;
+/// println!("Added thread comment with ID: {}", response.id);
+/// ```
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/spaces/add-thread-comment/>
 pub fn add_thread_comment(
     space: u64,
     thread: u64,

@@ -19,7 +19,9 @@ use crate::models::{Order, PostedRecordComment, Record, RecordComment};
 /// let response = get_record(123, 456).send(&client)?;
 /// println!("Record: {:?}", response.record);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-record/>
 pub fn get_record(app: u64, id: u64) -> GetRecordRequest {
     let builder = RequestBuilder::new(http::Method::GET, "/v1/record.json")
         .query("app", app)
@@ -65,7 +67,9 @@ pub struct GetRecordResponse {
 ///     .send(&client)?;
 /// println!("Found {} records", response.records.len());
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records/>
 pub fn get_records(app: u64) -> GetRecordsRequest {
     let builder = RequestBuilder::new(http::Method::GET, "/v1/records.json").query("app", app);
     GetRecordsRequest { builder }
@@ -127,7 +131,9 @@ impl GetRecordsRequest {
 ///     .send(&client)?;
 /// println!("Created record with ID: {}", response.id);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/add-record/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/add-record/>
 pub fn add_record(app: u64) -> AddRecordRequest {
     let builder = RequestBuilder::new(http::Method::POST, "/v1/record.json");
     AddRecordRequest {
@@ -196,7 +202,9 @@ impl AddRecordRequest {
 ///     .send(&client)?;
 /// println!("Updated to revision: {}", response.revision);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/update-record/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-record/>
 pub fn update_record(app: u64) -> UpdateRecordRequest {
     let builder = RequestBuilder::new(http::Method::PUT, "/v1/record.json");
     UpdateRecordRequest {
@@ -289,7 +297,9 @@ impl UpdateRecordRequest {
 ///     .send(&client)?;
 /// println!("Found {} comments", response.comments.len());
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/get-comments/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-comments/>
 pub fn get_comments(app: u64, record: u64) -> GetCommentsRequest {
     let builder = RequestBuilder::new(http::Method::GET, "/v1/record/comments.json")
         .query("app", app)
@@ -349,7 +359,9 @@ impl GetCommentsRequest {
 /// let response = add_comment(123, 456, comment).send(&client)?;
 /// println!("Added comment with ID: {}", response.id);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/add-comment/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/add-comment/>
 pub fn add_comment(app: u64, record: u64, comment: RecordComment) -> AddCommentRequest {
     let builder = RequestBuilder::new(http::Method::POST, "/v1/record/comment.json");
     AddCommentRequest {
@@ -406,7 +418,9 @@ impl AddCommentRequest {
 /// let response = delete_comment(123, 456, 789).send(&client)?;
 /// println!("Comment deleted successfully");
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-comment/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-comment/>
 pub fn delete_comment(app: u64, record: u64, comment: u64) -> DeleteCommentRequest {
     let builder = RequestBuilder::new(http::Method::DELETE, "/v1/record/comment.json");
     DeleteCommentRequest {
@@ -465,7 +479,9 @@ impl DeleteCommentRequest {
 ///     .send(&client)?;
 /// println!("Updated assignees, new revision: {}", response.revision);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/update-assignees/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-assignees/>
 pub fn update_assignees(app: u64, id: u64, assignees: Vec<String>) -> UpdateAssigneesRequest {
     let builder = RequestBuilder::new(http::Method::PUT, "/v1/record/assignees.json");
     UpdateAssigneesRequest {
@@ -535,7 +551,9 @@ impl UpdateAssigneesRequest {
 ///     .send(&client)?;
 /// println!("Status updated, new revision: {}", response.revision);
 /// ```
-// https://cybozu.dev/ja/kintone/docs/rest-api/records/update-status/
+/// 
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-status/>
 pub fn update_status(app: u64, id: u64, action: String) -> UpdateStatusRequest {
     let builder = RequestBuilder::new(http::Method::PUT, "/v1/record/status.json");
     UpdateStatusRequest {
