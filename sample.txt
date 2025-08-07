@@ -1,0 +1,3 @@
+Hello, World!
+This is a sample text file for testing the kintone file upload API.
+日本語のテストも含まれています。
