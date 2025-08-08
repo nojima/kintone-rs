@@ -5,7 +5,10 @@ use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 
-use crate::{internal::serde_helper::stringified, models::{Entity, FileBody, Group, Organization, User}};
+use crate::{
+    internal::serde_helper::stringified,
+    models::{Entity, FileBody, Group, Organization, User},
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -425,7 +428,6 @@ pub struct PostedRecordComment {
     pub user: User,
     pub mentions: Vec<Entity>,
 }
-
 
 #[cfg(test)]
 mod tests {

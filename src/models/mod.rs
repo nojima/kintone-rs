@@ -24,8 +24,8 @@
 //! }
 //! ```
 
+use crate::internal::serde_helper::stringified;
 use serde::{Deserialize, Serialize};
-use crate::{internal::serde_helper::stringified};
 
 pub mod app;
 pub mod record;
