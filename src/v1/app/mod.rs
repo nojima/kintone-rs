@@ -11,6 +11,9 @@
 //! ### Settings Management
 //! - [`settings::deploy_app`] - Deploy app settings from preview to production environment
 //!
+//! ### Form Management
+//! - [`form::add_form_field`] - Add fields to an app's form in the preview environment
+//!
 //! ## Usage Pattern
 //!
 //! All functions in this module follow the builder pattern:
@@ -26,6 +29,7 @@
 //!
 //! **Note**: App APIs require username/password authentication and cannot use API tokens.
 
+pub mod form;
 pub mod settings;
 
 use serde::{Deserialize, Serialize};
