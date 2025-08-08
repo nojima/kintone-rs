@@ -66,6 +66,8 @@
 //!     - [`v1::file::upload`], [`v1::file::download`]
 //! - [`v1::space`]: Space management APIs
 //!     - [`v1::space::add_thread_comment`]
+//! - [`v1::app`]: App management APIs
+//!     - [`v1::app::add_app`]
 //!
 //! ### Builder Pattern and Method Chaining
 //!
