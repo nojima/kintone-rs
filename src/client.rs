@@ -134,7 +134,10 @@ impl KintoneClientBuilder {
 
     pub fn build(self) -> KintoneClient {
         let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_string());
-        let http_client = ureq::AgentBuilder::new().user_agent(&user_agent).build();
+        let http_client = ureq::AgentBuilder::new()
+            .user_agent(&user_agent)
+            .try_proxy_from_env(true)
+            .build();
 
         KintoneClient {
             http_client,
@@ -359,13 +362,14 @@ fn make_request(
         }
     }
 
-    let mut u = client.base_url.clone();
-    if let Some(guest_space_id) = client.guest_space_id {
-        u = u.join(&format!("/k/guest/{guest_space_id}")).unwrap();
+    let mut path = if let Some(guest_space_id) = client.guest_space_id {
+        format!("/k/guest/{guest_space_id}")
     } else {
-        u = u.join("/k").unwrap();
-    }
-    u = u.join(api_path).unwrap();
+        "/k".to_string()
+    };
+    path += api_path;
+    let mut u = client.base_url.clone();
+    u.set_path(&path);
 
     let mut req = client.http_client.request(method.as_str(), u.as_str());
     for (key, value) in query {
