@@ -9,6 +9,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = KintoneClient::new(&base_url, Auth::api_token(api_token));
     let resp = kintone::v1::record::get_record(5, 1).send(&client)?;
 
-    println!("record = {:?}", resp.record);
+    println!("Record {}:", resp.record.id().unwrap());
+    for (field_code, field_value) in resp.record.fields() {
+        if !field_value.field_type().is_builtin() { // exclude built-in fields
+            println!("  {field_code} = {field_value:?}");
+        }
+    }
     Ok(())
 }
