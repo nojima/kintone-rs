@@ -8,6 +8,9 @@
 //! ### App Management
 //! - [`add_app`] - Create a new app in the preview environment
 //!
+//! ### Settings Management
+//! - [`settings::deploy_app_settings`] - Deploy app settings from preview to production environment
+//!
 //! ## Usage Pattern
 //!
 //! All functions in this module follow the builder pattern:
@@ -16,15 +19,14 @@
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
-//! let response = app::add_app("My App")
-//!     .space(123)
-//!     .thread(456)
-//!     .send(&client)?;
+//! let response = app::add_app("My App").send(&client)?;
 //! println!("Created app with ID: {}", response.app);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
 //! **Note**: App APIs require username/password authentication and cannot use API tokens.
+
+pub mod settings;
 
 use serde::{Deserialize, Serialize};
 
@@ -35,10 +37,13 @@ use crate::internal::serde_helper::stringified;
 /// Creates a new app in the preview environment.
 ///
 /// This function creates a request to add a new app to Kintone's preview environment.
-/// The preview environment is a temporary location where app information is stored 
+/// The preview environment is a temporary location where app information is stored
 /// before being deployed to the production environment.
 ///
 /// **Important**: This API requires username/password authentication and cannot use API tokens.
+///
+/// **Note**: Apps created with this function exist only in the preview environment.
+/// To deploy the app to the production environment, use [`settings::deploy_app_settings`].
 ///
 /// # Arguments
 /// * `name` - The name of the app (up to 64 characters)
