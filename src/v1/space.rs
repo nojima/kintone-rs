@@ -1,3 +1,8 @@
+//! # Kintone Space API
+//!
+//! This module provides functions for interacting with Kintone's space-related REST API endpoints.
+//! It includes operations for managing spaces, threads, and thread comments.
+
 use serde::{Deserialize, Serialize};
 
 use crate::ApiResult;

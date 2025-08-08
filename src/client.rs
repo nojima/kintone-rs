@@ -1,3 +1,84 @@
+//! # Kintone HTTP Client
+//!
+//! This module provides the HTTP client for communicating with Kintone's REST API.
+//! It handles authentication, request building, and response processing for all API calls.
+//!
+//! ## Key Components
+//!
+//! - [`KintoneClient`] - The main HTTP client for making API requests
+//! - [`KintoneClientBuilder`] - Builder for configuring the client with custom options
+//! - [`Auth`] - Authentication methods (API token or username/password)
+//!
+//! ## Authentication
+//!
+//! The client supports two authentication methods:
+//!
+//! ### API Token Authentication
+//!
+//! **Note**: API tokens can be generated from the Kintone app settings page.
+//!
+//! ```rust
+//! use kintone::client::{Auth, KintoneClient};
+//!
+//! let client = KintoneClient::new(
+//!     "https://your-domain.cybozu.com",
+//!     Auth::api_token("your-api-token".to_string())
+//! );
+//! ```
+//!
+//! ### Username/Password Authentication
+//! ```rust
+//! use kintone::client::{Auth, KintoneClient};
+//!
+//! let client = KintoneClient::new(
+//!     "https://your-domain.cybozu.com",
+//!     Auth::password("username".to_string(), "password".to_string())
+//! );
+//! ```
+//!
+//! ## Client Configuration
+//!
+//! For advanced configuration, use the builder pattern:
+//!
+//! ```rust
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//!
+//! let client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::api_token("your-api-token".to_string())
+//!     )
+//!     .user_agent("MyApp/1.0")
+//!     .build();
+//! ```
+//!
+//! ## Guest Space Support
+//!
+//! The client supports guest spaces by specifying a guest space ID during client creation.
+//!
+//! Each guest space requires its own `KintoneClient` instance. You cannot
+//! use a single client to access multiple guest spaces or mix guest space and regular space operations.
+//!
+//! ### Creating a Client for Guest Space
+//! ```rust
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//!
+//! // Client for guest space ID 123
+//! let guest_client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::api_token("your-api-token".to_string())
+//!     )
+//!     .guest_space_id(123)
+//!     .build();
+//!
+//! // If you need to access a different guest space (ID 456), create another client
+//! let another_guest_client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::api_token("your-api-token".to_string())
+//!     )
+//!     .guest_space_id(456)
+//!     .build();
+//! ```
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::Read;

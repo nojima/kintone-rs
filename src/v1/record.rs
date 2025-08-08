@@ -1,3 +1,8 @@
+//! # Kintone Record API
+//!
+//! This module provides functions for interacting with Kintone's record-related REST API endpoints.
+//! It includes operations for managing records, comments, assignees, and workflow statuses.
+
 use serde::{Deserialize, Serialize};
 
 use crate::ApiResult;

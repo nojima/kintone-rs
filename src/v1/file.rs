@@ -1,3 +1,9 @@
+//! # Kintone File API
+//!
+//! This module provides functions for interacting with Kintone's file-related REST API endpoints.
+//! It includes operations for uploading and downloading files that can be used in file fields
+//! or as attachments in Kintone records.
+
 use serde::Deserialize;
 use std::io::Read;
 
