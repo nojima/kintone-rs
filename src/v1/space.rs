@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::ApiResult;
+use crate::error::ApiError;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::ThreadComment;
@@ -69,7 +69,7 @@ pub struct AddThreadCommentResponse {
 }
 
 impl AddThreadCommentRequest {
-    pub fn send(self, client: &KintoneClient) -> ApiResult<AddThreadCommentResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<AddThreadCommentResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }

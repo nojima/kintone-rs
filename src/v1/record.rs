@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::ApiResult;
+use crate::error::ApiError;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::internal::serde_helper::stringified;
 use crate::models::{Order, PostedRecordComment, Record, RecordComment};
@@ -40,7 +40,7 @@ pub struct GetRecordRequest {
 }
 
 impl GetRecordRequest {
-    pub fn send(self, client: &KintoneClient) -> ApiResult<GetRecordResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<GetRecordResponse, ApiError> {
         self.builder.call(client)
     }
 }
@@ -110,7 +110,7 @@ impl GetRecordsRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<GetRecordsResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<GetRecordsResponse, ApiError> {
         self.builder.call(client)
     }
 }
@@ -175,7 +175,7 @@ impl AddRecordRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<AddRecordResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<AddRecordResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
@@ -275,7 +275,7 @@ impl UpdateRecordRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<UpdateRecordResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateRecordResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
@@ -341,7 +341,7 @@ impl GetCommentsRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<GetCommentsResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<GetCommentsResponse, ApiError> {
         self.builder.call(client)
     }
 }
@@ -401,7 +401,7 @@ pub struct AddCommentResponse {
 }
 
 impl AddCommentRequest {
-    pub fn send(self, client: &KintoneClient) -> ApiResult<AddCommentResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<AddCommentResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
@@ -458,7 +458,7 @@ pub struct DeleteCommentResponse {
 }
 
 impl DeleteCommentRequest {
-    pub fn send(self, client: &KintoneClient) -> ApiResult<DeleteCommentResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<DeleteCommentResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
@@ -528,7 +528,7 @@ impl UpdateAssigneesRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<UpdateAssigneesResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateAssigneesResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
@@ -607,7 +607,7 @@ impl UpdateStatusRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<UpdateStatusResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateStatusResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }

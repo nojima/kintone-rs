@@ -89,7 +89,7 @@ use rand::RngCore as _;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-use crate::ApiResult;
+use crate::error::ApiError;
 
 pub struct KintoneClient {
     http_client: ureq::Agent,
@@ -215,7 +215,7 @@ impl RequestBuilder {
         self
     }
 
-    pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> ApiResult<Resp> {
+    pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> Result<Resp, ApiError> {
         let resp = make_request(
             client,
             self.method,
@@ -231,7 +231,7 @@ impl RequestBuilder {
         self,
         client: &KintoneClient,
         body: Body,
-    ) -> ApiResult<Resp> {
+    ) -> Result<Resp, ApiError> {
         let resp = make_request(
             client,
             self.method,
@@ -270,7 +270,7 @@ impl UploadRequest {
         self,
         client: &KintoneClient,
         content: impl Read,
-    ) -> ApiResult<Resp> {
+    ) -> Result<Resp, ApiError> {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
@@ -321,7 +321,7 @@ impl DownloadRequest {
         self
     }
 
-    pub fn send(self, client: &KintoneClient) -> ApiResult<DownloadResponse> {
+    pub fn send(self, client: &KintoneClient) -> Result<DownloadResponse, ApiError> {
         let req = make_request(
             client,
             self.method,
