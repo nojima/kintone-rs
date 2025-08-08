@@ -173,6 +173,7 @@ impl<'a> Iterator for FieldValueIter<'a> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Assoc)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn is_builtin(&self) -> bool)]
+#[non_exhaustive]
 pub enum FieldType {
     #[assoc(is_builtin = false)]
     Calc,
@@ -279,6 +280,7 @@ pub enum FieldType {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
+#[non_exhaustive]
 pub enum FieldValue {
     #[assoc(field_type = FieldType::Calc)]
     Calc(String),
@@ -398,7 +400,7 @@ pub struct Organization {
     pub code: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TableRow {
     #[serde(flatten)]
     fields: HashMap<String, FieldValue>,
@@ -421,6 +423,22 @@ impl TableRow {
 
     pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
+    }
+}
+
+impl std::fmt::Debug for TableRow {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut debug_struct = f.debug_struct("TableRow");
+
+        let mut keys: Vec<_> = self.fields.keys().by_ref().collect();
+        keys.sort();
+
+        for key in keys {
+            let value = self.fields.get(key).unwrap();
+            debug_struct.field(key, value);
+        }
+
+        debug_struct.finish()
     }
 }
 
