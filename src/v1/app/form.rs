@@ -137,16 +137,13 @@ impl AddFormFieldRequest {
     /// let number_field = FieldProperty::Number(NumberFieldProperty {
     ///     code: "price".to_string(),
     ///     label: "Price".to_string(),
-    ///     no_label: false,
     ///     required: true,
-    ///     min_value: Some(BigDecimal::from(0)),
-    ///     max_value: None,
+    ///     min_value: Some(0.into()),
     ///     digit: true,
-    ///     unique: false,
-    ///     default_value: None,
     ///     display_scale: Some(2),
     ///     unit: Some("USD".to_string()),
     ///     unit_position: Some(UnitPosition::Before),
+    ///     ..Default::default()
     /// });
     ///
     /// let request = add_form_field(123)

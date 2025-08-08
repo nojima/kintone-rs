@@ -4,7 +4,8 @@ use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::internal::serde_helper::option_stringified;
+use crate::internal::serde_helper::{option_stringified, stringified};
+use crate::models::Entity;
 use crate::models::record::FieldType;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
@@ -107,24 +108,23 @@ pub enum LinkProtocol {
     Mail,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+impl Default for LinkProtocol {
+    fn default() -> Self {
+        Self::Web
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldOption {
     pub label: String,
-    pub index: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Entity {
-    pub code: String,
-    #[serde(rename = "type")]
-    pub entity_type: String,
+    #[serde(with = "stringified")]
+    pub index: u64,
 }
 
 // Field Property structs
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalcFieldProperty {
     pub code: String,
@@ -139,7 +139,7 @@ pub struct CalcFieldProperty {
     pub unit_position: Option<UnitPosition>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleLineTextFieldProperty {
     pub code: String,
@@ -156,7 +156,7 @@ pub struct SingleLineTextFieldProperty {
     pub hide_expression: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultiLineTextFieldProperty {
     pub code: String,
@@ -166,7 +166,7 @@ pub struct MultiLineTextFieldProperty {
     pub default_value: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RichTextFieldProperty {
     pub code: String,
@@ -176,7 +176,7 @@ pub struct RichTextFieldProperty {
     pub default_value: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NumberFieldProperty {
     pub code: String,
@@ -194,7 +194,7 @@ pub struct NumberFieldProperty {
     pub unit_position: Option<UnitPosition>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DateFieldProperty {
     pub code: String,
@@ -206,7 +206,7 @@ pub struct DateFieldProperty {
     pub default_now_value: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeFieldProperty {
     pub code: String,
@@ -217,7 +217,7 @@ pub struct TimeFieldProperty {
     pub default_now_value: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DateTimeFieldProperty {
     pub code: String,
@@ -229,7 +229,7 @@ pub struct DateTimeFieldProperty {
     pub default_now_value: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RadioButtonFieldProperty {
     pub code: String,
@@ -241,7 +241,7 @@ pub struct RadioButtonFieldProperty {
     pub options: HashMap<String, FieldOption>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckBoxFieldProperty {
     pub code: String,
@@ -253,7 +253,7 @@ pub struct CheckBoxFieldProperty {
     pub options: HashMap<String, FieldOption>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultiSelectFieldProperty {
     pub code: String,
@@ -264,7 +264,7 @@ pub struct MultiSelectFieldProperty {
     pub options: HashMap<String, FieldOption>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DropDownFieldProperty {
     pub code: String,
@@ -275,7 +275,7 @@ pub struct DropDownFieldProperty {
     pub options: HashMap<String, FieldOption>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileFieldProperty {
     pub code: String,
@@ -286,7 +286,7 @@ pub struct FileFieldProperty {
     pub thumbnail_size: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinkFieldProperty {
     pub code: String,
@@ -302,7 +302,7 @@ pub struct LinkFieldProperty {
     pub protocol: LinkProtocol,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSelectFieldProperty {
     pub code: String,
@@ -313,7 +313,7 @@ pub struct UserSelectFieldProperty {
     pub entities: Vec<Entity>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrganizationSelectFieldProperty {
     pub code: String,
@@ -324,7 +324,7 @@ pub struct OrganizationSelectFieldProperty {
     pub entities: Vec<Entity>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupSelectFieldProperty {
     pub code: String,
@@ -335,7 +335,7 @@ pub struct GroupSelectFieldProperty {
     pub entities: Vec<Entity>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceTableFieldProperty {
     pub code: String,
@@ -344,7 +344,7 @@ pub struct ReferenceTableFieldProperty {
     pub reference_table: ReferenceTable,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceTable {
     pub related_app: RelatedApp,
@@ -356,7 +356,7 @@ pub struct ReferenceTable {
     pub size: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelatedApp {
     #[serde(with = "option_stringified")]
@@ -364,14 +364,14 @@ pub struct RelatedApp {
     pub code: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceCondition {
     pub field: String,
     pub related_field: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LookupSetting {
     pub related_app: RelatedApp,
@@ -389,7 +389,7 @@ pub struct FieldMapping {
     pub related_field: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupFieldProperty {
     pub code: String,
@@ -398,7 +398,7 @@ pub struct GroupFieldProperty {
     pub open_group: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubtableFieldProperty {
     pub code: String,
@@ -419,9 +419,22 @@ pub struct LookupFieldProperty {
     pub lookup: LookupSetting,
 }
 
+impl Default for LookupFieldProperty {
+    fn default() -> Self {
+        Self {
+            code: String::default(),
+            field_type: FieldType::SingleLineText,
+            label: String::default(),
+            no_label: None,
+            required: None,
+            lookup: LookupSetting::default(),
+        }
+    }
+}
+
 // System field properties (read-only)
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordNumberFieldProperty {
     pub code: String,
@@ -429,7 +442,7 @@ pub struct RecordNumberFieldProperty {
     pub no_label: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CategoryFieldProperty {
     pub code: String,
@@ -437,7 +450,7 @@ pub struct CategoryFieldProperty {
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusFieldProperty {
     pub code: String,
@@ -445,7 +458,7 @@ pub struct StatusFieldProperty {
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusAssigneeFieldProperty {
     pub code: String,
@@ -453,7 +466,7 @@ pub struct StatusAssigneeFieldProperty {
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatedTimeFieldProperty {
     pub code: String,
@@ -461,7 +474,7 @@ pub struct CreatedTimeFieldProperty {
     pub no_label: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatedTimeFieldProperty {
     pub code: String,
@@ -469,7 +482,7 @@ pub struct UpdatedTimeFieldProperty {
     pub no_label: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatorFieldProperty {
     pub code: String,
@@ -477,7 +490,7 @@ pub struct CreatorFieldProperty {
     pub no_label: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModifierFieldProperty {
     pub code: String,
