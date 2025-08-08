@@ -139,6 +139,7 @@ pub struct HttpError {
 }
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum ApiError {
     #[error("i/o error: {0}")]
     Io(#[from] std::io::Error),
