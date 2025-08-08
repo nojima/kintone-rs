@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let client = KintoneClient::new(&base_url, Auth::api_token(api_token));
     let resp = kintone::v1::record::get_records(5)
-        .fields(&["test_field_1"])
+        .fields(&["test_field_1", "test_field_2"])
         .send(&client)?;
 
     for record in resp.records {
