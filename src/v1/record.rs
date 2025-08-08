@@ -5,8 +5,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::ApiError;
 use crate::client::{KintoneClient, RequestBuilder};
+use crate::error::ApiError;
 use crate::internal::serde_helper::stringified;
 use crate::models::{Order, PostedRecordComment, Record, RecordComment};
 

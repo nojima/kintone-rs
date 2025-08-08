@@ -7,8 +7,8 @@
 use serde::Deserialize;
 use std::io::Read;
 
-use crate::error::ApiError;
 use crate::client::{DownloadRequest, KintoneClient, UploadRequest};
+use crate::error::ApiError;
 
 /// Uploads a file to Kintone for use in file fields or attachments.
 ///
@@ -60,7 +60,11 @@ impl UploadFileRequest {
     ///
     /// # Returns
     /// A Result containing the UploadFileResponse with the file key or an error
-    pub fn send(self, client: &KintoneClient, content: impl Read) -> Result<UploadFileResponse, ApiError> {
+    pub fn send(
+        self,
+        client: &KintoneClient,
+        content: impl Read,
+    ) -> Result<UploadFileResponse, ApiError> {
         self.upload_request.send(client, content)
     }
 }
