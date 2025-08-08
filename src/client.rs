@@ -203,17 +203,15 @@ impl RequestBuilder {
         }
     }
 
-    pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
-        let value_str = serde_json::to_string(&value).unwrap();
-        self.query.insert(key.to_string(), value_str);
+    pub fn query<V: ToString>(mut self, key: &str, value: V) -> Self {
+        self.query.insert(key.to_string(), value.to_string());
         self
     }
 
-    pub fn query_array<V: Serialize>(mut self, key: &str, values: &[V]) -> Self {
+    pub fn query_array<V: ToString>(mut self, key: &str, values: &[V]) -> Self {
         for (i, v) in values.iter().enumerate() {
             let name = format!("{key}[{i}]");
-            let value_str = serde_json::to_string(v).unwrap();
-            self.query.insert(name, value_str);
+            self.query.insert(name, v.to_string());
         }
         self
     }

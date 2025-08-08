@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
-use crate::internal::serde_helper::stringified;
+use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::models::{Order, PostedRecordComment, Record, RecordComment};
 
 /// Retrieves a single record from a Kintone app by its ID.
@@ -90,8 +90,8 @@ pub struct GetRecordsRequest {
 pub struct GetRecordsResponse {
     pub records: Vec<Record>,
 
-    #[serde(with = "stringified")]
-    pub total_count: usize,
+    #[serde(with = "option_stringified")]
+    pub total_count: Option<usize>,
 }
 
 impl GetRecordsRequest {

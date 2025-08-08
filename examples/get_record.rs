@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     println!("Record {}:", resp.record.id().unwrap());
     for (field_code, field_value) in resp.record.fields() {
-        if !field_value.field_type().is_builtin() { // exclude built-in fields
+        if !field_value.field_type().is_builtin() {
             println!("  {field_code} = {field_value:?}");
         }
     }

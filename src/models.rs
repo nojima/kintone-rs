@@ -524,6 +524,15 @@ pub enum Order {
     Desc,
 }
 
+impl std::fmt::Display for Order {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Order::Asc => write!(f, "asc"),
+            Order::Desc => write!(f, "desc"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
