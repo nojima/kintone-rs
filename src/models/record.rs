@@ -1,29 +1,3 @@
-//! # Kintone Data Models
-//!
-//! This module provides data structures for representing Kintone records, fields, and other entities.
-//! These models handle serialization/deserialization between Rust types and Kintone's JSON API format.
-//!
-//! ## Usage Examples
-//!
-//! ### Creating a Record
-//! ```rust
-//! use kintone::models::{Record, FieldValue};
-//!
-//! let mut record = Record::new();
-//! record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
-//! record.put_field("age", FieldValue::Number(30.into()));
-//! println!("record = {record:?}");
-//! ```
-//!
-//! ### Reading Field Values
-//! ```rust
-//! # use kintone::models::{Record, FieldValue};
-//! # let record = Record::new();
-//! if let Some(FieldValue::SingleLineText(name)) = record.get_field_value("name") {
-//!     println!("Name: {}", name);
-//! }
-//! ```
-
 use std::collections::{HashMap, hash_map};
 
 use bigdecimal::BigDecimal;
@@ -31,7 +5,7 @@ use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 
-use crate::internal::serde_helper::stringified;
+use crate::{internal::serde_helper::stringified, models::{Entity, FileBody, Group, Organization, User}};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -369,37 +343,6 @@ pub enum FieldValue {
     __REVISION__(#[serde(with = "stringified")] u64),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FileBody {
-    pub content_type: String,
-    pub file_key: String,
-    pub name: String,
-    #[serde(with = "stringified")]
-    pub size: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct User {
-    pub name: String,
-    pub code: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Group {
-    pub name: String,
-    pub code: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Organization {
-    pub name: String,
-    pub code: String,
-}
-
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TableRow {
     #[serde(flatten)]
@@ -449,26 +392,6 @@ impl Default for TableRow {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum EntityType {
-    USER,
-    GROUP,
-    ORGANIZATION,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Entity {
-    #[serde(rename = "type")]
-    pub type_: EntityType,
-    pub code: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ThreadComment {
-    pub text: String,
-    pub mentions: Vec<Entity>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordComment {
     pub text: String,
@@ -503,41 +426,12 @@ pub struct PostedRecordComment {
     pub mentions: Vec<Entity>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CalcFieldProperty {
-    pub code: String,
-    pub label: String,
-    pub no_label: bool,
-    pub required: bool,
-    pub expression: String,
-    //pub format: DisplayFormat,
-    pub display_scale: i64,
-    pub hide_expression: bool,
-    pub unit: String,
-    //pub unit_position: UnitPosition,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Order {
-    Asc,
-    Desc,
-}
-
-impl std::fmt::Display for Order {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Order::Asc => write!(f, "asc"),
-            Order::Desc => write!(f, "desc"),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const RECORD_JSON1: &str = include_str!("testdata/record1.json");
+    const RECORD_JSON1: &str = include_str!("../testdata/record1.json");
 
     fn assert_json_eq(json1: &str, json2: &str) {
         let value1: serde_json::Value = serde_json::from_str(json1).unwrap();

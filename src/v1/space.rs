@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
 use crate::internal::serde_helper::stringified;
-use crate::models::ThreadComment;
+use crate::models::space::ThreadComment;
 
 /// Adds a new comment to a specific thread in a Kintone space.
 ///

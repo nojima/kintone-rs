@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
 use crate::internal::serde_helper::{option_stringified, stringified};
-use crate::models::{Order, PostedRecordComment, Record, RecordComment};
+use crate::models::{Order, record::{PostedRecordComment, Record, RecordComment}};
 
 /// Retrieves a single record from a Kintone app by its ID.
 ///
