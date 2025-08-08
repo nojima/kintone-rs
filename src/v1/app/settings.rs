@@ -6,7 +6,7 @@
 //! ## Available Operations
 //!
 //! ### Settings Deployment
-//! - [`deploy_app_settings`] - Deploy app settings from preview to production environment
+//! - [`deploy_app`] - Deploy app settings from preview to production environment
 //!
 //! ## Usage Pattern
 //!
@@ -16,7 +16,7 @@
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::settings;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
-//! settings::deploy_app_settings()
+//! settings::deploy_app()
 //!     .app(123, Some(45)) // app ID with optional revision
 //!     .app(124, None)     // app ID without revision check
 //!     .send(&client)?;
@@ -54,14 +54,14 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 /// # Example
 /// ```rust
 /// // Deploy multiple apps
-/// let response = deploy_app_settings()
+/// let response = deploy_app()
 ///     .app(123, Some(45))  // Deploy app 123 with revision check
 ///     .app(124, None)      // Deploy app 124 without revision check
 ///     .revert(false)       // Deploy changes (default)
 ///     .send(&client)?;
 ///
 /// // Cancel changes instead of deploying
-/// let response = deploy_app_settings()
+/// let response = deploy_app()
 ///     .app(123, None)
 ///     .revert(true)        // Cancel changes
 ///     .send(&client)?;
@@ -69,11 +69,11 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 ///
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/settings/deploy-app-settings/>
-pub fn deploy_app_settings() -> DeployAppSettingsRequest {
+pub fn deploy_app() -> DeployAppRequest {
     let builder = RequestBuilder::new(http::Method::POST, "/v1/preview/app/deploy.json");
-    DeployAppSettingsRequest {
+    DeployAppRequest {
         builder,
-        body: DeployAppSettingsRequestBody {
+        body: DeployAppRequestBody {
             apps: Vec::new(),
             revert: None,
         },
@@ -81,14 +81,14 @@ pub fn deploy_app_settings() -> DeployAppSettingsRequest {
 }
 
 #[must_use]
-pub struct DeployAppSettingsRequest {
+pub struct DeployAppRequest {
     builder: RequestBuilder,
-    body: DeployAppSettingsRequestBody,
+    body: DeployAppRequestBody,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DeployAppSettingsRequestBody {
+struct DeployAppRequestBody {
     apps: Vec<AppDeployInfo>,
     revert: Option<bool>,
 }
@@ -102,7 +102,7 @@ struct AppDeployInfo {
     revision: Option<u64>,
 }
 
-impl DeployAppSettingsRequest {
+impl DeployAppRequest {
     /// Adds an app to be deployed.
     ///
     /// # Arguments
@@ -112,7 +112,7 @@ impl DeployAppSettingsRequest {
     ///
     /// # Example
     /// ```rust
-    /// let request = deploy_app_settings()
+    /// let request = deploy_app()
     ///     .app(123, Some(45))  // Deploy with revision check
     ///     .app(124, None);     // Deploy without revision check
     /// ```
@@ -133,12 +133,12 @@ impl DeployAppSettingsRequest {
     /// # Example
     /// ```rust
     /// // Cancel changes
-    /// let request = deploy_app_settings()
+    /// let request = deploy_app()
     ///     .app(123, None)
     ///     .revert(true);
     ///
     /// // Deploy changes (default behavior)
-    /// let request = deploy_app_settings()
+    /// let request = deploy_app()
     ///     .app(123, None)
     ///     .revert(false);
     /// ```

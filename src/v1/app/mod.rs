@@ -9,7 +9,7 @@
 //! - [`add_app`] - Create a new app in the preview environment
 //!
 //! ### Settings Management
-//! - [`settings::deploy_app_settings`] - Deploy app settings from preview to production environment
+//! - [`settings::deploy_app`] - Deploy app settings from preview to production environment
 //!
 //! ## Usage Pattern
 //!
@@ -43,7 +43,7 @@ use crate::internal::serde_helper::stringified;
 /// **Important**: This API requires username/password authentication and cannot use API tokens.
 ///
 /// **Note**: Apps created with this function exist only in the preview environment.
-/// To deploy the app to the production environment, use [`settings::deploy_app_settings`].
+/// To deploy the app to the production environment, use [`settings::deploy_app`].
 ///
 /// # Arguments
 /// * `name` - The name of the app (up to 64 characters)
