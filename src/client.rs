@@ -84,7 +84,7 @@ use std::fmt::Debug;
 use std::io::Read;
 
 use base64::Engine;
-use base64::engine::general_purpose::STANDARD_NO_PAD as BASE64;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use rand::RngCore as _;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
