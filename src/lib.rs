@@ -90,9 +90,7 @@
 //! backward compatibility. You can call multiple methods on the builder to configure your
 //! request, and only the final `.send(&client)` call actually sends the request to the server.
 //!
-//! ### Important: Don't Forget `.send(&client)`!
-//!
-//! If you forget to call `.send(&client)`, the compiler will help you catch this mistake
+//! **Note**: If you forget to call `.send(&client)`, the compiler will help you catch this mistake
 //! with a helpful warning:
 //!
 //! ```text
