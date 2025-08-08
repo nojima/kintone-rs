@@ -9,7 +9,7 @@ use crate::models::Entity;
 use crate::models::record::FieldType;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
-#[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
 #[non_exhaustive]
 pub enum FieldProperty {

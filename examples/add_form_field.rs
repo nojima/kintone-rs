@@ -81,21 +81,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. Radio Button Field (choice field)
     let mut priority_options = HashMap::new();
     priority_options.insert(
-        "high".to_string(),
+        "High".to_string(),
         FieldOption {
             label: "High".to_string(),
             index: 0,
         },
     );
     priority_options.insert(
-        "medium".to_string(),
+        "Medium".to_string(),
         FieldOption {
             label: "Medium".to_string(),
             index: 1,
         },
     );
     priority_options.insert(
-        "low".to_string(),
+        "Low".to_string(),
         FieldOption {
             label: "Low".to_string(),
             index: 2,
@@ -107,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         label: "Priority".to_string(),
         required: true,
         options: priority_options,
-        default_value: Some("medium".to_string()),
+        default_value: Some("Medium".to_string()),
         align: Some(Alignment::Horizontal),
         ..Default::default()
     });
