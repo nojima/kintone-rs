@@ -131,9 +131,6 @@ pub mod v1;
 
 mod internal;
 
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
-pub type BoxResult<T> = std::result::Result<T, BoxError>;
-
 #[derive(Debug, thiserror::Error)]
 #[error("status={status}, body={body:?}")]
 pub struct HttpError {
@@ -162,4 +159,4 @@ impl From<ureq::Error> for ApiError {
     }
 }
 
-pub type ApiResult<T> = std::result::Result<T, ApiError>;
+type ApiResult<T> = std::result::Result<T, ApiError>;
