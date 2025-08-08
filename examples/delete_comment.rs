@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
     // コメントを削除
-    let resp = kintone::v1::record::delete_comment(1, 1, 1).send(&client)?;
+    let resp = kintone::v1::record::delete_comment(5, 1, 1).send(&client)?;
 
     println!("Comment deleted successfully: {resp:?}");
 
