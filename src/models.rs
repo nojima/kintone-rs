@@ -12,6 +12,7 @@
 //! let mut record = Record::new();
 //! record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
 //! record.put_field("age", FieldValue::Number(30.into()));
+//! println!("record = {record:?}");
 //! ```
 //!
 //! ### Reading Field Values
@@ -32,7 +33,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::internal::serde_helper::stringified;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Record {
     #[serde(flatten)]
     fields: HashMap<String, FieldValue>,
@@ -105,6 +106,22 @@ impl Record {
             return None;
         };
         Some(*value)
+    }
+}
+
+impl std::fmt::Debug for Record {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut debug_struct = f.debug_struct("Record");
+
+        let mut keys: Vec<_> = self.fields.keys().by_ref().collect();
+        keys.sort();
+
+        for key in keys {
+            let value = self.fields.get(key).unwrap();
+            debug_struct.field(key, value);
+        }
+
+        debug_struct.finish()
     }
 }
 

@@ -9,8 +9,6 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = KintoneClient::new(&base_url, Auth::api_token(api_token));
     let resp = kintone::v1::record::get_record(5, 1).send(&client)?;
 
-    for (field_code, field_value) in resp.record.fields() {
-        println!("'{field_code}' = {field_value:?}");
-    }
+    println!("record = {:?}", resp.record);
     Ok(())
 }
