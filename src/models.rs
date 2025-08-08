@@ -1,3 +1,28 @@
+//! # Kintone Data Models
+//!
+//! This module provides data structures for representing Kintone records, fields, and other entities.
+//! These models handle serialization/deserialization between Rust types and Kintone's JSON API format.
+//!
+//! ## Usage Examples
+//!
+//! ### Creating a Record
+//! ```rust
+//! use kintone::models::{Record, FieldValue};
+//!
+//! let mut record = Record::new();
+//! record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
+//! record.put_field("age", FieldValue::Number(30.into()));
+//! ```
+//!
+//! ### Reading Field Values
+//! ```rust
+//! # use kintone::models::{Record, FieldValue};
+//! # let record = Record::new();
+//! if let Some(FieldValue::SingleLineText(name)) = record.get_field_value("name") {
+//!     println!("Name: {}", name);
+//! }
+//! ```
+
 use std::collections::{HashMap, hash_map};
 
 use bigdecimal::BigDecimal;
