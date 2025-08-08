@@ -25,7 +25,7 @@
 //!
 //! **Note**: App settings APIs require app management permissions.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
@@ -158,7 +158,10 @@ impl DeployAppRequest {
     ///
     /// # Authentication
     /// Requires app management permissions.
-    pub fn send(self, client: &KintoneClient) -> Result<(), ApiError> {
+    pub fn send(self, client: &KintoneClient) -> Result<DeployAppResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeployAppResponse {}
