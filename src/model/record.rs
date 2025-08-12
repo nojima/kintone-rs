@@ -34,7 +34,7 @@ impl Record {
         Record { fields }
     }
 
-    pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
+    pub fn get(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
 
@@ -69,14 +69,14 @@ impl Record {
     }
 
     pub fn id(&self) -> Option<u64> {
-        let FieldValue::__ID__(value) = self.get_field_value("$id")? else {
+        let FieldValue::__ID__(value) = self.get("$id")? else {
             return None;
         };
         Some(*value)
     }
 
     pub fn revision(&self) -> Option<u64> {
-        let FieldValue::__REVISION__(value) = self.get_field_value("$revision")? else {
+        let FieldValue::__REVISION__(value) = self.get("$revision")? else {
             return None;
         };
         Some(*value)
@@ -364,7 +364,7 @@ impl TableRow {
         self.fields.insert(field_code.into(), value)
     }
 
-    pub fn get_field_value(&self, field_code: &str) -> Option<&FieldValue> {
+    pub fn get(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
 }

@@ -19,10 +19,10 @@
 //! ```rust
 //! # use kintone::model::record::{Record, FieldValue};
 //! # let record = Record::new();
-//! if let Some(FieldValue::SingleLineText(name)) = record.get_field_value("name") {
+//! if let Some(FieldValue::SingleLineText(name)) = record.get("name") {
 //!     println!("Name: {}", name);
 //! }
-//! if let Some(FieldValue::Number(age)) = record.get_field_value("age") {
+//! if let Some(FieldValue::Number(age)) = record.get("age") {
 //!     println!("Age: {}", age);
 //! }
 //! ```
