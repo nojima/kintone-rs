@@ -64,9 +64,9 @@
 //! - [`v1::file`]: File management APIs
 //!     - [`v1::file::upload`], [`v1::file::download`]
 //! - [`v1::space`]: Space management APIs
-//!     - [`v1::space::add_thread_comment`]
+//!     - [`v1::space::add_space`], [`v1::space::delete_space`], [`v1::space::add_thread`], [`v1::space::add_thread_comment`]
 //! - [`v1::app`]: App management APIs
-//!     - [`v1::app::add_app`], [`v1::app::settings::deploy_app`]
+//!     - [`v1::app::add_app`], [`v1::app::settings::deploy_app`], [`v1::app::settings::get_app_deploy_status`], [`v1::app::form::add_form_field`]
 //!
 //! ### Builder Pattern and Method Chaining
 //!
