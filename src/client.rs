@@ -88,6 +88,7 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use rand::RngCore as _;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use ureq::{AsSendBody, SendBody};
 
 use crate::error::ApiError;
 
@@ -101,6 +102,17 @@ pub struct KintoneClient {
 impl KintoneClient {
     pub fn new(base_url: &str, auth: Auth) -> Self {
         KintoneClientBuilder::new(base_url, auth).build()
+    }
+
+    pub(crate) fn run<ReqBody: AsSendBody>(
+        &self,
+        req: http::Request<ReqBody>,
+    ) -> Result<http::Response<ureq::Body>, ApiError> {
+        let resp = self.http_client.run(req)?;
+        if resp.status().as_u16() >= 400 {
+            return Err(ApiError::from(resp));
+        }
+        Ok(resp)
     }
 }
 
@@ -134,10 +146,11 @@ impl KintoneClientBuilder {
 
     pub fn build(self) -> KintoneClient {
         let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_owned());
-        let http_client = ureq::AgentBuilder::new()
+        let http_client: ureq::Agent = ureq::Agent::config_builder()
             .user_agent(&user_agent)
-            .try_proxy_from_env(true)
-            .build();
+            .http_status_as_error(false)
+            .build()
+            .into();
 
         KintoneClient {
             http_client,
@@ -216,19 +229,22 @@ impl RequestBuilder {
     }
 
     pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> Result<Resp, ApiError> {
-        let resp =
-            make_request(client, self.method, &self.api_path, self.headers, self.query).call()?;
-        Ok(resp.into_json()?)
+        let req = make_request(client, self.method, &self.api_path, self.headers, self.query)?;
+        let resp = client.run(req)?;
+        Ok(resp.into_body().read_json()?)
     }
 
     pub fn send<Body: Serialize, Resp: DeserializeOwned>(
-        self,
+        mut self,
         client: &KintoneClient,
         body: Body,
     ) -> Result<Resp, ApiError> {
-        let resp = make_request(client, self.method, &self.api_path, self.headers, self.query)
-            .send_json(body)?;
-        Ok(resp.into_json()?)
+        let body = SendBody::from_json(&body)?;
+        self.headers.insert("content-type".to_owned(), "application/json".to_owned());
+        let req = make_request(client, self.method, &self.api_path, self.headers, self.query)?
+            .map(|_| body);
+        let resp = client.run(req)?;
+        Ok(resp.into_body().read_json()?)
     }
 }
 
@@ -266,8 +282,6 @@ impl UploadRequest {
         let mut headers = HashMap::with_capacity(1);
         headers.insert("content-type".to_owned(), content_type);
 
-        let req = make_request(client, self.method, &self.api_path, headers, HashMap::new());
-
         let header = format!(
             "--{boundary}\r\n\
              content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
@@ -276,10 +290,14 @@ impl UploadRequest {
         )
         .into_bytes();
         let footer = format!("\r\n--{boundary}--\r\n").into_bytes();
-        let body = header.chain(content).chain(&*footer);
+        let mut body = header.chain(content).chain(&*footer);
+        let body = SendBody::from_reader(&mut body);
 
-        let resp = req.send(body)?;
-        Ok(resp.into_json()?)
+        let req = make_request(client, self.method, &self.api_path, headers, HashMap::new())?
+            .map(|_| body);
+
+        let resp = client.run(req)?;
+        Ok(resp.into_body().read_json()?)
     }
 }
 
@@ -309,13 +327,20 @@ impl DownloadRequest {
         self
     }
 
+    fn get_content_type(resp: &http::Response<ureq::Body>) -> Option<String> {
+        let content_type = resp.headers().get(http::header::CONTENT_TYPE)?;
+        let content_type = content_type.to_str().ok()?;
+        Some(content_type.to_owned())
+    }
+
     pub fn send(self, client: &KintoneClient) -> Result<DownloadResponse, ApiError> {
-        let req = make_request(client, self.method, &self.api_path, HashMap::new(), self.query);
-        let resp = req.call()?;
-        let mime_type = resp.header("content-type").unwrap_or_default().to_owned();
+        let req = make_request(client, self.method, &self.api_path, HashMap::new(), self.query)?;
+        let resp = client.run(req)?;
+        let mime_type = Self::get_content_type(&resp).unwrap_or_default();
+        let content_reader = Box::new(resp.into_body().into_reader());
         Ok(DownloadResponse {
             mime_type,
-            content: resp.into_reader(),
+            content: content_reader,
         })
     }
 }
@@ -326,7 +351,8 @@ fn make_request(
     api_path: &str,
     mut headers: HashMap<String, String>,
     query: HashMap<String, String>,
-) -> ureq::Request {
+) -> Result<http::Request<()>, http::Error> {
+    // Add headers for auth
     match client.auth {
         Auth::Password {
             ref username,
@@ -341,21 +367,22 @@ fn make_request(
         }
     }
 
+    // Construct URL
+    let mut u = client.base_url.clone();
     let mut path = if let Some(guest_space_id) = client.guest_space_id {
         format!("/k/guest/{guest_space_id}")
     } else {
         "/k".to_owned()
     };
     path += api_path;
-    let mut u = client.base_url.clone();
     u.set_path(&path);
-
-    let mut req = client.http_client.request(method.as_str(), u.as_str());
     for (key, value) in query {
-        req = req.query(&key, &value);
+        u.query_pairs_mut().append_pair(&key, &value);
     }
+
+    let mut req = http::Request::builder().method(method).uri(u.as_str());
     for (key, value) in headers {
-        req = req.set(&key, &value);
+        req = req.header(&key, &value);
     }
-    req
+    req.body(())
 }

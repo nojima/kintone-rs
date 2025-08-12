@@ -62,27 +62,46 @@ pub enum ApiError {
 
 impl From<ureq::Error> for ApiError {
     fn from(err: ureq::Error) -> Self {
-        match err {
-            ureq::Error::Status(status, response) => convert_http_error(status, response),
-            _ => err.into(),
-        }
+        Self::Io(err.into_io())
     }
 }
 
-fn convert_http_error(status: u16, response: ureq::Response) -> ApiError {
-    if response.content_type() != "application/json" {
-        let body = response.into_string().unwrap_or_default();
-        return HttpError { status, body }.into();
+impl From<http::Error> for ApiError {
+    fn from(err: http::Error) -> Self {
+        Self::Io(ureq::Error::from(err).into_io())
     }
-    // If the response is JSON, attempt to parse it as KintoneError.
-    match response.into_json::<KintoneErrorJson>() {
-        Ok(error_json) => KintoneError {
-            status,
-            code: error_json.code,
-            id: error_json.id,
-            message: error_json.message,
+}
+
+fn is_json_response<T>(response: &http::Response<T>) -> bool {
+    let Some(content_type) = response.headers().get(http::header::CONTENT_TYPE) else {
+        return false;
+    };
+    let Ok(content_type) = content_type.to_str() else {
+        return false;
+    };
+    // TODO: parse
+    content_type == "application/json" || content_type.starts_with("application/json;")
+}
+
+impl From<http::Response<ureq::Body>> for ApiError {
+    fn from(mut response: http::Response<ureq::Body>) -> ApiError {
+        if !is_json_response(&response) {
+            let status = response.status().as_u16();
+            return match response.body_mut().read_to_string() {
+                Ok(body) => ApiError::Http(HttpError { status, body }),
+                Err(e) => ApiError::Io(e.into_io()),
+            };
+        };
+        // If the response is JSON, attempt to parse it as KintoneError.
+        match response.body_mut().read_json::<KintoneErrorJson>() {
+            Ok(error_json) => KintoneError {
+                status: response.status().as_u16(),
+                code: error_json.code,
+                id: error_json.id,
+                message: error_json.message,
+            }
+            .into(),
+            Err(io_error) => io_error.into(),
         }
-        .into(),
-        Err(io_error) => io_error.into(),
     }
 }

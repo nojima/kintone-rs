@@ -29,7 +29,7 @@
 //! - `integration_test_full_workflow`: Complete app creation, field addition, deployment, record management, and querying
 //! - `integration_test_record_operations`: Record CRUD operations (Create, Read, Update)
 
-use std::{env, thread, time::Duration};
+use std::{env, thread::{self, sleep}, time::Duration};
 
 use bigdecimal::BigDecimal;
 use kintone::{
@@ -75,6 +75,8 @@ impl TestConfig {
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_full_workflow() {
+    sleep(Duration::from_secs(2));
+
     let config = TestConfig::from_env().expect("Failed to load test configuration from environment");
     let client = config.create_client();
 
@@ -244,6 +246,8 @@ fn integration_test_full_workflow() {
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_record_operations() {
+    sleep(Duration::from_secs(2));
+
     let config = TestConfig::from_env().expect("Failed to load test configuration from environment");
     let client = config.create_client();
 
