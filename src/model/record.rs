@@ -69,14 +69,14 @@ impl Record {
     }
 
     pub fn id(&self) -> Option<u64> {
-        let FieldValue::__ID__(value) = self.get("$id")? else {
+        let Some(FieldValue::__ID__(value)) = self.get("$id") else {
             return None;
         };
         Some(*value)
     }
 
     pub fn revision(&self) -> Option<u64> {
-        let FieldValue::__REVISION__(value) = self.get("$revision")? else {
+        let Some(FieldValue::__REVISION__(value)) = self.get("$revision") else {
             return None;
         };
         Some(*value)
