@@ -129,6 +129,10 @@ impl<'a> Iterator for FieldCodeIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 #[derive(Clone)]
@@ -141,6 +145,10 @@ impl<'a> Iterator for FieldValueIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
     }
 }
 
