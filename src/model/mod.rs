@@ -22,6 +22,9 @@
 //! if let Some(FieldValue::SingleLineText(name)) = record.get_field_value("name") {
 //!     println!("Name: {}", name);
 //! }
+//! if let Some(FieldValue::Number(age)) = record.get_field_value("age") {
+//!     println!("Age: {}", age);
+//! }
 //! ```
 
 use crate::internal::serde_helper::stringified;
