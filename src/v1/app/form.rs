@@ -15,23 +15,18 @@
 //! ```rust
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::form;
-//! # use kintone::models::app::field::{FieldProperty, SingleLineTextFieldProperty};
+//! # use kintone::models::app::field::SingleLineTextFieldProperty;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
-//! let field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+//! let field = SingleLineTextFieldProperty {
 //!     code: "my_field".to_string(),
 //!     label: "My Field".to_string(),
-//!     no_label: false,
 //!     required: true,
-//!     unique: false,
-//!     max_length: Some(100),
-//!     min_length: None,
-//!     default_value: Some("".to_string()),
-//!     expression: None,
-//!     hide_expression: false,
-//! });
+//!     max_length: Some(50),
+//!     ..Default::default()
+//! };
 //!
 //! let response = form::add_form_field(123)
-//!     .field("my_field", field)
+//!     .field("my_field", field.into()) // Don't forget .into()
 //!     .revision(Some(5))
 //!     .send(&client)?;
 //! println!("Updated app with revision: {}", response.revision);
@@ -64,18 +59,18 @@ use crate::models::app::field::FieldProperty;
 ///
 /// # Example
 /// ```rust
-/// use kintone::models::app::field::{FieldProperty, SingleLineTextFieldProperty};
+/// use kintone::models::app::field::SingleLineTextFieldProperty;
 ///
-/// let text_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+/// let text_field = SingleLineTextFieldProperty {
 ///     code: "customer_name".to_string(),
 ///     label: "Customer Name".to_string(),
 ///     required: true,
 ///     max_length: Some(50),
 ///     ..Default::default()
-/// });
+/// };
 ///
 /// let response = add_form_field(123)
-///     .field("customer_name", text_field)
+///     .field("customer_name", text_field.into()) // Don't forget .into()
 ///     .send(&client)?;
 /// println!("Added field, new revision: {}", response.revision);
 /// ```

@@ -24,7 +24,7 @@
 //! cannot use API tokens.
 
 use kintone::client::{Auth, KintoneClient};
-use kintone::models::app::field::{FieldProperty, SingleLineTextFieldProperty};
+use kintone::models::app::field::SingleLineTextFieldProperty;
 use kintone::v1::app::{self, form, settings};
 use std::env;
 
@@ -58,37 +58,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏗️  Step 2: Adding fields to app form...");
 
     // Create a customer name field
-    let customer_name_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+    let customer_name_field = SingleLineTextFieldProperty {
         code: "customer_name".to_string(),
         label: "Customer Name".to_string(),
         required: true,
         max_length: Some(50),
         min_length: Some(1),
         ..Default::default()
-    });
+    };
 
     // Create an email field
-    let email_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+    let email_field = SingleLineTextFieldProperty {
         code: "email".to_string(),
         label: "Email Address".to_string(),
         required: true,
         unique: true, // Email should be unique
         ..Default::default()
-    });
+    };
 
     // Create a phone number field
-    let phone_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+    let phone_field = SingleLineTextFieldProperty {
         code: "phone".to_string(),
         label: "Phone Number".to_string(),
         max_length: Some(20),
         ..Default::default()
-    });
+    };
 
     // Add all fields at once
     let field_response = form::add_form_field(app_id)
-        .field("customer_name", customer_name_field)
-        .field("email", email_field)
-        .field("phone", phone_field)
+        .field("customer_name", customer_name_field.into())
+        .field("email", email_field.into())
+        .field("phone", phone_field.into())
         .revision(Some(initial_revision))
         .send(&client)?;
 

@@ -497,3 +497,173 @@ pub struct ModifierFieldProperty {
     pub label: String,
     pub no_label: bool,
 }
+
+// From trait implementations for ergonomic FieldProperty creation
+
+impl From<CalcFieldProperty> for FieldProperty {
+    fn from(property: CalcFieldProperty) -> Self {
+        FieldProperty::Calc(property)
+    }
+}
+
+impl From<SingleLineTextFieldProperty> for FieldProperty {
+    fn from(property: SingleLineTextFieldProperty) -> Self {
+        FieldProperty::SingleLineText(property)
+    }
+}
+
+impl From<MultiLineTextFieldProperty> for FieldProperty {
+    fn from(property: MultiLineTextFieldProperty) -> Self {
+        FieldProperty::MultiLineText(property)
+    }
+}
+
+impl From<RichTextFieldProperty> for FieldProperty {
+    fn from(property: RichTextFieldProperty) -> Self {
+        FieldProperty::RichText(property)
+    }
+}
+
+impl From<NumberFieldProperty> for FieldProperty {
+    fn from(property: NumberFieldProperty) -> Self {
+        FieldProperty::Number(property)
+    }
+}
+
+impl From<DateFieldProperty> for FieldProperty {
+    fn from(property: DateFieldProperty) -> Self {
+        FieldProperty::Date(property)
+    }
+}
+
+impl From<TimeFieldProperty> for FieldProperty {
+    fn from(property: TimeFieldProperty) -> Self {
+        FieldProperty::Time(property)
+    }
+}
+
+impl From<DateTimeFieldProperty> for FieldProperty {
+    fn from(property: DateTimeFieldProperty) -> Self {
+        FieldProperty::DateTime(property)
+    }
+}
+
+impl From<RadioButtonFieldProperty> for FieldProperty {
+    fn from(property: RadioButtonFieldProperty) -> Self {
+        FieldProperty::RadioButton(property)
+    }
+}
+
+impl From<CheckBoxFieldProperty> for FieldProperty {
+    fn from(property: CheckBoxFieldProperty) -> Self {
+        FieldProperty::CheckBox(property)
+    }
+}
+
+impl From<MultiSelectFieldProperty> for FieldProperty {
+    fn from(property: MultiSelectFieldProperty) -> Self {
+        FieldProperty::MultiSelect(property)
+    }
+}
+
+impl From<DropDownFieldProperty> for FieldProperty {
+    fn from(property: DropDownFieldProperty) -> Self {
+        FieldProperty::DropDown(property)
+    }
+}
+
+impl From<FileFieldProperty> for FieldProperty {
+    fn from(property: FileFieldProperty) -> Self {
+        FieldProperty::File(property)
+    }
+}
+
+impl From<LinkFieldProperty> for FieldProperty {
+    fn from(property: LinkFieldProperty) -> Self {
+        FieldProperty::Link(property)
+    }
+}
+
+impl From<UserSelectFieldProperty> for FieldProperty {
+    fn from(property: UserSelectFieldProperty) -> Self {
+        FieldProperty::UserSelect(property)
+    }
+}
+
+impl From<OrganizationSelectFieldProperty> for FieldProperty {
+    fn from(property: OrganizationSelectFieldProperty) -> Self {
+        FieldProperty::OrganizationSelect(property)
+    }
+}
+
+impl From<GroupSelectFieldProperty> for FieldProperty {
+    fn from(property: GroupSelectFieldProperty) -> Self {
+        FieldProperty::GroupSelect(property)
+    }
+}
+
+impl From<ReferenceTableFieldProperty> for FieldProperty {
+    fn from(property: ReferenceTableFieldProperty) -> Self {
+        FieldProperty::ReferenceTable(property)
+    }
+}
+
+impl From<GroupFieldProperty> for FieldProperty {
+    fn from(property: GroupFieldProperty) -> Self {
+        FieldProperty::Group(property)
+    }
+}
+
+impl From<SubtableFieldProperty> for FieldProperty {
+    fn from(property: SubtableFieldProperty) -> Self {
+        FieldProperty::Subtable(property)
+    }
+}
+
+impl From<RecordNumberFieldProperty> for FieldProperty {
+    fn from(property: RecordNumberFieldProperty) -> Self {
+        FieldProperty::RecordNumber(property)
+    }
+}
+
+impl From<CategoryFieldProperty> for FieldProperty {
+    fn from(property: CategoryFieldProperty) -> Self {
+        FieldProperty::Category(property)
+    }
+}
+
+impl From<StatusFieldProperty> for FieldProperty {
+    fn from(property: StatusFieldProperty) -> Self {
+        FieldProperty::Status(property)
+    }
+}
+
+impl From<StatusAssigneeFieldProperty> for FieldProperty {
+    fn from(property: StatusAssigneeFieldProperty) -> Self {
+        FieldProperty::StatusAssignee(property)
+    }
+}
+
+impl From<CreatedTimeFieldProperty> for FieldProperty {
+    fn from(property: CreatedTimeFieldProperty) -> Self {
+        FieldProperty::CreatedTime(property)
+    }
+}
+
+impl From<UpdatedTimeFieldProperty> for FieldProperty {
+    fn from(property: UpdatedTimeFieldProperty) -> Self {
+        FieldProperty::UpdatedTime(property)
+    }
+}
+
+impl From<CreatorFieldProperty> for FieldProperty {
+    fn from(property: CreatorFieldProperty) -> Self {
+        FieldProperty::Creator(property)
+    }
+}
+
+impl From<ModifierFieldProperty> for FieldProperty {
+    fn from(property: ModifierFieldProperty) -> Self {
+        FieldProperty::Modifier(property)
+    }
+}
