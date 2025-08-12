@@ -74,8 +74,8 @@ impl TestConfig {
             &self.base_url,
             Auth::password(self.username.clone(), self.password.clone()),
         )
-        .layer(middleware::LoggingLayer::new())
         .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+        .layer(middleware::LoggingLayer::new())
         .build()
     }
 }

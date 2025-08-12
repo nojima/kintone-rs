@@ -51,6 +51,73 @@
 //!     .build();
 //! ```
 //!
+//! ## Middleware Configuration
+//!
+//! The client supports middleware through the builder pattern. Middleware can handle
+//! cross-cutting concerns like retries, logging, and custom request/response processing.
+//!
+//! ### Retry Middleware
+//!
+//! Automatically retries failed requests with exponential backoff, particularly useful
+//! for handling database lock errors (GAIA_DA02):
+//!
+//! ```rust
+//! use std::time::Duration;
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::middleware;
+//!
+//! let client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::api_token("your-api-token".to_owned())
+//!     )
+//!     .layer(middleware::RetryLayer::new(
+//!         5,                              // max_attempts
+//!         Duration::from_secs(1),         // initial_delay
+//!         Duration::from_secs(8),         // max_delay
+//!         None                            // Optional custom should_retry function
+//!     ))
+//!     .build();
+//! ```
+//!
+//! ### Logging Middleware
+//!
+//! Logs detailed information about API requests and responses for debugging:
+//!
+//! ```rust
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::middleware;
+//!
+//! let client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::api_token("your-api-token".to_owned())
+//!     )
+//!     .layer(middleware::LoggingLayer::new())
+//!     .build();
+//! ```
+//!
+//! ### Combined Middleware
+//!
+//! You can combine multiple middleware layers. They are applied in the order they are added:
+//!
+//! ```rust
+//! use std::time::Duration;
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::middleware;
+//!
+//! let client = KintoneClientBuilder::new(
+//!         "https://your-domain.cybozu.com",
+//!         Auth::password("username".to_owned(), "password".to_owned())
+//!     )
+//!     .layer(middleware::RetryLayer::new(      // Applied second (retries with logging)
+//!         5,
+//!         Duration::from_secs(1),
+//!         Duration::from_secs(8),
+//!         None
+//!     ))
+//!     .layer(middleware::LoggingLayer::new())  // Applied first (logs outer requests)
+//!     .build();
+//! ```
+//!
 //! ## Guest Space Support
 //!
 //! The client supports guest spaces by specifying a guest space ID during client creation.
@@ -154,8 +221,8 @@ impl KintoneClientBuilder<middleware::NoLayer> {
 }
 
 impl<L> KintoneClientBuilder<L> {
-    pub fn layer<L2>(self, new_layer: L2) -> KintoneClientBuilder<middleware::Stack<L2, L>> {
-        let layer_stack = middleware::Stack::new(new_layer, self.layer);
+    pub fn layer<L2>(self, new_layer: L2) -> KintoneClientBuilder<middleware::Stack<L, L2>> {
+        let layer_stack = middleware::Stack::new(self.layer, new_layer);
         KintoneClientBuilder {
             base_url: self.base_url,
             auth: self.auth,
