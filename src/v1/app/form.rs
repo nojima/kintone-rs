@@ -69,14 +69,9 @@ use crate::models::app::field::FieldProperty;
 /// let text_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
 ///     code: "customer_name".to_string(),
 ///     label: "Customer Name".to_string(),
-///     no_label: false,
 ///     required: true,
-///     unique: false,
-///     min_length: None,
-///     max_length: Some(100),
-///     expression: None,
-///     hide_expression: false,
-///     default_value: Some("".to_string()),
+///     max_length: Some(50),
+///     ..Default::default()
 /// });
 ///
 /// let response = add_form_field(123)
@@ -124,31 +119,6 @@ pub struct AddFormFieldResponse {
 
 impl AddFormFieldRequest {
     /// Adds a field to be created.
-    ///
-    /// # Arguments
-    /// * `field_code` - The unique field code for the new field
-    /// * `field_property` - The field configuration including type, label, and other settings
-    ///
-    /// # Example
-    /// ```rust
-    /// use kintone::models::app::field::{FieldProperty, NumberFieldProperty, UnitPosition};
-    /// use bigdecimal::BigDecimal;
-    ///
-    /// let number_field = FieldProperty::Number(NumberFieldProperty {
-    ///     code: "price".to_string(),
-    ///     label: "Price".to_string(),
-    ///     required: true,
-    ///     min_value: Some(0.into()),
-    ///     digit: true,
-    ///     display_scale: Some(2),
-    ///     unit: Some("USD".to_string()),
-    ///     unit_position: Some(UnitPosition::Before),
-    ///     ..Default::default()
-    /// });
-    ///
-    /// let request = add_form_field(123)
-    ///     .field("price", number_field);
-    /// ```
     pub fn field(mut self, field_code: impl Into<String>, field_property: FieldProperty) -> Self {
         self.body
             .properties
@@ -160,15 +130,6 @@ impl AddFormFieldRequest {
     ///
     /// If provided and the actual revision doesn't match, the request will fail.
     /// Use `None` or omit this call to skip revision validation.
-    ///
-    /// # Arguments
-    /// * `revision` - The expected revision number, or None to skip validation
-    ///
-    /// # Example
-    /// ```rust
-    /// let request = add_form_field(123)
-    ///     .revision(Some(5));  // Validate that app is at revision 5
-    /// ```
     pub fn revision(mut self, revision: Option<u64>) -> Self {
         self.body.revision = revision;
         self
