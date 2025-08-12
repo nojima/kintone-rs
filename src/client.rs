@@ -548,7 +548,7 @@ pub(crate) struct DownloadRequest {
 /// ```ignore
 /// let response = download_request.send(&client)?;
 /// println!("Downloaded file type: {}", response.mime_type);
-/// 
+///
 /// // Stream the content to a file
 /// let mut file = std::fs::File::create("downloaded_file")?;
 /// std::io::copy(&mut response.content, &mut file)?;

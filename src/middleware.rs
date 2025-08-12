@@ -1,3 +1,45 @@
+//! # Middleware System for Kintone Client
+//!
+//! This module provides a middleware system for the Kintone client that allows
+//! for intercepting and modifying requests and responses. Middleware can handle cross-cutting
+//! concerns such as retries, logging, authentication, and custom request/response processing.
+//!
+//! ## Core Concepts
+//!
+//! The middleware system is built around two fundamental concepts:
+//!
+//! ### Handler: Request → Response Function
+//! A [`Handler`] is essentially a function that transforms an HTTP request into an HTTP response.
+//! This is the core abstraction that represents any piece of logic that can process requests.
+//!
+//! ### Layer: Handler Stacking Mechanism  
+//! A [`Layer`] is a mechanism for "stacking" multiple Handlers to create a single, more powerful Handler.
+//! Layers allow you to compose functionality by wrapping one Handler with another, creating
+//! a chain where each layer can add behavior before and after the inner handler processes the request.
+//!
+//! ## How Stacking Works
+//!
+//! When you stack layers like this:
+//! ```ignore
+//! client_builder
+//!     .layer(RetryLayer::new(...))     // Layer A
+//!     .layer(LoggingLayer::new())      // Layer B
+//!     .build()
+//! ```
+//!
+//! You get a handler stack that looks like:
+//! ```ignore
+//! RetryLayer(LoggingLayer(BaseHandler))
+//! ```
+//!
+//! Requests flow through: RetryLayer → LoggingLayer → BaseHandler  
+//! Responses flow back: BaseHandler → LoggingLayer → RetryLayer
+//!
+//! ## Built-in Middleware
+//!
+//! - [`RetryLayer`] - Automatically retries failed requests with exponential backoff
+//! - [`LoggingLayer`] - Logs request and response information for debugging
+
 use std::{
     io::{Cursor, Read},
     sync::Arc,
@@ -8,6 +50,28 @@ use serde::de::DeserializeOwned;
 
 use crate::error::ApiError;
 
+/// Represents the body of an HTTP request in the middleware system.
+///
+/// This abstraction allows for different types of request bodies while maintaining
+/// the ability to clone and reuse them for retry operations. The body can be:
+/// - Empty (void)
+/// - Bytes in memory (cloneable for retries)
+/// - A streaming reader (non-cloneable)
+///
+/// # Examples
+///
+/// ```ignore
+/// // Empty body
+/// let body = RequestBody::void();
+///
+/// // JSON body from bytes
+/// let json_bytes = serde_json::to_vec(&data)?;
+/// let body = RequestBody::from_bytes(json_bytes);
+///
+/// // Streaming body from file
+/// let file = std::fs::File::open("large_file.txt")?;
+/// let body = RequestBody::from_reader(file);
+/// ```
 pub struct RequestBody(RequestBodyInner);
 
 impl RequestBody {
@@ -46,6 +110,22 @@ enum RequestBodyInner {
     Reader(Box<dyn Read + Sync + Send + 'static>),
 }
 
+/// Represents the body of an HTTP response in the middleware system.
+///
+/// This wrapper around the raw response body provides methods for reading
+/// the response content, including JSON deserialization and streaming access.
+/// The body can only be consumed once due to its streaming nature.
+///
+/// # Examples
+///
+/// ```ignore
+/// // Read as JSON
+/// let data: MyStruct = response_body.read_json()?;
+///
+/// // Read as raw stream
+/// let reader = response_body.into_reader();
+/// std::io::copy(&mut reader, &mut output_file)?;
+/// ```
 pub struct ResponseBody(ureq::Body);
 
 impl ResponseBody {
@@ -64,6 +144,24 @@ impl ResponseBody {
 
 //-----------------------------------------------------------------------------
 
+/// Core trait for handling HTTP requests in the middleware system.
+///
+/// **At its essence, a Handler is a function that transforms an HTTP request into an HTTP response.**
+/// This is the fundamental building block of the middleware system. Every Handler takes a request
+/// and produces either a successful response or an error.
+///
+/// Handlers form the foundation of the middleware system, where each middleware layer
+/// wraps a handler to add additional functionality while maintaining this core contract
+/// of `Request -> Response`.
+///
+/// # The Function-like Nature
+///
+/// You can think of a Handler as:
+/// ```ignore
+/// fn handle(request: Request) -> Result<Response, Error>
+/// ```
+///
+/// This simple concept allows for powerful composition through the middleware system.
 pub trait Handler: Send + Sync + 'static {
     fn handle(
         &self,
@@ -71,6 +169,51 @@ pub trait Handler: Send + Sync + 'static {
     ) -> Result<http::Response<ResponseBody>, ApiError>;
 }
 
+/// Trait for middleware layers that can wrap handlers to add functionality.
+///
+/// **A Layer is a mechanism for "stacking" multiple Handlers to create a single, more powerful Handler.**
+/// Think of it as a way to compose functionality by wrapping one Handler with another.
+///
+/// Each Layer takes an inner Handler and produces a new Handler that adds some behavior
+/// around the inner one. This creates a "Russian doll" effect where requests flow through
+/// each layer in order, and responses flow back through them in reverse order.
+///
+/// # The Stacking Concept
+///
+/// When you have multiple layers, they stack like this:
+/// ```ignore
+/// Layer3(Layer2(Layer1(BaseHandler)))
+/// ```
+///
+/// The request flows: Layer3 -> Layer2 -> Layer1 -> BaseHandler
+/// The response flows: BaseHandler -> Layer1 -> Layer2 -> Layer3
+///
+/// This allows each layer to:
+/// - Modify the request before passing it down
+/// - Modify the response after receiving it back
+/// - Add cross-cutting concerns (logging, retries, authentication, etc.)
+/// - Short-circuit the chain (e.g., return cached responses)
+///
+/// # Type Parameters
+///
+/// * `Inner` - The type of handler that this layer wraps
+///
+/// # Associated Types
+///
+/// * `Outer` - The type of handler returned after wrapping the inner handler
+///
+/// # Examples
+///
+/// ```ignore
+/// impl<Inner: Handler> Layer<Inner> for MyMiddleware {
+///     type Outer = MyHandler<Inner>;
+///
+///     fn layer(self, inner: Inner) -> Self::Outer {
+///         // Return a new handler that wraps the inner one
+///         MyHandler { inner, config: self }
+///     }
+/// }
+/// ```
 pub trait Layer<Inner: Handler>: Send + Sync + 'static {
     type Outer: Handler;
     fn layer(self, inner: Inner) -> Self::Outer;
@@ -78,9 +221,51 @@ pub trait Layer<Inner: Handler>: Send + Sync + 'static {
 
 //-----------------------------------------------------------------------------
 
+/// Type alias for a function that determines whether a request should be retried.
+///
+/// This function receives the original request (without body) and the response,
+/// and returns `true` if the request should be retried. The request body is
+/// removed to avoid lifetime issues and because retry decisions are typically
+/// based on response status rather than request content.
+///
+/// # Examples
+///
+/// ```ignore
+/// let should_retry: Box<ShouldRetryFn> = Box::new(|req, resp| {
+///     // Retry on server errors (5xx) or specific client errors
+///     resp.status().is_server_error() || resp.status() == 429
+/// });
+/// ```
 pub type ShouldRetryFn =
     dyn Fn(&http::Request<()>, &http::Response<ResponseBody>) -> bool + Send + Sync + 'static;
 
+/// Middleware layer that automatically retries failed requests with exponential backoff.
+///
+/// This layer is particularly useful for handling transient errors like database locks
+/// (GAIA_DA02 in Kintone) or network timeouts. It implements exponential backoff to
+/// avoid overwhelming the server with rapid retry attempts.
+///
+/// # Retry Logic
+///
+/// - Requests are retried up to `max_attempts` times
+/// - Delay between retries starts at `initial_delay` and doubles after each attempt
+/// - Delay is capped at `max_delay` to prevent excessively long waits
+/// - Only requests with cloneable bodies can be retried (streaming requests are not retried)
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+/// use kintone::middleware::RetryLayer;
+///
+/// // Retry up to 5 times with exponential backoff
+/// let retry_layer = RetryLayer::new(
+///     5,                              // max_attempts
+///     Duration::from_millis(500),     // initial_delay
+///     Duration::from_secs(30),        // max_delay
+///     None                            // use default retry logic
+/// );
+/// ```
 pub struct RetryLayer {
     max_attempts: usize,
     initial_delay: std::time::Duration,
@@ -117,6 +302,13 @@ impl<Inner: Handler> Layer<Inner> for RetryLayer {
     }
 }
 
+/// Handler implementation that wraps another handler with retry logic.
+///
+/// This handler implements the actual retry behavior for the [`RetryLayer`].
+/// It attempts requests multiple times according to the configured retry policy,
+/// with exponential backoff between attempts.
+///
+/// This is an internal implementation detail and should not be used directly.
 pub struct RetryHandler<Inner> {
     inner: Inner,
     layer: RetryLayer,
@@ -170,6 +362,34 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 
 //-----------------------------------------------------------------------------
 
+/// Middleware layer that logs HTTP request and response information.
+///
+/// This layer provides debugging capabilities by logging details about each
+/// HTTP request and response. It logs to stderr using `eprintln!` macros,
+/// making it suitable for development and debugging scenarios.
+///
+/// # Logged Information
+///
+/// - Request: HTTP method and URL
+/// - Response: HTTP status code
+/// - Errors: Full error details
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::middleware::LoggingLayer;
+///
+/// let logging_layer = LoggingLayer::new();
+/// // or
+/// let logging_layer = LoggingLayer::default();
+/// ```
+///
+/// # Output Example
+///
+/// ```text
+/// Request: method=GET, url="https://example.cybozu.com/k/v1/records.json?app=123"
+/// Response: status=200
+/// ```
 pub struct LoggingLayer;
 
 impl LoggingLayer {
@@ -191,6 +411,13 @@ impl<Inner: Handler> Layer<Inner> for LoggingLayer {
     }
 }
 
+/// Handler implementation that wraps another handler with logging functionality.
+///
+/// This handler implements the actual logging behavior for the [`LoggingLayer`].
+/// It logs request details before calling the inner handler and logs response
+/// details after receiving the response.
+///
+/// This is an internal implementation detail and should not be used directly.
 pub struct LoggingHandler<Inner> {
     inner: Inner,
 }
@@ -212,6 +439,13 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 
 //-----------------------------------------------------------------------------
 
+/// A no-op middleware layer that provides no additional functionality.
+///
+/// This layer is used as the base case in the middleware stack. When applied,
+/// it simply returns the inner handler unchanged. It's primarily used internally
+/// by the [`KintoneClientBuilder`] as the starting point for building middleware stacks.
+///
+/// [`KintoneClientBuilder`]: crate::client::KintoneClientBuilder
 pub struct NoLayer;
 
 impl<Inner: Handler> Layer<Inner> for NoLayer {
@@ -221,6 +455,26 @@ impl<Inner: Handler> Layer<Inner> for NoLayer {
     }
 }
 
+/// A stack of two middleware layers that composes them into a single layer.
+///
+/// This type allows for building chains of middleware by combining pairs of layers.
+/// When applied, it first applies the `Tail` layer to the inner handler, then
+/// applies the `Head` layer to the result.
+///
+/// This is an internal implementation detail used by the middleware system to
+/// build complex middleware stacks from individual layers.
+///
+/// # Type Parameters
+///
+/// * `Head` - The outer layer (applied last)
+/// * `Tail` - The inner layer (applied first)
+///
+/// # Examples
+///
+/// ```ignore
+/// // This creates a stack: LoggingLayer -> RetryLayer -> Handler
+/// let stack = Stack::new(LoggingLayer::new(), RetryLayer::new(...));
+/// ```
 pub struct Stack<Head, Tail>(Head, Tail);
 
 impl<Head, Tail> Stack<Head, Tail> {
