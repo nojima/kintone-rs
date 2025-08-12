@@ -79,7 +79,7 @@
 //!     .build();
 //! ```
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Cursor};
 use std::fmt::Debug;
 use std::io::Read;
 
@@ -273,7 +273,7 @@ impl UploadRequest {
     pub fn send<Resp: DeserializeOwned>(
         self,
         client: &KintoneClient,
-        content: impl Read,
+        content: impl Read + 'static,
     ) -> Result<Resp, ApiError> {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
@@ -282,16 +282,16 @@ impl UploadRequest {
         let mut headers = HashMap::with_capacity(1);
         headers.insert("content-type".to_owned(), content_type);
 
-        let header = format!(
+        let header = Cursor::new(format!(
             "--{boundary}\r\n\
              content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
              \r\n",
             self.name, self.filename
         )
-        .into_bytes();
-        let footer = format!("\r\n--{boundary}--\r\n").into_bytes();
-        let mut body = header.chain(content).chain(&*footer);
-        let body = SendBody::from_reader(&mut body);
+        .into_bytes());
+        let footer = Cursor::new(format!("\r\n--{boundary}--\r\n").into_bytes());
+        let body = header.chain(content).chain(footer);
+        let body = SendBody::from_owned_reader(body);
 
         let req = make_request(client, self.method, &self.api_path, headers, HashMap::new())?
             .map(|_| body);
