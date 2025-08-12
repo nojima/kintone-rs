@@ -178,6 +178,26 @@ use serde::de::DeserializeOwned;
 use crate::error::ApiError;
 use crate::middleware;
 
+/// The main HTTP client for communicating with Kintone's REST API.
+///
+/// This client handles authentication, request building, and response processing
+/// for all API calls. It supports both API token and username/password authentication,
+/// as well as guest spaces.
+///
+/// The client is designed to be reused across multiple API calls and is thread-safe.
+/// For advanced configuration like middleware support, use [`KintoneClientBuilder`].
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::client::{Auth, KintoneClient};
+///
+/// // Simple client creation
+/// let client = KintoneClient::new(
+///     "https://your-domain.cybozu.com",
+///     Auth::api_token("your-api-token".to_owned())
+/// );
+/// ```
 pub struct KintoneClient {
     base_url: url::Url,
     auth: Auth,
@@ -198,6 +218,10 @@ impl KintoneClient {
     }
 }
 
+/// Internal HTTP request handler that implements the actual HTTP communication.
+///
+/// This is an internal implementation detail and should not be used directly.
+/// Use [`KintoneClient`] or [`KintoneClientBuilder`] instead.
 pub struct RequestHandler {
     http_client: ureq::Agent,
 }
@@ -218,6 +242,34 @@ impl middleware::Handler for RequestHandler {
     }
 }
 
+/// Builder for configuring and creating [`KintoneClient`] instances.
+///
+/// This builder provides a fluent API for configuring various aspects of the Kintone client,
+/// including middleware, user agent, and guest space settings. The builder uses a type-safe
+/// approach to ensure that middleware layers are properly configured.
+///
+/// # Type Parameters
+///
+/// * `L` - The middleware layer type. This is used to ensure type safety when building
+///   the middleware stack.
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+/// use kintone::client::{Auth, KintoneClientBuilder};
+/// use kintone::middleware;
+///
+/// let client = KintoneClientBuilder::new(
+///         "https://your-domain.cybozu.com",
+///         Auth::api_token("your-api-token".to_owned())
+///     )
+///     .user_agent("MyApp/1.0")
+///     .guest_space_id(123)
+///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+///     .layer(middleware::LoggingLayer::new())
+///     .build();
+/// ```
 pub struct KintoneClientBuilder<L> {
     base_url: url::Url,
     auth: Auth,
@@ -285,6 +337,29 @@ where
     }
 }
 
+/// Authentication configuration for Kintone API access.
+///
+/// Kintone supports two primary authentication methods:
+/// - API Token authentication
+/// - Username/Password authentication
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::client::Auth;
+///
+/// // API token authentication
+/// let auth = Auth::api_token("your-api-token".to_owned());
+///
+/// // Multiple API tokens (for accessing multiple apps)
+/// let auth = Auth::api_tokens(vec![
+///     "token1".to_owned(),
+///     "token2".to_owned(),
+/// ]);
+///
+/// // Username/password authentication
+/// let auth = Auth::password("username".to_owned(), "password".to_owned());
+/// ```
 #[derive(Clone)]
 pub enum Auth {
     Password { username: String, password: String },
@@ -372,6 +447,27 @@ impl RequestBuilder {
     }
 }
 
+/// Internal builder for file upload requests to the Kintone API.
+///
+/// This builder handles the multipart/form-data encoding required for file uploads
+/// to Kintone. It automatically generates proper boundaries and formats the request
+/// according to the multipart specification.
+///
+/// This is an internal implementation detail and should not be used directly.
+/// Use the [`crate::v1::file::upload`] function instead.
+///
+/// # Examples
+///
+/// This is typically used internally like:
+/// ```ignore
+/// let upload = UploadRequest::new(
+///     http::Method::POST,
+///     "/v1/file.json",
+///     "file".to_owned(),
+///     "document.pdf".to_owned()
+/// );
+/// let response = upload.send(&client, file_content)?;
+/// ```
 pub(crate) struct UploadRequest {
     method: http::Method,
     api_path: String, // DO NOT include "/k" prefix
@@ -427,12 +523,36 @@ impl UploadRequest {
     }
 }
 
+/// Internal builder for file download requests from the Kintone API.
+///
+/// This builder handles the download of files from Kintone, including proper
+/// content-type detection and streaming of file content. It supports downloading
+/// files by their file key.
+///
+/// This is an internal implementation detail and should not be used directly.
+/// Use the [`crate::v1::file::download`] function instead.
 pub(crate) struct DownloadRequest {
     method: http::Method,
     api_path: String,               // DO NOT include "/k" prefix
     query: HashMap<String, String>, // keys and values are NOT encoded
 }
 
+/// Response from a file download operation.
+///
+/// Contains the downloaded file's content as a readable stream and its MIME type.
+/// The content is provided as a `Read` trait object to allow for efficient streaming
+/// of large files without loading them entirely into memory.
+///
+/// # Examples
+///
+/// ```ignore
+/// let response = download_request.send(&client)?;
+/// println!("Downloaded file type: {}", response.mime_type);
+/// 
+/// // Stream the content to a file
+/// let mut file = std::fs::File::create("downloaded_file")?;
+/// std::io::copy(&mut response.content, &mut file)?;
+/// ```
 pub(crate) struct DownloadResponse {
     pub mime_type: String,
     pub content: Box<dyn Read + Send + Sync + 'static>,
