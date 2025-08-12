@@ -97,7 +97,12 @@
 //!
 //! ### Combined Middleware
 //!
-//! You can combine multiple middleware layers. They are applied in the order they are added:
+//! You can combine multiple middleware layers. The order in which layers are added determines
+//! the execution order:
+//!
+//! **Important**: Layers are applied in a stack-like manner. The first layer added becomes the
+//! outermost layer, and subsequent layers are nested inside. For requests, the execution flows
+//! from the outermost layer to the innermost, and for responses, it flows back in reverse order.
 //!
 //! ```rust
 //! use std::time::Duration;
@@ -108,14 +113,28 @@
 //!         "https://your-domain.cybozu.com",
 //!         Auth::password("username".to_owned(), "password".to_owned())
 //!     )
-//!     .layer(middleware::RetryLayer::new(      // Applied second (retries with logging)
+//!     .layer(middleware::RetryLayer::new(      // Layer A (outermost) - handles retries
 //!         5,
 //!         Duration::from_secs(1),
 //!         Duration::from_secs(8),
 //!         None
 //!     ))
-//!     .layer(middleware::LoggingLayer::new())  // Applied first (logs outer requests)
+//!     .layer(middleware::LoggingLayer::new())  // Layer B (inner) - logs actual requests
 //!     .build();
+//!
+//! // Execution flow:
+//! // Request:  RetryLayer -> LoggingLayer -> HTTP Request
+//! // Response: HTTP Response -> LoggingLayer -> RetryLayer
+//! //
+//! // This means:
+//! // 1. RetryLayer receives the original request
+//! // 2. LoggingLayer logs each actual request attempt (including retries)
+//! // 3. HTTP request is sent
+//! // 4. LoggingLayer logs each response (including retry attempts)
+//! // 5. RetryLayer decides whether to retry or return the final response
+//! //
+//! // This order ensures that all retry attempts are logged, giving you
+//! // complete visibility into what requests were actually sent.
 //! ```
 //!
 //! ## Guest Space Support
