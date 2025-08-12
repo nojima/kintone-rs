@@ -19,11 +19,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // メンションを含むコメント投稿
     let mentions = vec![
         Entity {
-            type_: EntityType::USER,
+            entity_type: EntityType::USER,
             code: "takahashi".to_owned(),
         },
         Entity {
-            type_: EntityType::GROUP,
+            entity_type: EntityType::GROUP,
             code: "sample_group".to_owned(),
         },
     ];

@@ -44,7 +44,7 @@ pub enum EntityType {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entity {
     #[serde(rename = "type")]
-    pub type_: EntityType,
+    pub entity_type: EntityType,
     pub code: String,
 }
 
