@@ -38,6 +38,10 @@ impl Record {
         self.fields.get(field_code)
     }
 
+    pub fn get_mut(&mut self, field_code: &str) -> Option<&mut FieldValue> {
+        self.fields.get_mut(field_code)
+    }
+
     pub fn fields(&self) -> FieldIter {
         FieldIter {
             inner: self.fields.iter(),
