@@ -93,10 +93,14 @@ pub trait Layer<Inner: Handler + Send + Sync + 'static> {
 
 //-----------------------------------------------------------------------------
 
+pub type ShouldRetryFn =
+    dyn Fn(&http::Request<()>, &http::Response<ResponseBody>) -> bool + Send + Sync + 'static;
+
 pub struct RetryLayer {
     max_attempts: usize,
     initial_delay: std::time::Duration,
     max_delay: std::time::Duration,
+    should_retry: Box<ShouldRetryFn>,
 }
 
 impl RetryLayer {
@@ -104,11 +108,19 @@ impl RetryLayer {
         max_attempts: usize,
         initial_delay: std::time::Duration,
         max_delay: std::time::Duration,
+        should_retry: Option<Box<ShouldRetryFn>>,
     ) -> Self {
+        let should_retry: Box<ShouldRetryFn> = match should_retry {
+            Some(f) => f,
+            None => Box::new(|_: &http::Request<()>, resp: &http::Response<ResponseBody>| {
+                !resp.status().is_success()
+            }),
+        };
         RetryLayer {
             max_attempts,
             initial_delay,
             max_delay,
+            should_retry,
         }
     }
 }
@@ -146,7 +158,12 @@ impl<Inner: Handler + Send + Sync + 'static> Handler for RetryHandler<Inner> {
 
             match result {
                 Ok(resp) => {
-                    if resp.status().is_success() || attempts >= self.layer.max_attempts {
+                    if attempts >= self.layer.max_attempts {
+                        return Ok(resp);
+                    }
+                    let req_nobody = http::Request::from_parts(parts.clone(), ());
+                    let retry_ok = (self.layer.should_retry)(&req_nobody, &resp);
+                    if !retry_ok {
                         return Ok(resp);
                     }
                     // do retry
