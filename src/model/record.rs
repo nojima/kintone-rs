@@ -405,6 +405,22 @@ impl TableRow {
     pub fn get(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
+
+    pub fn fields(&self) -> impl Iterator<Item=(&'_ String, &'_ FieldValue)> + Clone {
+        self.fields.iter()
+    }
+
+    pub fn fields_mut(&mut self) -> impl Iterator<Item=(&'_ String, &'_ mut FieldValue)> {
+        self.fields.iter_mut()
+    }
+
+    pub fn field_codes(&self) -> impl Iterator<Item=&'_ String> + Clone {
+        self.fields.keys()
+    }
+
+    pub fn field_values(&self) -> impl Iterator<Item=&'_ FieldValue> + Clone {
+        self.fields.values()
+    }
 }
 
 impl std::fmt::Debug for TableRow {
