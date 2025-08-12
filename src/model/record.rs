@@ -42,25 +42,21 @@ impl Record {
         self.fields.get_mut(field_code)
     }
 
-    pub fn fields(
-        &self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone + Send + Sync {
+    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
         self.fields.iter()
     }
 
     pub fn fields_mut(
         &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> + Send + Sync {
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
         self.fields.iter_mut()
     }
 
-    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone + Send + Sync {
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
         self.fields.keys()
     }
 
-    pub fn field_values(
-        &self,
-    ) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone + Send + Sync {
+    pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
         self.fields.values()
     }
 
@@ -337,25 +333,21 @@ impl TableRow {
         self.fields.get(field_code)
     }
 
-    pub fn fields(
-        &self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone + Send + Sync {
+    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
         self.fields.iter()
     }
 
     pub fn fields_mut(
         &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> + Send + Sync {
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
         self.fields.iter_mut()
     }
 
-    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone + Send + Sync {
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
         self.fields.keys()
     }
 
-    pub fn field_values(
-        &self,
-    ) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone + Send + Sync {
+    pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
         self.fields.values()
     }
 }
