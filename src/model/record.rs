@@ -44,6 +44,12 @@ impl Record {
         }
     }
 
+    pub fn fields_mut(&mut self) -> FieldIterMut {
+        FieldIterMut {
+            inner: self.fields.iter_mut(),
+        }
+    }
+
     pub fn field_codes(&self) -> FieldCodeIter {
         FieldCodeIter {
             inner: self.fields.keys(),
@@ -115,6 +121,26 @@ impl<'a> Iterator for FieldIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
+}
+
+pub struct FieldIterMut<'a> {
+    inner: hash_map::IterMut<'a, String, FieldValue>,
+}
+
+impl<'a> Iterator for FieldIterMut<'a> {
+    type Item = (&'a String, &'a mut FieldValue);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
     }
 }
 
