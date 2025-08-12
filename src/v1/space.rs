@@ -8,7 +8,8 @@
 //! ### Space Management
 //! - [`add_space`] - Create a new space (public and single-thread)
 //!
-//! ### Thread Comments
+//! ### Thread Management
+//! - [`add_thread`] - Create a new thread in a space
 //! - [`add_thread_comment`] - Add a comment to a thread within a space
 //!
 //! ## Usage Pattern
@@ -22,13 +23,17 @@
 //! let space_response = kintone::v1::space::add_space("My New Space").send(&client)?;
 //! println!("Created space with ID: {}", space_response.id);
 //!
+//! // Create a new thread in the space
+//! let thread_response = kintone::v1::space::add_thread(space_response.id, "Discussion Thread").send(&client)?;
+//! println!("Created thread with ID: {}", thread_response.id);
+//!
 //! // Add a comment to a thread
 //! use kintone::model::space::ThreadComment;
 //! let comment = ThreadComment {
 //!     text: "Hello from the thread!".to_owned(),
 //!     mentions: vec![],
 //! };
-//! let comment_response = kintone::v1::space::add_thread_comment(space_response.id, 1, comment).send(&client)?;
+//! let comment_response = kintone::v1::space::add_thread_comment(space_response.id, thread_response.id, comment).send(&client)?;
 //! println!("Added comment with ID: {}", comment_response.id);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
@@ -105,6 +110,80 @@ impl AddSpaceRequest {
         self.builder.send(client, self.body)
     }
 }
+
+//-----------------------------------------------------------------------------
+
+/// Creates a new thread in a Kintone space.
+///
+/// This function creates a request to add a new thread with the specified name to a space.
+/// Threads can only be created in spaces where "Use space portal and multiple threads"
+/// is enabled in the space settings.
+///
+/// **Important**: This API requires space viewing permissions. For private spaces or guest spaces,
+/// only space members can execute this operation.
+///
+/// **Note**: Thread creation notifications will be sent to all space members as "All" notifications.
+///
+/// # Arguments
+/// * `space` - The ID of the space to create the thread in
+/// * `name` - The name of the thread to create (1 to 128 characters)
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::space::add_thread(123, "Project Discussion").send(&client)?;
+/// println!("Created thread with ID: {}", response.id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/spaces/add-thread/>
+pub fn add_thread(space: u64, name: impl Into<String>) -> AddThreadRequest {
+    AddThreadRequest {
+        builder: RequestBuilder::new(http::Method::POST, "/v1/space/thread.json"),
+        body: AddThreadRequestBody {
+            space,
+            name: name.into(),
+        },
+    }
+}
+
+#[must_use]
+pub struct AddThreadRequest {
+    builder: RequestBuilder,
+    body: AddThreadRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddThreadRequestBody {
+    space: u64,
+    name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddThreadResponse {
+    #[serde(with = "stringified")]
+    pub id: u64,
+}
+
+impl AddThreadRequest {
+    /// Sends the request to create the thread.
+    ///
+    /// # Returns
+    /// A Result containing the AddThreadResponse with the new thread ID, or an ApiError.
+    ///
+    /// # Authentication
+    /// This API requires space viewing permissions. For private/guest spaces,
+    /// only space members can execute this operation.
+    pub fn send(self, client: &KintoneClient) -> Result<AddThreadResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
 
 /// Adds a new comment to a specific thread in a Kintone space.
 ///
