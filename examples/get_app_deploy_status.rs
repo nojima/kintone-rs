@@ -37,10 +37,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::var("KINTONE_APP_IDS").expect("KINTONE_APP_IDS environment variable is required");
 
     // Parse app IDs from comma-separated string
-    let app_ids: Result<Vec<u64>, _> = app_ids_str
-        .split(',')
-        .map(|s| s.trim().parse::<u64>())
-        .collect();
+    let app_ids: Result<Vec<u64>, _> =
+        app_ids_str.split(',').map(|s| s.trim().parse::<u64>()).collect();
 
     let app_ids = app_ids.map_err(|e| format!("Failed to parse app IDs: {e}"))?;
 
@@ -51,10 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create client with username/password authentication
     let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
-    println!(
-        "🔍 Checking deployment status for {} app(s)...\n",
-        app_ids.len()
-    );
+    println!("🔍 Checking deployment status for {} app(s)...\n", app_ids.len());
 
     // Build the request to check multiple apps
     let mut request = settings::get_app_deploy_status();

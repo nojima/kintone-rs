@@ -178,10 +178,9 @@ impl Debug for Auth {
                 .field("username", username)
                 .field("password", &"<hidden>")
                 .finish(),
-            Auth::ApiToken { .. } => f
-                .debug_struct("ApiToken")
-                .field("tokens", &"<hidden>")
-                .finish(),
+            Auth::ApiToken { .. } => {
+                f.debug_struct("ApiToken").field("tokens", &"<hidden>").finish()
+            }
         }
     }
 }
@@ -217,14 +216,8 @@ impl RequestBuilder {
     }
 
     pub fn call<Resp: DeserializeOwned>(self, client: &KintoneClient) -> Result<Resp, ApiError> {
-        let resp = make_request(
-            client,
-            self.method,
-            &self.api_path,
-            self.headers,
-            self.query,
-        )
-        .call()?;
+        let resp =
+            make_request(client, self.method, &self.api_path, self.headers, self.query).call()?;
         Ok(resp.into_json()?)
     }
 
@@ -233,14 +226,8 @@ impl RequestBuilder {
         client: &KintoneClient,
         body: Body,
     ) -> Result<Resp, ApiError> {
-        let resp = make_request(
-            client,
-            self.method,
-            &self.api_path,
-            self.headers,
-            self.query,
-        )
-        .send_json(body)?;
+        let resp = make_request(client, self.method, &self.api_path, self.headers, self.query)
+            .send_json(body)?;
         Ok(resp.into_json()?)
     }
 }
@@ -323,13 +310,7 @@ impl DownloadRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<DownloadResponse, ApiError> {
-        let req = make_request(
-            client,
-            self.method,
-            &self.api_path,
-            HashMap::new(),
-            self.query,
-        );
+        let req = make_request(client, self.method, &self.api_path, HashMap::new(), self.query);
         let resp = req.call()?;
         let mime_type = resp.header("content-type").unwrap_or_default().to_owned();
         Ok(DownloadResponse {

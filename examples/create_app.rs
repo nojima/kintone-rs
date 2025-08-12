@@ -104,9 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3: Deploy the app to production environment
     println!("🚀 Step 3: Deploying app to production...");
 
-    settings::deploy_app()
-        .app(app_id, Some(field_revision))
-        .send(&client)?;
+    settings::deploy_app().app(app_id, Some(field_revision)).send(&client)?;
 
     println!("   ✅ App deployment initiated!");
 
@@ -120,9 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         attempts += 1;
 
-        let status_response = settings::get_app_deploy_status()
-            .app(app_id)
-            .send(&client)?;
+        let status_response = settings::get_app_deploy_status().app(app_id).send(&client)?;
 
         if let Some(app_status) = status_response.apps.first() {
             match app_status.status {

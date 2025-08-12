@@ -17,17 +17,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let reader = BufReader::new(file);
 
     let upload_resp = kintone::v1::file::upload("sample.txt".to_owned()).send(&client, reader)?;
-    println!(
-        "File uploaded successfully. File key: {}",
-        upload_resp.file_key
-    );
+    println!("File uploaded successfully. File key: {}", upload_resp.file_key);
 
     // 2. アップロードしたファイルをダウンロード
     let download_resp = kintone::v1::file::download(upload_resp.file_key).send(&client)?;
-    println!(
-        "Downloaded file with MIME type: {}",
-        download_resp.mime_type
-    );
+    println!("Downloaded file with MIME type: {}", download_resp.mime_type);
 
     // 3. ダウンロードしたファイルを保存
     let output_file = File::create("downloaded_sample.txt")?;

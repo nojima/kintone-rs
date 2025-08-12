@@ -20,10 +20,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .revision(5)
         .send(&client)?;
 
-    println!(
-        "Assignees updated with revision check, new revision: {}",
-        resp.revision
-    );
+    println!("Assignees updated with revision check, new revision: {}", resp.revision);
 
     // 作業者を解除（空の配列を指定）
     let resp = kintone::v1::record::update_assignees(1, 3, vec![]).send(&client)?;

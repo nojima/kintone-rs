@@ -115,9 +115,7 @@ pub struct AddFormFieldResponse {
 impl AddFormFieldRequest {
     /// Adds a field to be created.
     pub fn field(mut self, field_code: impl Into<String>, field_property: FieldProperty) -> Self {
-        self.body
-            .properties
-            .insert(field_code.into(), field_property);
+        self.body.properties.insert(field_code.into(), field_property);
         self
     }
 

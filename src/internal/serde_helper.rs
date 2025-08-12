@@ -11,9 +11,7 @@ pub(crate) mod stringified {
         T: FromStr,
         <T as FromStr>::Err: Display,
     {
-        String::deserialize(deserializer)?
-            .parse()
-            .map_err(serde::de::Error::custom)
+        String::deserialize(deserializer)?.parse().map_err(serde::de::Error::custom)
     }
 
     pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>

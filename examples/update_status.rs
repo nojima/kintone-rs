@@ -11,20 +11,14 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     // 基本的なステータス更新（アクションのみ）
     let resp = kintone::v1::record::update_status(1, 1, "申請する".to_owned()).send(&client)?;
-    println!(
-        "Status updated successfully. New revision: {}",
-        resp.revision
-    );
+    println!("Status updated successfully. New revision: {}", resp.revision);
 
     // 作業者とリビジョンを指定したステータス更新
     let resp = kintone::v1::record::update_status(1, 2, "承認する".to_owned())
         .assignee("user2".to_owned())
         .revision(5)
         .send(&client)?;
-    println!(
-        "Status updated with assignee. New revision: {}",
-        resp.revision
-    );
+    println!("Status updated with assignee. New revision: {}", resp.revision);
 
     Ok(())
 }

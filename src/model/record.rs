@@ -24,10 +24,7 @@ impl Record {
     }
 
     pub fn clone_without_builtins(&self) -> Self {
-        let size = self
-            .field_values()
-            .filter(|v| !v.field_type().is_builtin())
-            .count();
+        let size = self.field_values().filter(|v| !v.field_type().is_builtin()).count();
         let mut fields = HashMap::with_capacity(size);
         for (code, value) in self.fields() {
             if !value.field_type().is_builtin() {

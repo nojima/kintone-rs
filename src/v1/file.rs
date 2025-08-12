@@ -31,12 +31,8 @@ use crate::error::ApiError;
 /// # Reference
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/files/upload-file/>
 pub fn upload(filename: impl Into<String>) -> UploadFileRequest {
-    let upload_request = UploadRequest::new(
-        http::Method::POST,
-        "/v1/file.json",
-        "file".to_owned(),
-        filename.into(),
-    );
+    let upload_request =
+        UploadRequest::new(http::Method::POST, "/v1/file.json", "file".to_owned(), filename.into());
     UploadFileRequest { upload_request }
 }
 
