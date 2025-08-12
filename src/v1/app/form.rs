@@ -16,10 +16,10 @@
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::form;
 //! # use kintone::model::app::field::SingleLineTextFieldProperty;
-//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! let field = SingleLineTextFieldProperty {
-//!     code: "my_field".to_string(),
-//!     label: "My Field".to_string(),
+//!     code: "my_field".to_owned(),
+//!     label: "My Field".to_owned(),
 //!     required: true,
 //!     max_length: Some(50),
 //!     ..Default::default()
@@ -62,8 +62,8 @@ use crate::model::app::field::FieldProperty;
 /// use kintone::model::app::field::SingleLineTextFieldProperty;
 ///
 /// let text_field = SingleLineTextFieldProperty {
-///     code: "customer_name".to_string(),
-///     label: "Customer Name".to_string(),
+///     code: "customer_name".to_owned(),
+///     label: "Customer Name".to_owned(),
 ///     required: true,
 ///     max_length: Some(50),
 ///     ..Default::default()

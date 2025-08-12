@@ -21,7 +21,7 @@
 //! ```rust
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app;
-//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! let response = app::add_app("My App").send(&client)?;
 //! println!("Created app with ID: {}", response.app);
 //! # Ok::<(), Box<dyn std::error::Error>>(())

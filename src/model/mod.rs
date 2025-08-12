@@ -10,7 +10,7 @@
 //! use kintone::model::{Record, FieldValue};
 //!
 //! let mut record = Record::new();
-//! record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
+//! record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
 //! record.put_field("age", FieldValue::Number(30.into()));
 //! println!("record = {record:?}");
 //! ```

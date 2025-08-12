@@ -23,7 +23,7 @@ use crate::model::space::ThreadComment;
 /// # Example
 /// ```rust
 /// let comment = ThreadComment {
-///     text: "This is a thread comment.".to_string(),
+///     text: "This is a thread comment.".to_owned(),
 ///     mentions: vec![],
 /// };
 /// let response = add_thread_comment(123, 456, comment).send(&client)?;

@@ -16,7 +16,7 @@
 //! ```rust
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::settings;
-//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! // Deploy apps
 //! settings::deploy_app()
 //!     .app(123, Some(45)) // app ID with optional revision

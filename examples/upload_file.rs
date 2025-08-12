@@ -14,13 +14,13 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let file_path = "sample.txt";
     let file = File::open(file_path)?;
 
-    let resp = kintone::v1::file::upload("sample.txt".to_string()).send(&client, file)?;
+    let resp = kintone::v1::file::upload("sample.txt".to_owned()).send(&client, file)?;
     println!("File uploaded successfully. File key: {}", resp.file_key);
 
     // バイト配列からアップロード
     let content = b"Hello, World! This is a test file.";
 
-    let resp = kintone::v1::file::upload("test.txt".to_string()).send(&client, &content[..])?;
+    let resp = kintone::v1::file::upload("test.txt".to_owned()).send(&client, &content[..])?;
     println!("Content uploaded successfully. File key: {}", resp.file_key);
 
     Ok(())

@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
 
-    let upload_resp = kintone::v1::file::upload("sample.txt".to_string()).send(&client, reader)?;
+    let upload_resp = kintone::v1::file::upload("sample.txt".to_owned()).send(&client, reader)?;
     println!(
         "File uploaded successfully. File key: {}",
         upload_resp.file_key

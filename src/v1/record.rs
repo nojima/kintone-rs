@@ -132,7 +132,7 @@ impl GetRecordsRequest {
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
-/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
+/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
 ///
 /// let response = add_record(123)
 ///     .record(record)
@@ -201,7 +201,7 @@ impl AddRecordRequest {
 /// # Example
 /// ```rust
 /// let mut record = Record::new();
-/// record.put_field("status", FieldValue::SingleLineText("Completed".to_string()));
+/// record.put_field("status", FieldValue::SingleLineText("Completed".to_owned()));
 ///
 /// let response = update_record(123)
 ///     .id(456)
@@ -481,7 +481,7 @@ impl DeleteCommentRequest {
 ///
 /// # Example
 /// ```rust
-/// let assignees = vec!["user1".to_string(), "user2".to_string()];
+/// let assignees = vec!["user1".to_owned(), "user2".to_owned()];
 /// let response = update_assignees(123, 456, assignees)
 ///     .revision(10)
 ///     .send(&client)?;
@@ -553,8 +553,8 @@ impl UpdateAssigneesRequest {
 ///
 /// # Example
 /// ```rust
-/// let response = update_status(123, 456, "Submit for Review".to_string())
-///     .assignee("reviewer1".to_string())
+/// let response = update_status(123, 456, "Submit for Review".to_owned())
+///     .assignee("reviewer1".to_owned())
 ///     .revision(5)
 ///     .send(&client)?;
 /// println!("Status updated, new revision: {}", response.revision);

@@ -51,7 +51,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create client with username/password authentication
     let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
-    println!("🔍 Checking deployment status for {} app(s)...\n", app_ids.len());
+    println!(
+        "🔍 Checking deployment status for {} app(s)...\n",
+        app_ids.len()
+    );
 
     // Build the request to check multiple apps
     let mut request = settings::get_app_deploy_status();
@@ -86,24 +89,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "─".repeat(50));
 
     // Summary
-    let processing_count = response.apps.iter().filter(|a| a.status == settings::DeployStatus::Processing).count();
-    let success_count = response.apps.iter().filter(|a| a.status == settings::DeployStatus::Success).count();
-    let fail_count = response.apps.iter().filter(|a| a.status == settings::DeployStatus::Fail).count();
-    let cancel_count = response.apps.iter().filter(|a| a.status == settings::DeployStatus::Cancel).count();
+    let processing_count = response
+        .apps
+        .iter()
+        .filter(|a| a.status == settings::DeployStatus::Processing)
+        .count();
+    let success_count = response
+        .apps
+        .iter()
+        .filter(|a| a.status == settings::DeployStatus::Success)
+        .count();
+    let fail_count = response
+        .apps
+        .iter()
+        .filter(|a| a.status == settings::DeployStatus::Fail)
+        .count();
+    let cancel_count = response
+        .apps
+        .iter()
+        .filter(|a| a.status == settings::DeployStatus::Cancel)
+        .count();
 
     println!("\n📈 Summary:");
     println!("   • Total apps checked: {}", response.apps.len());
-    if processing_count > 0 { println!("   • Processing: {processing_count}"); }
-    if success_count > 0 { println!("   • Successful: {success_count}"); }
-    if fail_count > 0 { println!("   • Failed: {fail_count}"); }
-    if cancel_count > 0 { println!("   • Cancelled: {cancel_count}"); }
+    if processing_count > 0 {
+        println!("   • Processing: {processing_count}");
+    }
+    if success_count > 0 {
+        println!("   • Successful: {success_count}");
+    }
+    if fail_count > 0 {
+        println!("   • Failed: {fail_count}");
+    }
+    if cancel_count > 0 {
+        println!("   • Cancelled: {cancel_count}");
+    }
 
     if processing_count > 0 {
-        println!("\n💡 Tip: Apps still processing can be checked again later using this same command.");
+        println!(
+            "\n💡 Tip: Apps still processing can be checked again later using this same command."
+        );
     }
 
     if fail_count > 0 || cancel_count > 0 {
-        println!("\n⚠️  Some deployments were not successful. Please check the Kintone interface for more details.");
+        println!(
+            "\n⚠️  Some deployments were not successful. Please check the Kintone interface for more details."
+        );
     }
 
     Ok(())

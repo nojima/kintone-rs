@@ -10,13 +10,13 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     // 基本的な作業者更新
     let resp =
-        kintone::v1::record::update_assignees(1, 1, vec!["user1".to_string(), "user2".to_string()])
+        kintone::v1::record::update_assignees(1, 1, vec!["user1".to_owned(), "user2".to_owned()])
             .send(&client)?;
 
     println!("Assignees updated, new revision: {}", resp.revision);
 
     // リビジョン番号を指定して作業者更新
-    let resp = kintone::v1::record::update_assignees(1, 2, vec!["user3".to_string()])
+    let resp = kintone::v1::record::update_assignees(1, 2, vec!["user3".to_owned()])
         .revision(5)
         .send(&client)?;
 

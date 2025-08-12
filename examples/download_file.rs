@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     // ファイルをダウンロードして保存
     let file_key = std::env::var("FILE_KEY")
-        .unwrap_or_else(|_| "201202061155587E339F9067544F1A92C743460E3D12B3297".to_string());
+        .unwrap_or_else(|_| "201202061155587E339F9067544F1A92C743460E3D12B3297".to_owned());
 
     let resp = kintone::v1::file::download(file_key).send(&client)?;
 

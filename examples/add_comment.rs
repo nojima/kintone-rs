@@ -20,16 +20,16 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let mentions = vec![
         Entity {
             type_: EntityType::USER,
-            code: "takahashi".to_string(),
+            code: "takahashi".to_owned(),
         },
         Entity {
             type_: EntityType::GROUP,
-            code: "sample_group".to_string(),
+            code: "sample_group".to_owned(),
         },
     ];
 
     let comment = RecordComment {
-        text: "Please review this record.".to_string(),
+        text: "Please review this record.".to_owned(),
         mentions,
     };
 

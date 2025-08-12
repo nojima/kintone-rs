@@ -22,7 +22,7 @@
 //!
 //! let client = KintoneClient::new(
 //!     "https://your-domain.cybozu.com",
-//!     Auth::api_token("your-api-token".to_string())
+//!     Auth::api_token("your-api-token".to_owned())
 //! );
 //! ```
 //!
@@ -32,7 +32,7 @@
 //!
 //! let client = KintoneClient::new(
 //!     "https://your-domain.cybozu.com",
-//!     Auth::password("username".to_string(), "password".to_string())
+//!     Auth::password("username".to_owned(), "password".to_owned())
 //! );
 //! ```
 //!
@@ -45,7 +45,7 @@
 //!
 //! let client = KintoneClientBuilder::new(
 //!         "https://your-domain.cybozu.com",
-//!         Auth::api_token("your-api-token".to_string())
+//!         Auth::api_token("your-api-token".to_owned())
 //!     )
 //!     .user_agent("MyApp/1.0")
 //!     .build();
@@ -65,7 +65,7 @@
 //! // Client for guest space ID 123
 //! let guest_client = KintoneClientBuilder::new(
 //!         "https://your-domain.cybozu.com",
-//!         Auth::api_token("your-api-token".to_string())
+//!         Auth::api_token("your-api-token".to_owned())
 //!     )
 //!     .guest_space_id(123)
 //!     .build();
@@ -73,7 +73,7 @@
 //! // If you need to access a different guest space (ID 456), create another client
 //! let another_guest_client = KintoneClientBuilder::new(
 //!         "https://your-domain.cybozu.com",
-//!         Auth::api_token("your-api-token".to_string())
+//!         Auth::api_token("your-api-token".to_owned())
 //!     )
 //!     .guest_space_id(456)
 //!     .build();
@@ -133,7 +133,7 @@ impl KintoneClientBuilder {
     }
 
     pub fn build(self) -> KintoneClient {
-        let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_string());
+        let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_owned());
         let http_client = ureq::AgentBuilder::new()
             .user_agent(&user_agent)
             .try_proxy_from_env(true)
@@ -204,7 +204,7 @@ impl RequestBuilder {
     }
 
     pub fn query<V: ToString>(mut self, key: &str, value: V) -> Self {
-        self.query.insert(key.to_string(), value.to_string());
+        self.query.insert(key.to_owned(), value.to_string());
         self
     }
 
@@ -277,7 +277,7 @@ impl UploadRequest {
 
         let content_type = format!("multipart/form-data; boundary={boundary}");
         let mut headers = HashMap::with_capacity(1);
-        headers.insert("content-type".to_string(), content_type);
+        headers.insert("content-type".to_owned(), content_type);
 
         let req = make_request(client, self.method, &self.api_path, headers, HashMap::new());
 
@@ -318,7 +318,7 @@ impl DownloadRequest {
 
     pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
         let value_str = serde_json::to_string(&value).unwrap();
-        self.query.insert(key.to_string(), value_str);
+        self.query.insert(key.to_owned(), value_str);
         self
     }
 
@@ -353,17 +353,17 @@ fn make_request(
         } => {
             let body = format!("{username}:{password}");
             let header_value = BASE64.encode(body);
-            headers.insert("x-cybozu-authorization".to_string(), header_value);
+            headers.insert("x-cybozu-authorization".to_owned(), header_value);
         }
         Auth::ApiToken { ref tokens } => {
-            headers.insert("x-cybozu-api-token".to_string(), tokens.join(","));
+            headers.insert("x-cybozu-api-token".to_owned(), tokens.join(","));
         }
     }
 
     let mut path = if let Some(guest_space_id) = client.guest_space_id {
         format!("/k/guest/{guest_space_id}")
     } else {
-        "/k".to_string()
+        "/k".to_owned()
     };
     path += api_path;
     let mut u = client.base_url.clone();

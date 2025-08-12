@@ -49,8 +49,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Single Line Text Field
     let customer_name_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
-        code: "customer_name".to_string(),
-        label: "Customer Name".to_string(),
+        code: "customer_name".to_owned(),
+        label: "Customer Name".to_owned(),
         required: true,
         max_length: Some(100),
         ..Default::default()
@@ -58,21 +58,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Number Field
     let price_field = FieldProperty::Number(NumberFieldProperty {
-        code: "price".to_string(),
-        label: "Price".to_string(),
+        code: "price".to_owned(),
+        label: "Price".to_owned(),
         required: true,
         min_value: Some(0.into()),
         digit: true,            // Show thousand separators
         display_scale: Some(2), // 2 decimal places
-        unit: Some("USD".to_string()),
+        unit: Some("USD".to_owned()),
         unit_position: Some(UnitPosition::Before),
         ..Default::default()
     });
 
     // 3. Date Field
     let order_date_field = FieldProperty::Date(DateFieldProperty {
-        code: "order_date".to_string(),
-        label: "Order Date".to_string(),
+        code: "order_date".to_owned(),
+        label: "Order Date".to_owned(),
         required: true,
         default_now_value: true, // Default to current date
         ..Default::default()
@@ -81,41 +81,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. Radio Button Field (choice field)
     let mut priority_options = HashMap::new();
     priority_options.insert(
-        "High".to_string(),
+        "High".to_owned(),
         FieldOption {
-            label: "High".to_string(),
+            label: "High".to_owned(),
             index: 0,
         },
     );
     priority_options.insert(
-        "Medium".to_string(),
+        "Medium".to_owned(),
         FieldOption {
-            label: "Medium".to_string(),
+            label: "Medium".to_owned(),
             index: 1,
         },
     );
     priority_options.insert(
-        "Low".to_string(),
+        "Low".to_owned(),
         FieldOption {
-            label: "Low".to_string(),
+            label: "Low".to_owned(),
             index: 2,
         },
     );
 
     let priority_field = FieldProperty::RadioButton(RadioButtonFieldProperty {
-        code: "priority".to_string(),
-        label: "Priority".to_string(),
+        code: "priority".to_owned(),
+        label: "Priority".to_owned(),
         required: true,
         options: priority_options,
-        default_value: Some("Medium".to_string()),
+        default_value: Some("Medium".to_owned()),
         align: Some(Alignment::Horizontal),
         ..Default::default()
     });
 
     // 5. Multi-line Text Field
     let description_field = FieldProperty::MultiLineText(MultiLineTextFieldProperty {
-        code: "description".to_string(),
-        label: "Description".to_string(),
+        code: "description".to_owned(),
+        label: "Description".to_owned(),
         ..Default::default()
     });
 

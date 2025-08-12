@@ -10,15 +10,15 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
     // 基本的なステータス更新（アクションのみ）
-    let resp = kintone::v1::record::update_status(1, 1, "申請する".to_string()).send(&client)?;
+    let resp = kintone::v1::record::update_status(1, 1, "申請する".to_owned()).send(&client)?;
     println!(
         "Status updated successfully. New revision: {}",
         resp.revision
     );
 
     // 作業者とリビジョンを指定したステータス更新
-    let resp = kintone::v1::record::update_status(1, 2, "承認する".to_string())
-        .assignee("user2".to_string())
+    let resp = kintone::v1::record::update_status(1, 2, "承認する".to_owned())
+        .assignee("user2".to_owned())
         .revision(5)
         .send(&client)?;
     println!(

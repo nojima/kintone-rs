@@ -34,7 +34,7 @@ pub fn upload(filename: impl Into<String>) -> UploadFileRequest {
     let upload_request = UploadRequest::new(
         http::Method::POST,
         "/v1/file.json",
-        "file".to_string(),
+        "file".to_owned(),
         filename.into(),
     );
     UploadFileRequest { upload_request }

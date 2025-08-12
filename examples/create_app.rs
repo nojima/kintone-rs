@@ -59,8 +59,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a customer name field
     let customer_name_field = SingleLineTextFieldProperty {
-        code: "customer_name".to_string(),
-        label: "Customer Name".to_string(),
+        code: "customer_name".to_owned(),
+        label: "Customer Name".to_owned(),
         required: true,
         max_length: Some(50),
         min_length: Some(1),
@@ -69,8 +69,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create an email field
     let email_field = SingleLineTextFieldProperty {
-        code: "email".to_string(),
-        label: "Email Address".to_string(),
+        code: "email".to_owned(),
+        label: "Email Address".to_owned(),
         required: true,
         unique: true, // Email should be unique
         ..Default::default()
@@ -78,8 +78,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a phone number field
     let phone_field = SingleLineTextFieldProperty {
-        code: "phone".to_string(),
-        label: "Phone Number".to_string(),
+        code: "phone".to_owned(),
+        label: "Phone Number".to_owned(),
         max_length: Some(20),
         ..Default::default()
     };
@@ -129,7 +129,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 settings::DeployStatus::Processing => {
                     println!("   ⏳ Deployment in progress... (attempt {attempts}/{max_attempts})");
                     if attempts >= max_attempts {
-                        println!("   ⚠️  Deployment is taking longer than expected. Please check manually.");
+                        println!(
+                            "   ⚠️  Deployment is taking longer than expected. Please check manually."
+                        );
                         break;
                     }
                     std::thread::sleep(std::time::Duration::from_secs(1));
