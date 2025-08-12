@@ -1,4 +1,4 @@
-use std::collections::{HashMap, hash_map};
+use std::collections::HashMap;
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
@@ -42,28 +42,26 @@ impl Record {
         self.fields.get_mut(field_code)
     }
 
-    pub fn fields(&self) -> FieldIter {
-        FieldIter {
-            inner: self.fields.iter(),
-        }
+    pub fn fields(
+        &self,
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone + Send + Sync {
+        self.fields.iter()
     }
 
-    pub fn fields_mut(&mut self) -> FieldIterMut {
-        FieldIterMut {
-            inner: self.fields.iter_mut(),
-        }
+    pub fn fields_mut(
+        &mut self,
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> + Send + Sync {
+        self.fields.iter_mut()
     }
 
-    pub fn field_codes(&self) -> FieldCodeIter {
-        FieldCodeIter {
-            inner: self.fields.keys(),
-        }
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone + Send + Sync {
+        self.fields.keys()
     }
 
-    pub fn field_values(&self) -> FieldValueIter {
-        FieldValueIter {
-            inner: self.fields.values(),
-        }
+    pub fn field_values(
+        &self,
+    ) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone + Send + Sync {
+        self.fields.values()
     }
 
     pub fn put_field(
@@ -112,73 +110,6 @@ impl std::fmt::Debug for Record {
 impl Default for Record {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-#[derive(Clone)]
-pub struct FieldIter<'a> {
-    inner: hash_map::Iter<'a, String, FieldValue>,
-}
-
-impl<'a> Iterator for FieldIter<'a> {
-    type Item = (&'a String, &'a FieldValue);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
-}
-
-pub struct FieldIterMut<'a> {
-    inner: hash_map::IterMut<'a, String, FieldValue>,
-}
-
-impl<'a> Iterator for FieldIterMut<'a> {
-    type Item = (&'a String, &'a mut FieldValue);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
-}
-
-#[derive(Clone)]
-pub struct FieldCodeIter<'a> {
-    inner: hash_map::Keys<'a, String, FieldValue>,
-}
-
-impl<'a> Iterator for FieldCodeIter<'a> {
-    type Item = &'a String;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
-}
-
-#[derive(Clone)]
-pub struct FieldValueIter<'a> {
-    inner: hash_map::Values<'a, String, FieldValue>,
-}
-
-impl<'a> Iterator for FieldValueIter<'a> {
-    type Item = &'a FieldValue;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
     }
 }
 
@@ -406,19 +337,25 @@ impl TableRow {
         self.fields.get(field_code)
     }
 
-    pub fn fields(&self) -> impl Iterator<Item=(&'_ String, &'_ FieldValue)> + Clone {
+    pub fn fields(
+        &self,
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone + Send + Sync {
         self.fields.iter()
     }
 
-    pub fn fields_mut(&mut self) -> impl Iterator<Item=(&'_ String, &'_ mut FieldValue)> {
+    pub fn fields_mut(
+        &mut self,
+    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> + Send + Sync {
         self.fields.iter_mut()
     }
 
-    pub fn field_codes(&self) -> impl Iterator<Item=&'_ String> + Clone {
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone + Send + Sync {
         self.fields.keys()
     }
 
-    pub fn field_values(&self) -> impl Iterator<Item=&'_ FieldValue> + Clone {
+    pub fn field_values(
+        &self,
+    ) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone + Send + Sync {
         self.fields.values()
     }
 }
