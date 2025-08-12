@@ -20,7 +20,7 @@ use crate::error::ApiError;
 /// * `content` - The file content as a `Read` stream (provided when calling `send()`)
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use std::fs::File;
@@ -79,7 +79,7 @@ impl UploadFileRequest {
 /// * `file_key` - The unique file key returned from a previous upload operation
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use std::io::copy;

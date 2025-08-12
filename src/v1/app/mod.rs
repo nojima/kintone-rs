@@ -18,11 +18,10 @@
 //!
 //! All functions in this module follow the builder pattern:
 //!
-//! ```rust
+//! ```no_run
 //! # use kintone::client::{Auth, KintoneClient};
-//! # use kintone::v1::app;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-//! let response = app::add_app("My App").send(&client)?;
+//! let response = kintone::v1::app::add_app("My App").send(&client)?;
 //! println!("Created app with ID: {}", response.app);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
@@ -55,12 +54,15 @@ use crate::internal::serde_helper::stringified;
 /// * `thread` (optional) - The thread ID within the space where the app should be created
 ///
 /// # Example
-/// ```rust
-/// let response = add_app("Project Management App")
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::app::add_app("Project Management App")
 ///     .space(10) // optional
 ///     .thread(11) // optional
 ///     .send(&client)?;
 /// println!("Created app with ID: {}", response.app);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

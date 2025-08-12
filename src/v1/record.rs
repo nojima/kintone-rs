@@ -23,9 +23,12 @@ use crate::model::{
 /// * `id` - The ID of the record to retrieve
 ///
 /// # Example
-/// ```rust
-/// let response = get_record(123, 456).send(&client)?;
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::get_record(123, 456).send(&client)?;
 /// println!("Record: {:?}", response.record);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -68,12 +71,15 @@ pub struct GetRecordResponse {
 /// * `total_count` (optional) - If true, includes the total count; if false, excludes it for better performance
 ///
 /// # Example
-/// ```rust
-/// let response = get_records(123)
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::get_records(123)
 ///     .query("status = \"Active\"")
 ///     .fields(&["name", "email", "status"])
 ///     .send(&client)?;
 /// println!("Found {} records", response.records.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -130,14 +136,19 @@ impl GetRecordsRequest {
 /// * `record` (optional) - A Record containing the field data for the new record
 ///
 /// # Example
-/// ```rust
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::{Record, FieldValue};
+/// 
 /// let mut record = Record::new();
 /// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
 ///
-/// let response = add_record(123)
+/// let response = kintone::v1::record::add_record(123)
 ///     .record(record)
 ///     .send(&client)?;
 /// println!("Created record with ID: {}", response.id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -199,16 +210,21 @@ impl AddRecordRequest {
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
 ///
 /// # Example
-/// ```rust
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::{Record, FieldValue};
+///
 /// let mut record = Record::new();
 /// record.put_field("status", FieldValue::SingleLineText("Completed".to_owned()));
 ///
-/// let response = update_record(123)
+/// let response = kintone::v1::record::update_record(123)
 ///     .id(456)
 ///     .record(record)
 ///     .revision(10)
 ///     .send(&client)?;
 /// println!("Updated to revision: {}", response.revision);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -298,12 +314,17 @@ impl UpdateRecordRequest {
 /// * `limit` (optional) - The maximum number of comments to return
 ///
 /// # Example
-/// ```rust
-/// let response = get_comments(123, 456)
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::Order;
+///
+/// let response = kintone::v1::record::get_comments(123, 456)
 ///     .order(Order::Desc)
 ///     .limit(50)
 ///     .send(&client)?;
 /// println!("Found {} comments", response.comments.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -362,10 +383,15 @@ impl GetCommentsRequest {
 /// * `comment` - The comment data including text and mentions
 ///
 /// # Example
-/// ```rust
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::RecordComment;
+///
 /// let comment = RecordComment::from_text("This task is now complete.");
-/// let response = add_comment(123, 456, comment).send(&client)?;
+/// let response = kintone::v1::record::add_comment(123, 456, comment).send(&client)?;
 /// println!("Added comment with ID: {}", response.id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -422,9 +448,12 @@ impl AddCommentRequest {
 /// * `comment` - The ID of the comment to delete
 ///
 /// # Example
-/// ```rust
-/// let response = delete_comment(123, 456, 789).send(&client)?;
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::delete_comment(123, 456, 789).send(&client)?;
 /// println!("Comment deleted successfully");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -480,12 +509,15 @@ impl DeleteCommentRequest {
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
 ///
 /// # Example
-/// ```rust
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// let assignees = vec!["user1".to_owned(), "user2".to_owned()];
-/// let response = update_assignees(123, 456, assignees)
+/// let response = kintone::v1::record::update_assignees(123, 456, assignees)
 ///     .revision(10)
 ///     .send(&client)?;
 /// println!("Updated assignees, new revision: {}", response.revision);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -552,12 +584,15 @@ impl UpdateAssigneesRequest {
 /// * `revision` (optional) - The expected revision number of the record to prevent conflicts
 ///
 /// # Example
-/// ```rust
-/// let response = update_status(123, 456, "Submit for Review".to_owned())
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::update_status(123, 456, "Submit for Review".to_owned())
 ///     .assignee("reviewer1".to_owned())
 ///     .revision(5)
 ///     .send(&client)?;
 /// println!("Status updated, new revision: {}", response.revision);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

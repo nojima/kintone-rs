@@ -21,7 +21,7 @@ use crate::model::space::ThreadComment;
 /// * `comment` - The comment data including text and mentions
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::space::ThreadComment;

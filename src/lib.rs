@@ -20,7 +20,7 @@
 //!
 //! Here's a simple example that retrieves a record from a Kintone app and displays it:
 //!
-//! ```rust
+//! ```no_run
 //! use kintone::client::{Auth, KintoneClient};
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +73,7 @@
 //! Each API function follows the same pattern: create a request builder, optionally configure it
 //! with additional parameters using method chaining, and then call `.send(&client)` to execute the request.
 //!
-//! ```rust
+//! ```no_run
 //! # use std::error::Error;
 //! # use kintone::client::{Auth, KintoneClient};
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::api_token("token".to_owned()));

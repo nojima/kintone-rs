@@ -13,9 +13,8 @@
 //!
 //! All functions in this module follow the builder pattern:
 //!
-//! ```rust
+//! ```no_run
 //! # use kintone::client::{Auth, KintoneClient};
-//! # use kintone::v1::app::settings;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! // Deploy apps
 //! kintone::v1::app::settings::deploy_app()
@@ -59,9 +58,8 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 /// - `revert(true/false)` - Whether to cancel changes instead of deploying them
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
-/// # use kintone::v1::app::settings;
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// // Deploy multiple apps
 /// let response = kintone::v1::app::settings::deploy_app()
@@ -122,7 +120,7 @@ impl DeployAppRequest {
     ///   the actual revision, an error will be returned. Use `None` to skip validation.
     ///
     /// # Example
-    /// ```rust
+    /// ```no_run
     /// let request = kintone::v1::app::settings::deploy_app()
     ///     .app(123, Some(45))  // Deploy with revision check
     ///     .app(124, None);     // Deploy without revision check
@@ -136,33 +134,12 @@ impl DeployAppRequest {
     }
 
     /// Sets whether to revert (cancel) changes instead of deploying them.
-    ///
-    /// # Arguments
-    /// * `revert` - `true` to cancel changes and revert the preview environment to match
-    ///   the production environment, `false` to deploy changes to production (default)
-    ///
-    /// # Example
-    /// ```rust
-    /// // Cancel changes
-    /// let request = kintone::v1::app::settings::deploy_app()
-    ///     .app(123, None)
-    ///     .revert(true);
-    ///
-    /// // Deploy changes (default behavior)
-    /// let request = kintone::v1::app::settings::deploy_app()
-    ///     .app(123, None)
-    ///     .revert(false);
-    /// ```
     pub fn revert(mut self, revert: bool) -> Self {
         self.body.revert = Some(revert);
         self
     }
 
     /// Sends the request to deploy app settings.
-    ///
-    /// # Returns
-    /// A Result containing `()` on success, or an ApiError on failure.
-    /// This API has no response body - success is indicated by the absence of an error.
     ///
     /// **Note**: This is an asynchronous operation. Use the [`get_app_deploy_status`] API to check
     /// if the deployment has completed successfully.
@@ -195,9 +172,8 @@ pub struct DeployAppResponse {}
 /// - `app(app_id)` - Add an app ID to check deployment status
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
-/// # use kintone::v1::app::settings;
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// // Check deployment status for multiple apps
 /// let status = kintone::v1::app::settings::get_app_deploy_status()

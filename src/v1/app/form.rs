@@ -12,7 +12,7 @@
 //!
 //! All functions in this module follow the builder pattern:
 //!
-//! ```rust
+//! ```no_run
 //! # use kintone::client::{Auth, KintoneClient};
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! use kintone::model::app::field::SingleLineTextFieldProperty;
@@ -57,7 +57,7 @@ use crate::model::app::field::FieldProperty;
 /// * `app_id` - The ID of the app to add fields to
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::app::field::SingleLineTextFieldProperty;
