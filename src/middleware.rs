@@ -64,30 +64,15 @@ impl ResponseBody {
 
 //-----------------------------------------------------------------------------
 
-pub trait Handler {
+pub trait Handler: Send + Sync + 'static {
     fn handle(
         &self,
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError>;
 }
 
-impl<F> Handler for F
-where
-    F: Fn(http::Request<RequestBody>) -> Result<http::Response<ResponseBody>, ApiError>
-        + Send
-        + Sync
-        + 'static,
-{
-    fn handle(
-        &self,
-        req: http::Request<RequestBody>,
-    ) -> Result<http::Response<ResponseBody>, ApiError> {
-        self(req)
-    }
-}
-
-pub trait Layer<Inner: Handler + Send + Sync + 'static> {
-    type Outer: Handler + Send + Sync + 'static;
+pub trait Layer<Inner: Handler>: Send + Sync + 'static {
+    type Outer: Handler;
     fn layer(self, inner: Inner) -> Self::Outer;
 }
 
@@ -125,7 +110,7 @@ impl RetryLayer {
     }
 }
 
-impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for RetryLayer {
+impl<Inner: Handler> Layer<Inner> for RetryLayer {
     type Outer = RetryHandler<Inner>;
     fn layer(self, inner: Inner) -> Self::Outer {
         RetryHandler { inner, layer: self }
@@ -137,7 +122,7 @@ pub struct RetryHandler<Inner> {
     layer: RetryLayer,
 }
 
-impl<Inner: Handler + Send + Sync + 'static> Handler for RetryHandler<Inner> {
+impl<Inner: Handler> Handler for RetryHandler<Inner> {
     fn handle(
         &self,
         req: http::Request<RequestBody>,
@@ -199,7 +184,7 @@ impl Default for LoggingLayer {
     }
 }
 
-impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for LoggingLayer {
+impl<Inner: Handler> Layer<Inner> for LoggingLayer {
     type Outer = LoggingHandler<Inner>;
     fn layer(self, inner: Inner) -> Self::Outer {
         LoggingHandler { inner }
@@ -210,7 +195,7 @@ pub struct LoggingHandler<Inner> {
     inner: Inner,
 }
 
-impl<Inner: Handler + Send + Sync + 'static> Handler for LoggingHandler<Inner> {
+impl<Inner: Handler> Handler for LoggingHandler<Inner> {
     fn handle(
         &self,
         req: http::Request<RequestBody>,
@@ -229,10 +214,7 @@ impl<Inner: Handler + Send + Sync + 'static> Handler for LoggingHandler<Inner> {
 
 pub struct NoLayer;
 
-impl<Inner> Layer<Inner> for NoLayer
-where
-    Inner: Handler + Send + Sync + 'static,
-{
+impl<Inner: Handler> Layer<Inner> for NoLayer {
     type Outer = Inner;
     fn layer(self, inner: Inner) -> Self::Outer {
         inner
@@ -249,9 +231,9 @@ impl<Head, Tail> Stack<Head, Tail> {
 
 impl<Inner, Head, Tail> Layer<Inner> for Stack<Head, Tail>
 where
-    Inner: Handler + Send + Sync + 'static,
-    Head: Layer<Tail::Outer> + Send + Sync + 'static,
-    Tail: Layer<Inner> + Send + Sync + 'static,
+    Inner: Handler,
+    Head: Layer<Tail::Outer>,
+    Tail: Layer<Inner>,
 {
     type Outer = Head::Outer;
     fn layer(self, inner: Inner) -> Self::Outer {

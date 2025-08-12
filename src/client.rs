@@ -96,7 +96,7 @@ pub struct KintoneClient {
     base_url: url::Url,
     auth: Auth,
     guest_space_id: Option<u64>,
-    handler: Box<dyn middleware::Handler + Send + Sync + 'static>,
+    handler: Box<dyn middleware::Handler>,
 }
 
 impl KintoneClient {
@@ -178,7 +178,7 @@ impl<L> KintoneClientBuilder<L> {
 
 impl<L> KintoneClientBuilder<L>
 where
-    L: middleware::Layer<RequestHandler> + Send + Sync + 'static,
+    L: middleware::Layer<RequestHandler>,
 {
     pub fn build(self) -> KintoneClient {
         let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_owned());
