@@ -7,6 +7,7 @@
 //!
 //! ### Settings Deployment
 //! - [`deploy_app`] - Deploy app settings from preview to production environment
+//! - [`get_app_deploy_status`] - Check the deployment status of app settings
 //!
 //! ## Usage Pattern
 //!
@@ -16,9 +17,16 @@
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::settings;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
+//! // Deploy apps
 //! settings::deploy_app()
 //!     .app(123, Some(45)) // app ID with optional revision
 //!     .app(124, None)     // app ID without revision check
+//!     .send(&client)?;
+//!
+//! // Check deployment status
+//! let status = settings::get_app_deploy_status()
+//!     .app(123)
+//!     .app(124)
 //!     .send(&client)?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
@@ -37,8 +45,7 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 /// in the preview environment to the production environment. This is equivalent to
 /// clicking the "Deploy App" or "Cancel Changes" button in the app settings interface.
 ///
-/// **Important Features:**
-/// - This is an asynchronous API. Use the deploy status API to check completion.
+/// - This is an asynchronous API. Use the [`get_app_deploy_status`] API to check completion.
 /// - Multiple apps can be deployed in a single request (max 300 apps).
 /// - If any app fails to deploy, all specified apps will be reverted to their previous state.
 /// - Guest space apps can only be deployed with other apps from the same guest space.
@@ -153,7 +160,7 @@ impl DeployAppRequest {
     /// A Result containing `()` on success, or an ApiError on failure.
     /// This API has no response body - success is indicated by the absence of an error.
     ///
-    /// **Note**: This is an asynchronous operation. Use the deploy status API to check
+    /// **Note**: This is an asynchronous operation. Use the [`get_app_deploy_status`] API to check
     /// if the deployment has completed successfully.
     ///
     /// # Authentication
@@ -165,3 +172,101 @@ impl DeployAppRequest {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DeployAppResponse {}
+
+/// Checks the deployment status of app settings.
+///
+/// This function creates a request to check the status of app deployments that were
+/// initiated with the deploy_app API. Since deployment is an asynchronous operation,
+/// this API allows you to monitor the progress and completion of the deployment process.
+///
+/// - Can check the status of up to 300 apps in a single request
+/// - Returns the current status for each app: PROCESSING, SUCCESS, FAIL, or CANCEL
+/// - Guest space apps can only be checked with other apps from the same guest space
+///
+/// **Required Permissions:** App management permissions
+///
+/// # Arguments
+///
+/// Use the builder pattern to specify apps to check:
+/// - `app(app_id)` - Add an app ID to check deployment status
+///
+/// # Example
+/// ```rust
+/// // Check deployment status for multiple apps
+/// let status = get_app_deploy_status()
+///     .app(123)
+///     .app(124)
+///     .app(125)
+///     .send(&client)?;
+///
+/// for app_status in status.apps {
+///     match app_status.status {
+///         DeployStatus::Processing => println!("App {} is still deploying", app_status.app),
+///         DeployStatus::Success => println!("App {} deployed successfully", app_status.app),
+///         DeployStatus::Fail => println!("App {} deployment failed", app_status.app),
+///         DeployStatus::Cancel => println!("App {} deployment was cancelled", app_status.app),
+///     }
+/// }
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/settings/get-app-deploy-status/>
+pub fn get_app_deploy_status() -> GetAppDeployStatusRequest {
+    let builder = RequestBuilder::new(http::Method::GET, "/v1/preview/app/deploy.json");
+    GetAppDeployStatusRequest {
+        builder,
+        body: GetAppDeployStatusRequestBody { apps: Vec::new() },
+    }
+}
+
+#[must_use]
+pub struct GetAppDeployStatusRequest {
+    builder: RequestBuilder,
+    body: GetAppDeployStatusRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GetAppDeployStatusRequestBody {
+    apps: Vec<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAppDeployStatusResponse {
+    pub apps: Vec<AppDeployStatus>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppDeployStatus {
+    #[serde(with = "stringified")]
+    pub app: u64,
+    pub status: DeployStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DeployStatus {
+    /// Deployment is in progress
+    Processing,
+    /// Deployment completed successfully
+    Success,
+    /// Deployment failed
+    Fail,
+    /// Deployment was cancelled due to another app's failure
+    Cancel,
+}
+
+impl GetAppDeployStatusRequest {
+    /// Adds an app ID to check deployment status.
+    pub fn app(mut self, app_id: u64) -> Self {
+        self.body.apps.push(app_id);
+        self
+    }
+
+    /// Sends the request to check app deployment status.
+    pub fn send(self, client: &KintoneClient) -> Result<GetAppDeployStatusResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}

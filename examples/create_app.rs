@@ -108,7 +108,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .app(app_id, Some(field_revision))
         .send(&client)?;
 
-    println!("   ✅ App deployed successfully!\n");
+    println!("   ✅ App deployment initiated!");
+
+    // Step 4: Check deployment status
+    println!("⏳ Step 4: Checking deployment status...");
+
+    // Poll deployment status until completion
+    let mut attempts = 0;
+    let max_attempts = 30; // Wait up to 30 seconds
+
+    loop {
+        attempts += 1;
+
+        let status_response = settings::get_app_deploy_status()
+            .app(app_id)
+            .send(&client)?;
+
+        if let Some(app_status) = status_response.apps.first() {
+            match app_status.status {
+                settings::DeployStatus::Processing => {
+                    println!("   ⏳ Deployment in progress... (attempt {attempts}/{max_attempts})");
+                    if attempts >= max_attempts {
+                        println!("   ⚠️  Deployment is taking longer than expected. Please check manually.");
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                }
+                settings::DeployStatus::Success => {
+                    println!("   ✅ Deployment completed successfully!");
+                    break;
+                }
+                settings::DeployStatus::Fail => {
+                    println!("   ❌ Deployment failed!");
+                    return Err("App deployment failed".into());
+                }
+                settings::DeployStatus::Cancel => {
+                    println!("   ⚠️  Deployment was cancelled!");
+                    return Err("App deployment was cancelled".into());
+                }
+            }
+        } else {
+            println!("   ❌ No status information received for app");
+            break;
+        }
+    }
+
+    println!();
 
     // Summary
     println!("🎉 Workflow completed successfully!");
