@@ -140,7 +140,7 @@ impl GetRecordsRequest {
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::record::{Record, FieldValue};
-/// 
+///
 /// let mut record = Record::new();
 /// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
 ///
