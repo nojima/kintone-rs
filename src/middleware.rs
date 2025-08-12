@@ -62,6 +62,8 @@ impl ResponseBody {
     }
 }
 
+//-----------------------------------------------------------------------------
+
 pub trait Middleware {
     fn handle(
         &self,
@@ -69,12 +71,12 @@ pub trait Middleware {
     ) -> Result<http::Response<ResponseBody>, ApiError>;
 }
 
-impl<
+impl<F> Middleware for F
+where
     F: Fn(http::Request<RequestBody>) -> Result<http::Response<ResponseBody>, ApiError>
         + Send
         + Sync
         + 'static,
-> Middleware for F
 {
     fn handle(
         &self,
@@ -87,6 +89,8 @@ impl<
 pub trait Layer<Inner: Middleware + Send + Sync + 'static> {
     fn layer(self, inner: Inner) -> impl Middleware;
 }
+
+//-----------------------------------------------------------------------------
 
 pub struct RetryLayer {
     max_attempts: usize,
@@ -144,6 +148,36 @@ impl<Inner: Middleware + Send + Sync + 'static> Layer<Inner> for RetryLayer {
                 delay = std::cmp::min(delay * 2, self.max_delay);
                 attempts += 1;
             }
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+pub struct LoggingLayer;
+
+impl LoggingLayer {
+    pub fn new() -> Self {
+        LoggingLayer
+    }
+}
+
+impl Default for LoggingLayer {
+    fn default() -> Self {
+        LoggingLayer::new()
+    }
+}
+
+impl<Inner: Middleware + Send + Sync + 'static> Layer<Inner> for LoggingLayer {
+    fn layer(self, inner: Inner) -> impl Middleware {
+        move |req: http::Request<RequestBody>| {
+            eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
+            let result = inner.handle(req);
+            match &result {
+                Ok(resp) => eprintln!("Response: status={:?}", resp.status().as_u16()),
+                Err(e) => eprintln!("Error: {e:?}"),
+            }
+            result
         }
     }
 }

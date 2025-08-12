@@ -15,8 +15,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         text: "Hello, World!".to_owned(),
         mentions: vec![],
     };
-    let resp = kintone::v1::record::add_comment(5, 1, comment)
-        .send(&client)?;
+    let resp = kintone::v1::record::add_comment(5, 1, comment).send(&client)?;
 
     println!("Basic comment added with ID: {}", resp.id);
 

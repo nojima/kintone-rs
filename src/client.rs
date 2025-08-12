@@ -79,9 +79,9 @@
 //!     .build();
 //! ```
 
-use std::{collections::HashMap, io::Cursor};
 use std::fmt::Debug;
 use std::io::Read;
+use std::{collections::HashMap, io::Cursor};
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -90,7 +90,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::error::ApiError;
-use crate::middleware::{self, RequestBody};
+use crate::middleware::{self, Layer, RequestBody};
 
 pub struct KintoneClient {
     base_url: url::Url,
@@ -147,25 +147,25 @@ impl KintoneClientBuilder {
             .http_status_as_error(false)
             .build()
             .into();
-    
-        let middleware = Box::new(
-            move |req: http::Request<middleware::RequestBody>| {
-                let req = req.map(|body| body.into_ureq_body());
-                let resp = http_client.run(req)?;
-                if resp.status().as_u16() >= 400 {
-                    return Err(ApiError::from(resp));
-                }
-                let (parts, body) = resp.into_parts();
-                let body = middleware::ResponseBody::from_ureq_body(body);
-                Ok(http::Response::from_parts(parts, body))
+
+        let mw = move |req: http::Request<middleware::RequestBody>| {
+            let req = req.map(|body| body.into_ureq_body());
+            let resp = http_client.run(req)?;
+            if resp.status().as_u16() >= 400 {
+                return Err(ApiError::from(resp));
             }
-        );
+            let (parts, body) = resp.into_parts();
+            let body = middleware::ResponseBody::from_ureq_body(body);
+            Ok(http::Response::from_parts(parts, body))
+        };
+
+        let mw = middleware::LoggingLayer::new().layer(mw);
 
         KintoneClient {
             base_url: self.base_url,
             auth: self.auth,
             guest_space_id: self.guest_space_id,
-            middleware,
+            middleware: Box::new(mw),
         }
     }
 }
@@ -291,13 +291,15 @@ impl UploadRequest {
         let mut headers = HashMap::with_capacity(1);
         headers.insert("content-type".to_owned(), content_type);
 
-        let header = Cursor::new(format!(
-            "--{boundary}\r\n\
+        let header = Cursor::new(
+            format!(
+                "--{boundary}\r\n\
              content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
              \r\n",
-            self.name, self.filename
-        )
-        .into_bytes());
+                self.name, self.filename
+            )
+            .into_bytes(),
+        );
         let footer = Cursor::new(format!("\r\n--{boundary}--\r\n").into_bytes());
         let body = header.chain(content).chain(footer);
         let body = RequestBody::from_reader(body);
