@@ -45,7 +45,7 @@ use crate::internal::serde_helper::stringified;
 ///
 /// **Important**: This API requires username/password authentication and cannot use API tokens.
 ///
-/// **Note**: Apps created with this function exist only in the preview environment.
+/// **Important**: Apps created with this function exist only in the preview environment.
 /// To deploy the app to the production environment, use [`settings::deploy_app`].
 ///
 /// # Arguments

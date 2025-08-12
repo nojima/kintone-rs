@@ -50,8 +50,8 @@ use crate::model::app::field::FieldProperty;
 ///
 /// **Important**: This API requires app management permissions.
 ///
-/// **Note**: Fields added with this function exist only in the preview environment.
-/// To deploy the changes to the production environment, use the deploy app API.
+/// **Important**: Fields added with this function exist only in the preview environment.
+/// To deploy the changes to the production environment, use [`kintone::v1::app::settings::deploy_app`].
 ///
 /// # Arguments
 /// * `app_id` - The ID of the app to add fields to
