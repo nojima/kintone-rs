@@ -64,14 +64,14 @@ impl ResponseBody {
 
 //-----------------------------------------------------------------------------
 
-pub trait Middleware {
+pub trait Handler {
     fn handle(
         &self,
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError>;
 }
 
-impl<F> Middleware for F
+impl<F> Handler for F
 where
     F: Fn(http::Request<RequestBody>) -> Result<http::Response<ResponseBody>, ApiError>
         + Send
@@ -86,8 +86,8 @@ where
     }
 }
 
-pub trait Layer<Inner: Middleware + Send + Sync + 'static> {
-    fn layer(self, inner: Inner) -> impl Middleware;
+pub trait Layer<Inner: Handler + Send + Sync + 'static> {
+    fn layer(self, inner: Inner) -> impl Handler;
 }
 
 //-----------------------------------------------------------------------------
@@ -112,8 +112,8 @@ impl RetryLayer {
     }
 }
 
-impl<Inner: Middleware + Send + Sync + 'static> Layer<Inner> for RetryLayer {
-    fn layer(self, inner: Inner) -> impl Middleware {
+impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for RetryLayer {
+    fn layer(self, inner: Inner) -> impl Handler {
         move |req: http::Request<RequestBody>| {
             let (parts, body) = req.into_parts();
 
@@ -168,8 +168,8 @@ impl Default for LoggingLayer {
     }
 }
 
-impl<Inner: Middleware + Send + Sync + 'static> Layer<Inner> for LoggingLayer {
-    fn layer(self, inner: Inner) -> impl Middleware {
+impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for LoggingLayer {
+    fn layer(self, inner: Inner) -> impl Handler {
         move |req: http::Request<RequestBody>| {
             eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
             let result = inner.handle(req);

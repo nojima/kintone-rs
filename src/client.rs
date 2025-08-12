@@ -96,7 +96,7 @@ pub struct KintoneClient {
     base_url: url::Url,
     auth: Auth,
     guest_space_id: Option<u64>,
-    middleware: Box<dyn middleware::Middleware + Send + Sync + 'static>,
+    handler: Box<dyn middleware::Handler + Send + Sync + 'static>,
 }
 
 impl KintoneClient {
@@ -108,7 +108,7 @@ impl KintoneClient {
         &self,
         req: http::Request<middleware::RequestBody>,
     ) -> Result<http::Response<middleware::ResponseBody>, ApiError> {
-        self.middleware.handle(req)
+        self.handler.handle(req)
     }
 }
 
@@ -148,7 +148,7 @@ impl KintoneClientBuilder {
             .build()
             .into();
 
-        let mw = move |req: http::Request<middleware::RequestBody>| {
+        let handler = move |req: http::Request<middleware::RequestBody>| {
             let req = req.map(|body| body.into_ureq_body());
             let resp = http_client.run(req)?;
             if resp.status().as_u16() >= 400 {
@@ -159,13 +159,13 @@ impl KintoneClientBuilder {
             Ok(http::Response::from_parts(parts, body))
         };
 
-        let mw = middleware::LoggingLayer::new().layer(mw);
+        let handler = middleware::LoggingLayer::new().layer(handler);
 
         KintoneClient {
             base_url: self.base_url,
             auth: self.auth,
             guest_space_id: self.guest_space_id,
-            middleware: Box::new(mw),
+            handler: Box::new(handler),
         }
     }
 }
