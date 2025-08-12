@@ -37,7 +37,8 @@ use std::{
 
 use bigdecimal::BigDecimal;
 use kintone::{
-    client::{Auth, KintoneClient},
+    client::{Auth, KintoneClient, KintoneClientBuilder},
+    middleware,
     model::{
         app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty},
         record::{FieldValue, Record},
@@ -69,10 +70,13 @@ impl TestConfig {
     }
 
     fn create_client(&self) -> KintoneClient {
-        KintoneClient::new(
+        KintoneClientBuilder::new(
             &self.base_url,
             Auth::password(self.username.clone(), self.password.clone()),
         )
+        .layer(middleware::LoggingLayer::new())
+        .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8)))
+        .build()
     }
 }
 

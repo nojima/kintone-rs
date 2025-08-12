@@ -87,7 +87,8 @@ where
 }
 
 pub trait Layer<Inner: Handler + Send + Sync + 'static> {
-    fn layer(self, inner: Inner) -> impl Handler;
+    type Outer: Handler + Send + Sync + 'static;
+    fn layer(self, inner: Inner) -> Self::Outer;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,41 +114,54 @@ impl RetryLayer {
 }
 
 impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for RetryLayer {
-    fn layer(self, inner: Inner) -> impl Handler {
-        move |req: http::Request<RequestBody>| {
-            let (parts, body) = req.into_parts();
+    type Outer = RetryHandler<Inner>;
+    fn layer(self, inner: Inner) -> Self::Outer {
+        RetryHandler { inner, layer: self }
+    }
+}
 
-            let mut attempts = 0;
-            let mut delay = self.initial_delay;
+pub struct RetryHandler<Inner> {
+    inner: Inner,
+    layer: RetryLayer,
+}
 
-            loop {
-                let Some(body_cloned) = body.try_clone() else {
-                    // Body cannot be cloned. We cannot retry this request.
-                    let req = Request::from_parts(parts, body);
-                    return inner.handle(req);
-                };
-                let req_cloned = http::Request::from_parts(parts.clone(), body_cloned);
-                let result = inner.handle(req_cloned);
+impl<Inner: Handler + Send + Sync + 'static> Handler for RetryHandler<Inner> {
+    fn handle(
+        &self,
+        req: http::Request<RequestBody>,
+    ) -> Result<http::Response<ResponseBody>, ApiError> {
+        let (parts, body) = req.into_parts();
 
-                match result {
-                    Ok(resp) => {
-                        if resp.status().is_success() || attempts >= self.max_attempts {
-                            return Ok(resp);
-                        }
-                        // do retry
+        let mut attempts = 0;
+        let mut delay = self.layer.initial_delay;
+
+        loop {
+            let Some(body_cloned) = body.try_clone() else {
+                // Body cannot be cloned. We cannot retry this request.
+                let req = Request::from_parts(parts, body);
+                return self.inner.handle(req);
+            };
+            let req_cloned = http::Request::from_parts(parts.clone(), body_cloned);
+            let result = self.inner.handle(req_cloned);
+
+            match result {
+                Ok(resp) => {
+                    if resp.status().is_success() || attempts >= self.layer.max_attempts {
+                        return Ok(resp);
                     }
-                    Err(e) => {
-                        if attempts >= self.max_attempts {
-                            return Err(e);
-                        }
-                        // do retry
-                    }
+                    // do retry
                 }
-
-                std::thread::sleep(delay);
-                delay = std::cmp::min(delay * 2, self.max_delay);
-                attempts += 1;
+                Err(e) => {
+                    if attempts >= self.layer.max_attempts {
+                        return Err(e);
+                    }
+                    // do retry
+                }
             }
+
+            std::thread::sleep(delay);
+            delay = std::cmp::min(delay * 2, self.layer.max_delay);
+            attempts += 1;
         }
     }
 }
@@ -169,15 +183,61 @@ impl Default for LoggingLayer {
 }
 
 impl<Inner: Handler + Send + Sync + 'static> Layer<Inner> for LoggingLayer {
-    fn layer(self, inner: Inner) -> impl Handler {
-        move |req: http::Request<RequestBody>| {
-            eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
-            let result = inner.handle(req);
-            match &result {
-                Ok(resp) => eprintln!("Response: status={:?}", resp.status().as_u16()),
-                Err(e) => eprintln!("Error: {e:?}"),
-            }
-            result
+    type Outer = LoggingHandler<Inner>;
+    fn layer(self, inner: Inner) -> Self::Outer {
+        LoggingHandler { inner }
+    }
+}
+
+pub struct LoggingHandler<Inner> {
+    inner: Inner,
+}
+
+impl<Inner: Handler + Send + Sync + 'static> Handler for LoggingHandler<Inner> {
+    fn handle(
+        &self,
+        req: http::Request<RequestBody>,
+    ) -> Result<http::Response<ResponseBody>, ApiError> {
+        eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
+        let result = self.inner.handle(req);
+        match &result {
+            Ok(resp) => eprintln!("Response: status={:?}", resp.status().as_u16()),
+            Err(e) => eprintln!("Error: {e:?}"),
         }
+        result
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+pub struct NoLayer;
+
+impl<Inner> Layer<Inner> for NoLayer
+where
+    Inner: Handler + Send + Sync + 'static,
+{
+    type Outer = Inner;
+    fn layer(self, inner: Inner) -> Self::Outer {
+        inner
+    }
+}
+
+pub struct Stack<Head, Tail>(Head, Tail);
+
+impl<Head, Tail> Stack<Head, Tail> {
+    pub fn new(head: Head, tail: Tail) -> Self {
+        Stack(head, tail)
+    }
+}
+
+impl<Inner, Head, Tail> Layer<Inner> for Stack<Head, Tail>
+where
+    Inner: Handler + Send + Sync + 'static,
+    Head: Layer<Tail::Outer> + Send + Sync + 'static,
+    Tail: Layer<Inner> + Send + Sync + 'static,
+{
+    type Outer = Head::Outer;
+    fn layer(self, inner: Inner) -> Self::Outer {
+        self.0.layer(self.1.layer(inner))
     }
 }

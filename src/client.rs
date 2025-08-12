@@ -90,7 +90,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::error::ApiError;
-use crate::middleware::{self, Layer, RequestBody};
+use crate::middleware;
 
 pub struct KintoneClient {
     base_url: url::Url,
@@ -112,14 +112,35 @@ impl KintoneClient {
     }
 }
 
-pub struct KintoneClientBuilder {
+pub struct RequestHandler {
+    http_client: ureq::Agent,
+}
+
+impl middleware::Handler for RequestHandler {
+    fn handle(
+        &self,
+        req: http::Request<middleware::RequestBody>,
+    ) -> Result<http::Response<middleware::ResponseBody>, ApiError> {
+        let req = req.map(|body| body.into_ureq_body());
+        let resp = self.http_client.run(req)?;
+        if resp.status().as_u16() >= 400 {
+            return Err(ApiError::from(resp));
+        }
+        let (parts, body) = resp.into_parts();
+        let body = middleware::ResponseBody::from_ureq_body(body);
+        Ok(http::Response::from_parts(parts, body))
+    }
+}
+
+pub struct KintoneClientBuilder<L> {
     base_url: url::Url,
     auth: Auth,
     user_agent: Option<String>,
     guest_space_id: Option<u64>,
+    layer: L,
 }
 
-impl KintoneClientBuilder {
+impl KintoneClientBuilder<middleware::NoLayer> {
     pub fn new(base_url: &str, auth: Auth) -> Self {
         let base_url = url::Url::parse(base_url).unwrap();
         Self {
@@ -127,6 +148,20 @@ impl KintoneClientBuilder {
             auth,
             user_agent: None,
             guest_space_id: None,
+            layer: middleware::NoLayer,
+        }
+    }
+}
+
+impl<L> KintoneClientBuilder<L> {
+    pub fn layer<L2>(self, new_layer: L2) -> KintoneClientBuilder<middleware::Stack<L2, L>> {
+        let layer_stack = middleware::Stack::new(new_layer, self.layer);
+        KintoneClientBuilder {
+            base_url: self.base_url,
+            auth: self.auth,
+            user_agent: self.user_agent,
+            guest_space_id: self.guest_space_id,
+            layer: layer_stack,
         }
     }
 
@@ -139,7 +174,12 @@ impl KintoneClientBuilder {
         self.user_agent = Some(user_agent.into());
         self
     }
+}
 
+impl<L> KintoneClientBuilder<L>
+where
+    L: middleware::Layer<RequestHandler> + Send + Sync + 'static,
+{
     pub fn build(self) -> KintoneClient {
         let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_owned());
         let http_client: ureq::Agent = ureq::Agent::config_builder()
@@ -148,18 +188,7 @@ impl KintoneClientBuilder {
             .build()
             .into();
 
-        let handler = move |req: http::Request<middleware::RequestBody>| {
-            let req = req.map(|body| body.into_ureq_body());
-            let resp = http_client.run(req)?;
-            if resp.status().as_u16() >= 400 {
-                return Err(ApiError::from(resp));
-            }
-            let (parts, body) = resp.into_parts();
-            let body = middleware::ResponseBody::from_ureq_body(body);
-            Ok(http::Response::from_parts(parts, body))
-        };
-
-        let handler = middleware::LoggingLayer::new().layer(handler);
+        let handler = self.layer.layer(RequestHandler { http_client });
 
         KintoneClient {
             base_url: self.base_url,
@@ -248,7 +277,7 @@ impl RequestBuilder {
         client: &KintoneClient,
         body: Body,
     ) -> Result<Resp, ApiError> {
-        let body = RequestBody::from_bytes(serde_json::to_vec_pretty(&body)?);
+        let body = middleware::RequestBody::from_bytes(serde_json::to_vec_pretty(&body)?);
         self.headers.insert("content-type".to_owned(), "application/json".to_owned());
         let req = make_request(client, self.method, &self.api_path, self.headers, self.query)?
             .map(|_| body);
@@ -302,7 +331,7 @@ impl UploadRequest {
         );
         let footer = Cursor::new(format!("\r\n--{boundary}--\r\n").into_bytes());
         let body = header.chain(content).chain(footer);
-        let body = RequestBody::from_reader(body);
+        let body = middleware::RequestBody::from_reader(body);
 
         let req = make_request(client, self.method, &self.api_path, headers, HashMap::new())?
             .map(|_| body);
@@ -362,7 +391,7 @@ fn make_request(
     api_path: &str,
     mut headers: HashMap<String, String>,
     query: HashMap<String, String>,
-) -> Result<http::Request<RequestBody>, http::Error> {
+) -> Result<http::Request<middleware::RequestBody>, http::Error> {
     // Add headers for auth
     match client.auth {
         Auth::Password {
@@ -395,5 +424,5 @@ fn make_request(
     for (key, value) in headers {
         req = req.header(&key, &value);
     }
-    req.body(RequestBody::void())
+    req.body(middleware::RequestBody::void())
 }
