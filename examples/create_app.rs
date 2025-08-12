@@ -86,9 +86,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Add all fields at once
     let field_response = form::add_form_field(app_id)
-        .field("customer_name", customer_name_field.into())
-        .field("email", email_field.into())
-        .field("phone", phone_field.into())
+        .field(customer_name_field.into())
+        .field(email_field.into())
+        .field(phone_field.into())
         .revision(Some(initial_revision))
         .send(&client)?;
 

@@ -121,11 +121,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Send the request to add all fields
     let response = form::add_form_field(app_id)
-        .field("customer_name", customer_name_field)
-        .field("price", price_field)
-        .field("order_date", order_date_field)
-        .field("priority", priority_field)
-        .field("description", description_field)
+        .field(customer_name_field)
+        .field(price_field)
+        .field(order_date_field)
+        .field(priority_field)
+        .field(description_field)
         .send(&client)?;
 
     println!("Successfully added form fields!");

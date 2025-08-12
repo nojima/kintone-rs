@@ -25,7 +25,7 @@
 //! };
 //!
 //! let response = kintone::v1::app::form::add_form_field(123)
-//!     .field("my_field", field.into()) // Don't forget .into()
+//!     .field(field.into()) // Don't forget .into()
 //!     .revision(Some(5))
 //!     .send(&client)?;
 //! println!("Updated app with revision: {}", response.revision);
@@ -71,7 +71,7 @@ use crate::model::app::field::FieldProperty;
 /// };
 ///
 /// let response = kintone::v1::app::form::add_form_field(123)
-///     .field("customer_name", text_field.into()) // Don't forget .into()
+///     .field(text_field.into()) // Don't forget .into()
 ///     .send(&client)?;
 /// println!("Added field, new revision: {}", response.revision);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -116,8 +116,10 @@ pub struct AddFormFieldResponse {
 
 impl AddFormFieldRequest {
     /// Adds a field to be created.
-    pub fn field(mut self, field_code: impl Into<String>, field_property: FieldProperty) -> Self {
-        self.body.properties.insert(field_code.into(), field_property);
+    pub fn field(mut self, field_property: FieldProperty) -> Self {
+        self.body
+            .properties
+            .insert(field_property.field_code().to_owned(), field_property);
         self
     }
 

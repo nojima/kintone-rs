@@ -11,63 +11,92 @@ use crate::model::record::FieldType;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
+#[func(pub fn field_code(&self) -> &str)]
 #[non_exhaustive]
 pub enum FieldProperty {
     #[assoc(field_type = FieldType::Calc)]
+    #[assoc(field_code = &_0.code)]
     Calc(CalcFieldProperty),
     #[assoc(field_type = FieldType::SingleLineText)]
+    #[assoc(field_code = &_0.code)]
     SingleLineText(SingleLineTextFieldProperty),
     #[assoc(field_type = FieldType::MultiLineText)]
+    #[assoc(field_code = &_0.code)]
     MultiLineText(MultiLineTextFieldProperty),
     #[assoc(field_type = FieldType::RichText)]
+    #[assoc(field_code = &_0.code)]
     RichText(RichTextFieldProperty),
     #[assoc(field_type = FieldType::Number)]
+    #[assoc(field_code = &_0.code)]
     Number(NumberFieldProperty),
     #[assoc(field_type = FieldType::Date)]
+    #[assoc(field_code = &_0.code)]
     Date(DateFieldProperty),
     #[assoc(field_type = FieldType::Time)]
+    #[assoc(field_code = &_0.code)]
     Time(TimeFieldProperty),
     #[assoc(field_type = FieldType::Datetime)]
+    #[assoc(field_code = &_0.code)]
     DateTime(DateTimeFieldProperty),
     #[assoc(field_type = FieldType::RadioButton)]
+    #[assoc(field_code = &_0.code)]
     RadioButton(RadioButtonFieldProperty),
     #[assoc(field_type = FieldType::CheckBox)]
+    #[assoc(field_code = &_0.code)]
     CheckBox(CheckBoxFieldProperty),
     #[assoc(field_type = FieldType::MultiSelect)]
+    #[assoc(field_code = &_0.code)]
     MultiSelect(MultiSelectFieldProperty),
     #[assoc(field_type = FieldType::DropDown)]
+    #[assoc(field_code = &_0.code)]
     DropDown(DropDownFieldProperty),
     #[assoc(field_type = FieldType::File)]
+    #[assoc(field_code = &_0.code)]
     File(FileFieldProperty),
     #[assoc(field_type = FieldType::Link)]
+    #[assoc(field_code = &_0.code)]
     Link(LinkFieldProperty),
     #[assoc(field_type = FieldType::UserSelect)]
+    #[assoc(field_code = &_0.code)]
     UserSelect(UserSelectFieldProperty),
     #[assoc(field_type = FieldType::OrganizationSelect)]
+    #[assoc(field_code = &_0.code)]
     OrganizationSelect(OrganizationSelectFieldProperty),
     #[assoc(field_type = FieldType::GroupSelect)]
+    #[assoc(field_code = &_0.code)]
     GroupSelect(GroupSelectFieldProperty),
     #[assoc(field_type = FieldType::ReferenceTable)]
+    #[assoc(field_code = &_0.code)]
     ReferenceTable(ReferenceTableFieldProperty),
     #[assoc(field_type = FieldType::Group)]
+    #[assoc(field_code = &_0.code)]
     Group(GroupFieldProperty),
     #[assoc(field_type = FieldType::Subtable)]
+    #[assoc(field_code = &_0.code)]
     Subtable(SubtableFieldProperty),
     #[assoc(field_type = FieldType::RecordNumber)]
+    #[assoc(field_code = &_0.code)]
     RecordNumber(RecordNumberFieldProperty),
     #[assoc(field_type = FieldType::Category)]
+    #[assoc(field_code = &_0.code)]
     Category(CategoryFieldProperty),
     #[assoc(field_type = FieldType::Status)]
+    #[assoc(field_code = &_0.code)]
     Status(StatusFieldProperty),
     #[assoc(field_type = FieldType::StatusAssignee)]
+    #[assoc(field_code = &_0.code)]
     StatusAssignee(StatusAssigneeFieldProperty),
     #[assoc(field_type = FieldType::CreatedTime)]
+    #[assoc(field_code = &_0.code)]
     CreatedTime(CreatedTimeFieldProperty),
     #[assoc(field_type = FieldType::UpdatedTime)]
+    #[assoc(field_code = &_0.code)]
     UpdatedTime(UpdatedTimeFieldProperty),
     #[assoc(field_type = FieldType::Creator)]
+    #[assoc(field_code = &_0.code)]
     Creator(CreatorFieldProperty),
     #[assoc(field_type = FieldType::Modifier)]
+    #[assoc(field_code = &_0.code)]
     Modifier(ModifierFieldProperty),
     // Note: Lookup is handled separately in deserialization as it can be applied to various field types
     // and is identified by the presence of a "lookup" property in the JSON
