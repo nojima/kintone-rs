@@ -14,9 +14,8 @@
 //!
 //! ```rust
 //! # use kintone::client::{Auth, KintoneClient};
-//! # use kintone::v1::app::form;
-//! # use kintone::model::app::field::SingleLineTextFieldProperty;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+//! use kintone::model::app::field::SingleLineTextFieldProperty;
 //! let field = SingleLineTextFieldProperty {
 //!     code: "my_field".to_owned(),
 //!     label: "My Field".to_owned(),
@@ -25,7 +24,7 @@
 //!     ..Default::default()
 //! };
 //!
-//! let response = form::add_form_field(123)
+//! let response = kintone::v1::app::form::add_form_field(123)
 //!     .field("my_field", field.into()) // Don't forget .into()
 //!     .revision(Some(5))
 //!     .send(&client)?;
@@ -59,6 +58,8 @@ use crate::model::app::field::FieldProperty;
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::app::field::SingleLineTextFieldProperty;
 ///
 /// let text_field = SingleLineTextFieldProperty {
@@ -69,10 +70,11 @@ use crate::model::app::field::FieldProperty;
 ///     ..Default::default()
 /// };
 ///
-/// let response = add_form_field(123)
+/// let response = kintone::v1::app::form::add_form_field(123)
 ///     .field("customer_name", text_field.into()) // Don't forget .into()
 ///     .send(&client)?;
 /// println!("Added field, new revision: {}", response.revision);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

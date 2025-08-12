@@ -18,13 +18,13 @@
 //! # use kintone::v1::app::settings;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 //! // Deploy apps
-//! settings::deploy_app()
+//! kintone::v1::app::settings::deploy_app()
 //!     .app(123, Some(45)) // app ID with optional revision
 //!     .app(124, None)     // app ID without revision check
 //!     .send(&client)?;
 //!
 //! // Check deployment status
-//! let status = settings::get_app_deploy_status()
+//! let status = kintone::v1::app::settings::get_app_deploy_status()
 //!     .app(123)
 //!     .app(124)
 //!     .send(&client)?;
@@ -60,18 +60,22 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # use kintone::v1::app::settings;
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// // Deploy multiple apps
-/// let response = deploy_app()
+/// let response = kintone::v1::app::settings::deploy_app()
 ///     .app(123, Some(45))  // Deploy app 123 with revision check
 ///     .app(124, None)      // Deploy app 124 without revision check
 ///     .revert(false)       // Deploy changes (default)
 ///     .send(&client)?;
 ///
 /// // Cancel changes instead of deploying
-/// let response = deploy_app()
+/// let response = kintone::v1::app::settings::deploy_app()
 ///     .app(123, None)
 ///     .revert(true)        // Cancel changes
 ///     .send(&client)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -119,7 +123,7 @@ impl DeployAppRequest {
     ///
     /// # Example
     /// ```rust
-    /// let request = deploy_app()
+    /// let request = kintone::v1::app::settings::deploy_app()
     ///     .app(123, Some(45))  // Deploy with revision check
     ///     .app(124, None);     // Deploy without revision check
     /// ```
@@ -140,12 +144,12 @@ impl DeployAppRequest {
     /// # Example
     /// ```rust
     /// // Cancel changes
-    /// let request = deploy_app()
+    /// let request = kintone::v1::app::settings::deploy_app()
     ///     .app(123, None)
     ///     .revert(true);
     ///
     /// // Deploy changes (default behavior)
-    /// let request = deploy_app()
+    /// let request = kintone::v1::app::settings::deploy_app()
     ///     .app(123, None)
     ///     .revert(false);
     /// ```
@@ -192,13 +196,17 @@ pub struct DeployAppResponse {}
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # use kintone::v1::app::settings;
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// // Check deployment status for multiple apps
-/// let status = get_app_deploy_status()
+/// let status = kintone::v1::app::settings::get_app_deploy_status()
 ///     .app(123)
 ///     .app(124)
 ///     .app(125)
 ///     .send(&client)?;
 ///
+/// use kintone::v1::app::settings::DeployStatus;
 /// for app_status in status.apps {
 ///     match app_status.status {
 ///         DeployStatus::Processing => println!("App {} is still deploying", app_status.app),
@@ -207,6 +215,7 @@ pub struct DeployAppResponse {}
 ///         DeployStatus::Cancel => println!("App {} deployment was cancelled", app_status.app),
 ///     }
 /// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

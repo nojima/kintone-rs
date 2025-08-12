@@ -20,14 +20,13 @@
 //!
 //! Here's a simple example that retrieves a record from a Kintone app and displays it:
 //!
-//! ```no_run
-//! use std::error::Error;
+//! ```rust
 //! use kintone::client::{Auth, KintoneClient};
 //!
-//! fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Create a client with your Kintone base URL and API token
 //!     let base_url = "https://your-domain.cybozu.com";
-//!     let api_token = "your-api-token";
+//!     let api_token = "your-api-token".to_owned();
 //!     let client = KintoneClient::new(base_url, Auth::api_token(api_token));
 //!
 //!     // Get a single record by ID
@@ -77,15 +76,13 @@
 //! ```rust
 //! # use std::error::Error;
 //! # use kintone::client::{Auth, KintoneClient};
-//! # fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::api_token("token"));
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::api_token("token".to_owned()));
 //! # let app_id = 1;
 //! let response = kintone::v1::record::get_records(app_id) // Returns a request builder
 //!     .query("status = \"Active\"") // Optional parameter: query filter
 //!     .fields(&["name", "email"])   // Optional parameter: field selection
 //!     .send(&client)?;              // Execute the request
-//! # Ok(())
-//! # }
+//! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
 //! This builder pattern allows us to add optional parameters to our APIs while maintaining

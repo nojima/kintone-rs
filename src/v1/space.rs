@@ -22,12 +22,16 @@ use crate::model::space::ThreadComment;
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::space::ThreadComment;
 /// let comment = ThreadComment {
 ///     text: "This is a thread comment.".to_owned(),
 ///     mentions: vec![],
 /// };
-/// let response = add_thread_comment(123, 456, comment).send(&client)?;
+/// let response = kintone::v1::space::add_thread_comment(123, 456, comment).send(&client)?;
 /// println!("Added thread comment with ID: {}", response.id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

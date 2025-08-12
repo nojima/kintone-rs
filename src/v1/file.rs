@@ -21,11 +21,14 @@ use crate::error::ApiError;
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use std::fs::File;
 ///
 /// let file = File::open("./document.pdf")?;
-/// let response = upload("document.pdf").send(&client, file)?;
+/// let response = kintone::v1::file::upload("document.pdf").send(&client, file)?;
 /// println!("Uploaded file key: {}", response.file_key);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference
@@ -77,15 +80,18 @@ impl UploadFileRequest {
 ///
 /// # Example
 /// ```rust
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use std::io::copy;
 /// use std::fs::File;
 ///
-/// let response = download("file_key_from_upload")
+/// let mut response = kintone::v1::file::download("file_key_from_upload")
 ///     .send(&client)?;
 ///
 /// let mut output_file = File::create("./downloaded_file.pdf")?;
 /// copy(&mut response.content, &mut output_file)?;
 /// println!("Downloaded file with MIME type: {}", response.mime_type);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// # Reference

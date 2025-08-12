@@ -7,7 +7,7 @@
 //!
 //! ### Creating a Record
 //! ```rust
-//! use kintone::model::{Record, FieldValue};
+//! use kintone::model::record::{Record, FieldValue};
 //!
 //! let mut record = Record::new();
 //! record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
@@ -17,7 +17,7 @@
 //!
 //! ### Reading Field Values
 //! ```rust
-//! # use kintone::model::{Record, FieldValue};
+//! # use kintone::model::record::{Record, FieldValue};
 //! # let record = Record::new();
 //! if let Some(FieldValue::SingleLineText(name)) = record.get_field_value("name") {
 //!     println!("Name: {}", name);
