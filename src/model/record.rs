@@ -381,15 +381,6 @@ pub struct RecordComment {
     pub mentions: Vec<Entity>,
 }
 
-impl RecordComment {
-    pub fn from_text(s: impl Into<String>) -> Self {
-        Self {
-            text: s.into(),
-            mentions: vec![],
-        }
-    }
-}
-
 impl From<PostedRecordComment> for RecordComment {
     fn from(c: PostedRecordComment) -> Self {
         RecordComment {
