@@ -72,6 +72,12 @@ impl From<http::Error> for ApiError {
     }
 }
 
+impl From<serde_json::Error> for ApiError {
+    fn from(err: serde_json::Error) -> Self {
+        Self::Io(ureq::Error::from(err).into_io())
+    }
+}
+
 fn is_json_response<T>(response: &http::Response<T>) -> bool {
     let Some(content_type) = response.headers().get(http::header::CONTENT_TYPE) else {
         return false;

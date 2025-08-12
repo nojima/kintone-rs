@@ -62,7 +62,7 @@ impl UploadFileRequest {
     pub fn send(
         self,
         client: &KintoneClient,
-        content: impl Read + 'static,
+        content: impl Read + Send + Sync + 'static,
     ) -> Result<UploadFileResponse, ApiError> {
         self.upload_request.send(client, content)
     }
