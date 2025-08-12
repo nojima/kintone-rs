@@ -15,7 +15,7 @@
 //! ```rust
 //! # use kintone::client::{Auth, KintoneClient};
 //! # use kintone::v1::app::form;
-//! # use kintone::models::app::field::SingleLineTextFieldProperty;
+//! # use kintone::model::app::field::SingleLineTextFieldProperty;
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_string(), "pass".to_string()));
 //! let field = SingleLineTextFieldProperty {
 //!     code: "my_field".to_string(),
@@ -41,7 +41,7 @@ use std::collections::HashMap;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
 use crate::internal::serde_helper::{option_stringified, stringified};
-use crate::models::app::field::FieldProperty;
+use crate::model::app::field::FieldProperty;
 
 /// Adds new fields to an app's form in the preview environment.
 ///
@@ -59,7 +59,7 @@ use crate::models::app::field::FieldProperty;
 ///
 /// # Example
 /// ```rust
-/// use kintone::models::app::field::SingleLineTextFieldProperty;
+/// use kintone::model::app::field::SingleLineTextFieldProperty;
 ///
 /// let text_field = SingleLineTextFieldProperty {
 ///     code: "customer_name".to_string(),

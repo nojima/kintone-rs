@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     internal::serde_helper::stringified,
-    models::{Entity, FileBody, Group, Organization, User},
+    model::{Entity, FileBody, Group, Organization, User},
 };
 
 #[derive(Clone, Serialize, Deserialize)]

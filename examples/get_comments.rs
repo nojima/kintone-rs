@@ -2,7 +2,7 @@ use std::error::Error;
 
 use kintone::{
     client::{Auth, KintoneClient},
-    models::Order,
+    model::Order,
 };
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {

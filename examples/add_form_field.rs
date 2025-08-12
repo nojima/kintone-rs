@@ -18,7 +18,7 @@
 //! - `KINTONE_APP_ID`: The ID of the app to add fields to
 
 use kintone::client::{Auth, KintoneClient};
-use kintone::models::app::field::{
+use kintone::model::app::field::{
     Alignment, DateFieldProperty, FieldOption, FieldProperty, MultiLineTextFieldProperty,
     NumberFieldProperty, RadioButtonFieldProperty, SingleLineTextFieldProperty, UnitPosition,
 };

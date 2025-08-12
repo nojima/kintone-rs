@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use kintone::client::{Auth, KintoneClient};
-use kintone::models::space::ThreadComment;
+use kintone::model::space::ThreadComment;
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let base_url = std::env::var("KINTONE_BASE_URL").expect("KINTONE_BASE_URL is not set");

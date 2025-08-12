@@ -127,7 +127,7 @@
 
 pub mod client;
 pub mod error;
-pub mod models;
+pub mod model;
 pub mod v1;
 
 mod internal;

@@ -24,7 +24,7 @@
 //! cannot use API tokens.
 
 use kintone::client::{Auth, KintoneClient};
-use kintone::models::app::field::SingleLineTextFieldProperty;
+use kintone::model::app::field::SingleLineTextFieldProperty;
 use kintone::v1::app::{self, form, settings};
 use std::env;
 

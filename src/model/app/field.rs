@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::internal::serde_helper::{option_stringified, stringified};
-use crate::models::Entity;
-use crate::models::record::FieldType;
+use crate::model::Entity;
+use crate::model::record::FieldType;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
