@@ -4,6 +4,8 @@
 //! All API operations return `Result<T, ApiError>` where errors can be categorized
 //! into I/O errors or HTTP-specific errors.
 
+use serde::Deserialize;
+
 /// HTTP-specific error containing status code and response body.
 ///
 /// This error type is used when the HTTP request completes but returns
@@ -13,11 +15,27 @@
 /// # Fields
 /// * `status` - The HTTP status code (e.g., 404, 500)
 /// * `body` - The response body as a string, which may contain error details from Kintone
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
 #[error("status={status}, body={body:?}")]
 pub struct HttpError {
     pub status: u16,
     pub body: String,
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("status={status:?}, code={code:?}, id={id:?}, message={message:?}")]
+pub struct KintoneError {
+    pub status: u16,
+    pub code: String,
+    pub id: String,
+    pub message: String,
+}
+
+#[derive(Deserialize)]
+struct KintoneErrorJson {
+    pub code: String,
+    pub id: String,
+    pub message: String,
 }
 
 /// The main error type for all Kintone API operations.
@@ -37,16 +55,34 @@ pub enum ApiError {
 
     #[error("http error: {0}")]
     Http(#[from] HttpError),
+
+    #[error("kintone error: {0}")]
+    Kintone(#[from] KintoneError),
 }
 
 impl From<ureq::Error> for ApiError {
     fn from(err: ureq::Error) -> Self {
         match err {
-            ureq::Error::Status(status, response) => {
-                let body = response.into_string().unwrap_or_default();
-                HttpError { status, body }.into()
-            }
+            ureq::Error::Status(status, response) => convert_http_error(status, response),
             _ => err.into(),
         }
+    }
+}
+
+fn convert_http_error(status: u16, response: ureq::Response) -> ApiError {
+    if response.content_type() != "application/json" {
+        let body = response.into_string().unwrap_or_default();
+        return HttpError { status, body }.into();
+    }
+    // If the response is JSON, attempt to parse it as KintoneError.
+    match response.into_json::<KintoneErrorJson>() {
+        Ok(error_json) => KintoneError {
+            status,
+            code: error_json.code,
+            id: error_json.id,
+            message: error_json.message,
+        }
+        .into(),
+        Err(io_error) => io_error.into(),
     }
 }
