@@ -10,6 +10,31 @@ use crate::{
     model::{Entity, FileBody, Group, Organization, User},
 };
 
+/// Represents a record in a Kintone application.
+///
+/// A record is a collection of field values identified by field codes (names).
+/// Records are the primary data structure in Kintone applications, similar to
+/// rows in a database table. Each record can contain various types of fields
+/// such as text, numbers, dates, attachments, and more.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::record::{Record, FieldValue};
+///
+/// // Create a new record
+/// let mut record = Record::new();
+///
+/// // Add fields to the record
+/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
+/// record.put_field("age", FieldValue::Number(30.into()));
+/// record.put_field("email", FieldValue::Link("john@example.com".to_owned()));
+///
+/// // Read field values
+/// if let Some(FieldValue::SingleLineText(name)) = record.get("name") {
+///     println!("Name: {}", name);
+/// }
+/// ```
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Record {
     #[serde(flatten)]
@@ -17,12 +42,40 @@ pub struct Record {
 }
 
 impl Record {
+    /// Creates a new empty record.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::Record;
+    ///
+    /// let record = Record::new();
+    /// assert_eq!(record.fields().len(), 0);
+    /// ```
     pub fn new() -> Self {
         Record {
             fields: HashMap::new(),
         }
     }
 
+    /// Creates a copy of the record without built-in system fields.
+    ///
+    /// Built-in fields are system-managed fields like record ID, creator, creation time,
+    /// modifier, and modification time. This method is useful when you want to create
+    /// a new record based on an existing one, excluding the system-generated fields.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut original = Record::new();
+    /// original.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    /// // Assume the record also has built-in fields after being retrieved from Kintone
+    ///
+    /// let clean_copy = original.clone_without_builtins();
+    /// // clean_copy only contains user-defined fields, not system fields
+    /// ```
     pub fn clone_without_builtins(&self) -> Self {
         let size = self.field_values().filter(|v| !v.field_type().is_builtin()).count();
         let mut fields = HashMap::with_capacity(size);
@@ -34,32 +87,166 @@ impl Record {
         Record { fields }
     }
 
+    /// Gets a reference to the field value for the specified field code.
+    ///
+    /// # Arguments
+    ///
+    /// * `field_code` - The field code (name) to look up
+    ///
+    /// # Returns
+    ///
+    /// `Some(&FieldValue)` if the field exists, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    ///
+    /// if let Some(FieldValue::SingleLineText(name)) = record.get("name") {
+    ///     println!("Name: {}", name);
+    /// }
+    /// ```
     pub fn get(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
 
+    /// Gets a mutable reference to the field value for the specified field code.
+    ///
+    /// # Arguments
+    ///
+    /// * `field_code` - The field code (name) to look up
+    ///
+    /// # Returns
+    ///
+    /// `Some(&mut FieldValue)` if the field exists, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    ///
+    /// if let Some(FieldValue::SingleLineText(name)) = record.get_mut("name") {
+    ///     *name = "Jane".to_owned();
+    /// }
+    /// ```
     pub fn get_mut(&mut self, field_code: &str) -> Option<&mut FieldValue> {
         self.fields.get_mut(field_code)
     }
 
+    /// Returns an iterator over all field codes and values in the record.
+    ///
+    /// The iterator yields tuples of `(&String, &FieldValue)` representing
+    /// the field code and its corresponding value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    /// record.put_field("age", FieldValue::Number(30.into()));
+    ///
+    /// for (field_code, field_value) in record.fields() {
+    ///     println!("{}: {:?}", field_code, field_value);
+    /// }
+    /// ```
     pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
         self.fields.iter()
     }
 
+    /// Returns a mutable iterator over all field codes and values in the record.
+    ///
+    /// The iterator yields tuples of `(&String, &mut FieldValue)` representing
+    /// the field code and its corresponding mutable value reference.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    ///
+    /// for (field_code, field_value) in record.fields_mut() {
+    ///     if let FieldValue::SingleLineText(text) = field_value {
+    ///         *text = text.to_uppercase();
+    ///     }
+    /// }
+    /// ```
     pub fn fields_mut(
         &mut self,
     ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
         self.fields.iter_mut()
     }
 
+    /// Returns an iterator over all field codes in the record.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    /// record.put_field("age", FieldValue::Number(30.into()));
+    ///
+    /// let field_codes: Vec<&String> = record.field_codes().collect();
+    /// assert_eq!(field_codes.len(), 2);
+    /// ```
     pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
         self.fields.keys()
     }
 
+    /// Returns an iterator over all field values in the record.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    /// record.put_field("age", FieldValue::Number(30.into()));
+    ///
+    /// let field_values: Vec<&FieldValue> = record.field_values().collect();
+    /// assert_eq!(field_values.len(), 2);
+    /// ```
     pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
         self.fields.values()
     }
 
+    /// Inserts a field value into the record.
+    ///
+    /// If the field already exists, its value is replaced and the old value is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `field_code` - The field code (name) for the field
+    /// * `value` - The field value to insert
+    ///
+    /// # Returns
+    ///
+    /// The previous value if the field existed, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// let old_value = record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    /// assert!(old_value.is_none());
+    ///
+    /// let replaced_value = record.put_field("name", FieldValue::SingleLineText("Jane".to_owned()));
+    /// assert!(replaced_value.is_some());
+    /// ```
     pub fn put_field(
         &mut self,
         field_code: impl Into<String>,
@@ -68,10 +255,53 @@ impl Record {
         self.fields.insert(field_code.into(), value)
     }
 
+    /// Removes a field from the record.
+    ///
+    /// # Arguments
+    ///
+    /// * `field_code` - The field code to remove
+    ///
+    /// # Returns
+    ///
+    /// The removed field value if it existed, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::{Record, FieldValue};
+    ///
+    /// let mut record = Record::new();
+    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
+    ///
+    /// let removed = record.remove_field("name");
+    /// assert!(removed.is_some());
+    ///
+    /// let not_found = record.remove_field("nonexistent");
+    /// assert!(not_found.is_none());
+    /// ```
     pub fn remove_field(&mut self, field_code: &str) -> Option<FieldValue> {
         self.fields.remove(field_code)
     }
 
+    /// Gets the record ID if available.
+    ///
+    /// The record ID is a system-generated unique identifier for the record.
+    /// This field is only available for records that have been saved to Kintone.
+    ///
+    /// # Returns
+    ///
+    /// `Some(id)` if the record has an ID, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::Record;
+    ///
+    /// let record = Record::new();
+    /// assert!(record.id().is_none()); // New records don't have IDs
+    ///
+    /// // After saving to Kintone, the record would have an ID
+    /// ```
     pub fn id(&self) -> Option<u64> {
         let Some(FieldValue::__ID__(value)) = self.get("$id") else {
             return None;
@@ -79,6 +309,26 @@ impl Record {
         Some(*value)
     }
 
+    /// Gets the record revision number if available.
+    ///
+    /// The revision number is a system-managed version counter that increments
+    /// each time the record is updated. This is used for optimistic locking
+    /// to prevent concurrent modification conflicts.
+    ///
+    /// # Returns
+    ///
+    /// `Some(revision)` if the record has a revision number, `None` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::model::record::Record;
+    ///
+    /// let record = Record::new();
+    /// assert!(record.revision().is_none()); // New records don't have revisions
+    ///
+    /// // After saving to Kintone, the record would have a revision number
+    /// ```
     pub fn revision(&self) -> Option<u64> {
         let Some(FieldValue::__REVISION__(value)) = self.get("$revision") else {
             return None;
@@ -109,92 +359,138 @@ impl Default for Record {
     }
 }
 
+/// Represents the type of a field in a Kintone application.
+///
+/// Each field in a Kintone app has a specific type that determines what kind of data
+/// it can store and how it behaves. Some field types are built-in system fields
+/// (like record ID, creation time) while others are user-defined fields.
+///
+/// The `is_builtin()` method can be used to distinguish between system-managed
+/// and user-defined fields.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::record::FieldType;
+///
+/// assert!(!FieldType::SingleLineText.is_builtin());
+/// assert!(FieldType::CreatedTime.is_builtin());
+/// assert!(FieldType::Creator.is_builtin());
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Assoc)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn is_builtin(&self) -> bool)]
 #[non_exhaustive]
 pub enum FieldType {
+    /// Calculated field that computes values based on other fields
     #[assoc(is_builtin = false)]
     Calc,
 
+    /// System field for record categories (built-in)
     #[assoc(is_builtin = true)]
     Category,
 
+    /// Checkbox field for multiple selection options
     #[assoc(is_builtin = false)]
     CheckBox,
 
+    /// System field for record creation timestamp (built-in)
     #[assoc(is_builtin = true)]
     CreatedTime,
 
+    /// System field for record creator information (built-in)
     #[assoc(is_builtin = true)]
     Creator,
 
+    /// Date field for storing dates without time
     #[assoc(is_builtin = false)]
     Date,
 
+    /// Date and time field for storing timestamps
     #[assoc(is_builtin = false)]
     Datetime,
 
+    /// Dropdown field for single selection from predefined options
     #[assoc(is_builtin = false)]
     DropDown,
 
+    /// File attachment field for storing uploaded files
     #[assoc(is_builtin = false)]
     File,
 
+    /// Group field for displaying related information
     #[assoc(is_builtin = false)]
     Group,
 
+    /// Group selection field for choosing from predefined groups
     #[assoc(is_builtin = false)]
     GroupSelect,
 
+    /// Horizontal rule field for visual separation
     #[assoc(is_builtin = false)]
     Hr,
 
+    /// Label field for displaying text information
     #[assoc(is_builtin = false)]
     Label,
 
+    /// Link field for storing URLs
     #[assoc(is_builtin = false)]
     Link,
 
+    /// System field for record modifier information (built-in)
     #[assoc(is_builtin = true)]
     Modifier,
 
+    /// Multi-line text field for longer text content
     #[assoc(is_builtin = false)]
     MultiLineText,
 
+    /// Multi-select field for choosing multiple options
     #[assoc(is_builtin = false)]
     MultiSelect,
 
+    /// Number field for storing numeric values
     #[assoc(is_builtin = false)]
     Number,
 
+    /// Organization selection field for choosing from organizational units
     #[assoc(is_builtin = false)]
     OrganizationSelect,
 
+    /// Radio button field for single selection
     #[assoc(is_builtin = false)]
     RadioButton,
 
+    /// System field for unique record numbers (built-in)
     #[assoc(is_builtin = true)]
     RecordNumber,
 
+    /// Reference table field for linking to other app records
     #[assoc(is_builtin = false)]
     ReferenceTable,
 
+    /// Rich text field for formatted text content
     #[assoc(is_builtin = false)]
     RichText,
 
+    /// Single-line text field for short text content
     #[assoc(is_builtin = false)]
     SingleLineText,
 
+    /// Spacer field for layout purposes
     #[assoc(is_builtin = false)]
     Spacer,
 
+    /// System field for workflow status (built-in)
     #[assoc(is_builtin = true)]
     Status,
 
+    /// System field for workflow status assignee (built-in)
     #[assoc(is_builtin = true)]
     StatusAssignee,
 
+    /// Subtable field for tabular data
     #[assoc(is_builtin = false)]
     Subtable,
 
@@ -216,6 +512,27 @@ pub enum FieldType {
     __REVISION__,
 }
 
+/// Represents the value of a field in a Kintone record.
+///
+/// Each variant corresponds to a specific field type and contains the appropriate value type.
+/// The enum is marked as `#[non_exhaustive]` to allow for future field types without breaking changes.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::record::FieldValue;
+/// use chrono::{DateTime, FixedOffset, NaiveDate};
+///
+/// // Text field
+/// let text_value = FieldValue::SingleLineText("Hello, world!".to_string());
+///
+/// // Date field
+/// let date = NaiveDate::from_ymd_opt(2023, 12, 25).unwrap();
+/// let date_value = FieldValue::Date(Some(date));
+///
+/// // Number field
+/// let number_value = FieldValue::Number(42.into());
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
@@ -308,6 +625,24 @@ pub enum FieldValue {
     __REVISION__(#[serde(with = "stringified")] u64),
 }
 
+/// Represents a single row in a subtable field.
+///
+/// A `TableRow` contains a collection of fields indexed by field code,
+/// similar to a record but used within subtable contexts.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::record::{TableRow, FieldValue};
+///
+/// let mut row = TableRow::new();
+/// row.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
+/// row.put_field("age", FieldValue::Number(25.into()));
+///
+/// if let Some(name_field) = row.get("name") {
+///     println!("Name: {:?}", name_field);
+/// }
+/// ```
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TableRow {
     #[serde(flatten)]
@@ -315,12 +650,16 @@ pub struct TableRow {
 }
 
 impl TableRow {
+    /// Creates a new empty table row.
     pub fn new() -> Self {
         Self {
             fields: HashMap::new(),
         }
     }
 
+    /// Adds or updates a field in the table row.
+    ///
+    /// Returns the previous value if the field already existed.
     pub fn put_field(
         &mut self,
         field_code: impl Into<String>,
@@ -329,24 +668,34 @@ impl TableRow {
         self.fields.insert(field_code.into(), value)
     }
 
+    /// Gets a field value by field code.
     pub fn get(&self, field_code: &str) -> Option<&FieldValue> {
         self.fields.get(field_code)
     }
 
+    /// Gets a mutable reference to a field value by field code.
+    pub fn get_mut(&mut self, field_code: &str) -> Option<&mut FieldValue> {
+        self.fields.get_mut(field_code)
+    }
+
+    /// Returns an iterator over all fields in the table row.
     pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
         self.fields.iter()
     }
 
+    /// Returns a mutable iterator over all fields in the table row.
     pub fn fields_mut(
         &mut self,
     ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
         self.fields.iter_mut()
     }
 
+    /// Returns an iterator over all field codes in the table row.
     pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
         self.fields.keys()
     }
 
+    /// Returns an iterator over all field values in the table row.
     pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
         self.fields.values()
     }
@@ -374,10 +723,33 @@ impl Default for TableRow {
     }
 }
 
+/// Represents a comment to be posted to a Kintone record.
+///
+/// This struct is used when creating new comments on records.
+/// Use `PostedRecordComment` for comments that have already been posted.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::{Entity, EntityType};
+/// use kintone::model::record::RecordComment;
+///
+/// let comment = RecordComment {
+///     text: "Please review this record".to_string(),
+///     mentions: vec![
+///         Entity {
+///             entity_type: EntityType::USER,
+///             code: "user1".to_string(),
+///         }
+///     ],
+/// };
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordComment {
+    /// The text content of the comment
     pub text: String,
+    /// List of entities mentioned in the comment
     pub mentions: Vec<Entity>,
 }
 
@@ -390,13 +762,44 @@ impl From<PostedRecordComment> for RecordComment {
     }
 }
 
+/// Represents a comment that has been posted to a Kintone record.
+///
+/// This struct contains all the metadata for an existing comment,
+/// including its ID, creation time, and author information.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::record::{PostedRecordComment, RecordComment};
+/// use kintone::model::User;
+/// use chrono::{DateTime, FixedOffset};
+///
+/// // Convert a PostedRecordComment to RecordComment for updating
+/// let posted_comment = PostedRecordComment {
+///     id: 123,
+///     text: "Updated comment text".to_string(),
+///     created_at: DateTime::parse_from_rfc3339("2023-12-25T10:00:00+09:00").unwrap(),
+///     user: User {
+///         name: "John Doe".to_string(),
+///         code: "john.doe".to_string(),
+///     },
+///     mentions: vec![],
+/// };
+///
+/// let comment: RecordComment = posted_comment.into();
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PostedRecordComment {
+    /// Unique identifier of the comment
     pub id: u64,
+    /// The text content of the comment
     pub text: String,
+    /// When the comment was created
     pub created_at: DateTime<FixedOffset>,
+    /// User who created the comment
     pub user: User,
+    /// List of entities mentioned in the comment
     pub mentions: Vec<Entity>,
 }
 

@@ -8,6 +8,31 @@ use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::model::Entity;
 use crate::model::record::FieldType;
 
+/// Represents the configuration properties of a field in a Kintone app.
+///
+/// Each variant corresponds to a specific field type and contains the complete
+/// configuration for that field, including validation rules, display options,
+/// and default values.
+///
+/// This enum is marked as `#[non_exhaustive]` to allow for future field types
+/// without breaking changes.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty};
+///
+/// let text_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
+///     code: "name".to_string(),
+///     label: "Full Name".to_string(),
+///     required: true,
+///     max_length: Some(100),
+///     ..Default::default()
+/// });
+///
+/// // Get the field code
+/// assert_eq!(text_field.field_code(), "name");
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
 #[func(pub const fn field_type(&self) -> FieldType)]
@@ -103,37 +128,56 @@ pub enum FieldProperty {
 }
 
 // Common types used across field properties
+
+/// Alignment options for field layouts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Alignment {
+    /// Horizontal alignment
     Horizontal,
+    /// Vertical alignment
     Vertical,
 }
 
+/// Position of unit text relative to the input field.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum UnitPosition {
+    /// Display unit before the value
     Before,
+    /// Display unit after the value
     After,
 }
 
+/// Display format options for calculated fields.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DisplayFormat {
+    /// Display as a number
     Number,
+    /// Display as a number with digit grouping
     NumberDigit,
+    /// Display as date and time
     DateTime,
+    /// Display as date only
     Date,
+    /// Display as time only
     Time,
+    /// Display as hour and minute
     HourMinute,
+    /// Display as day, hour, and minute
     DayHourMinute,
 }
 
+/// Protocol type for link fields.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LinkProtocol {
+    /// Web URL (http/https)
     Web,
+    /// Phone call (tel:)
     Call,
+    /// Email address (mailto:)
     Mail,
 }
 
@@ -143,45 +187,76 @@ impl Default for LinkProtocol {
     }
 }
 
+/// Represents an option in a choice field (radio button, checkbox, dropdown, multi-select).
+///
+/// Each option has a display label and an index that determines its position
+/// in the list of options.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldOption {
+    /// Display label for the option
     pub label: String,
+    /// Position index of the option
     #[serde(with = "stringified")]
     pub index: u64,
 }
 
 // Field Property structs
 
+/// Properties for calculated fields.
+///
+/// Calculated fields automatically compute values based on an expression
+/// that can reference other fields in the same record.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalcFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Calculation expression
     pub expression: String,
+    /// Display format for the calculated result
     pub format: Option<DisplayFormat>,
+    /// Number of decimal places to display
     pub display_scale: Option<i64>,
+    /// Whether to hide the expression from users
     pub hide_expression: bool,
+    /// Unit text to display with the value
     pub unit: Option<String>,
+    /// Position of the unit text
     pub unit_position: Option<UnitPosition>,
 }
 
+/// Properties for single line text fields.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleLineTextFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Whether values must be unique across records
     pub unique: bool,
+    /// Maximum allowed length
     #[serde(with = "option_stringified")]
     pub max_length: Option<u64>,
+    /// Minimum required length
     #[serde(with = "option_stringified")]
     pub min_length: Option<u64>,
+    /// Default value when creating new records
     pub default_value: Option<String>,
+    /// Auto-calculation expression
     pub expression: Option<String>,
+    /// Whether to hide the expression from users
     pub hide_expression: bool,
 }
 

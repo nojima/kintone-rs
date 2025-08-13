@@ -34,13 +34,59 @@ pub mod app;
 pub mod record;
 pub mod space;
 
+/// Represents the type of entity in Kintone's user management system.
+///
+/// Kintone supports three types of entities for access control and assignment:
+/// users, groups, and organizations. This enum is used throughout the API
+/// to specify which type of entity is being referenced.
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::EntityType;
+///
+/// let user_type = EntityType::USER;
+/// let group_type = EntityType::GROUP;
+/// let org_type = EntityType::ORGANIZATION;
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EntityType {
+    /// Represents an individual user in the Kintone system
     USER,
+    /// Represents a group of users
     GROUP,
+    /// Represents an organizational unit
     ORGANIZATION,
 }
 
+/// Represents a generic entity in Kintone's user management system.
+///
+/// An entity can be a user, group, or organization, identified by its type and code.
+/// This structure is commonly used in permission settings, assignee specifications,
+/// and other contexts where you need to reference a Kintone entity.
+///
+/// # Fields
+///
+/// * `entity_type` - The type of entity (USER, GROUP, or ORGANIZATION)
+/// * `code` - The unique identifier code for the entity
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::{Entity, EntityType};
+///
+/// // Create a user entity
+/// let user_entity = Entity {
+///     entity_type: EntityType::USER,
+///     code: "john.doe".to_owned(),
+/// };
+///
+/// // Create a group entity
+/// let group_entity = Entity {
+///     entity_type: EntityType::GROUP,
+///     code: "development-team".to_owned(),
+/// };
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entity {
     #[serde(rename = "type")]
@@ -48,6 +94,29 @@ pub struct Entity {
     pub code: String,
 }
 
+/// Represents a user in the Kintone system.
+///
+/// This structure contains basic information about a Kintone user, including
+/// their display name and unique code. Users can be assigned to records,
+/// added to groups, and given various permissions within Kintone apps.
+///
+/// # Fields
+///
+/// * `name` - The display name of the user
+/// * `code` - The unique identifier code for the user (typically their login name)
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::User;
+///
+/// let user = User {
+///     name: "John Doe".to_owned(),
+///     code: "john.doe".to_owned(),
+/// };
+///
+/// println!("User: {} ({})", user.name, user.code);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
@@ -55,6 +124,29 @@ pub struct User {
     pub code: String,
 }
 
+/// Represents a group in the Kintone system.
+///
+/// Groups are collections of users that can be managed together for permissions,
+/// assignments, and notifications. Groups help organize users and simplify
+/// access control management in Kintone applications.
+///
+/// # Fields
+///
+/// * `name` - The display name of the group
+/// * `code` - The unique identifier code for the group
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::Group;
+///
+/// let group = Group {
+///     name: "Development Team".to_owned(),
+///     code: "dev-team".to_owned(),
+/// };
+///
+/// println!("Group: {} ({})", group.name, group.code);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Group {
@@ -62,6 +154,29 @@ pub struct Group {
     pub code: String,
 }
 
+/// Represents an organizational unit in the Kintone system.
+///
+/// Organizations represent hierarchical structures within your company or entity.
+/// They can be used for access control, workflow routing, and organizational
+/// reporting within Kintone applications.
+///
+/// # Fields
+///
+/// * `name` - The display name of the organization
+/// * `code` - The unique identifier code for the organization
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::Organization;
+///
+/// let org = Organization {
+///     name: "Engineering Division".to_owned(),
+///     code: "eng-div".to_owned(),
+/// };
+///
+/// println!("Organization: {} ({})", org.name, org.code);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Organization {
@@ -69,6 +184,33 @@ pub struct Organization {
     pub code: String,
 }
 
+/// Represents metadata for a file stored in Kintone.
+///
+/// This structure contains information about files that have been uploaded to Kintone,
+/// including their content type, unique file key, original filename, and size.
+/// File bodies are typically used in attachment fields and file upload operations.
+///
+/// # Fields
+///
+/// * `content_type` - The MIME type of the file (e.g., "image/jpeg", "application/pdf")
+/// * `file_key` - The unique identifier for the file in Kintone's storage system
+/// * `name` - The original filename when the file was uploaded
+/// * `size` - The file size in bytes
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::FileBody;
+///
+/// let file = FileBody {
+///     content_type: "application/pdf".to_owned(),
+///     file_key: "abc123def456".to_owned(),
+///     name: "document.pdf".to_owned(),
+///     size: 1024768,
+/// };
+///
+/// println!("File: {} ({} bytes)", file.name, file.size);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileBody {
@@ -79,10 +221,35 @@ pub struct FileBody {
     pub size: usize,
 }
 
+/// Represents the sort order for query results.
+///
+/// This enum is used to specify whether records should be sorted in ascending
+/// or descending order when querying Kintone records. It's commonly used in
+/// record retrieval operations and other sorted data requests.
+///
+/// # Variants
+///
+/// * `Asc` - Ascending order (A-Z, 0-9, oldest to newest)
+/// * `Desc` - Descending order (Z-A, 9-0, newest to oldest)
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::model::Order;
+///
+/// let ascending = Order::Asc;
+/// let descending = Order::Desc;
+///
+/// // The Display trait converts to lowercase string representation
+/// assert_eq!(ascending.to_string(), "asc");
+/// assert_eq!(descending.to_string(), "desc");
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Order {
+    /// Ascending order (A-Z, 0-9, oldest to newest)
     Asc,
+    /// Descending order (Z-A, 9-0, newest to oldest)
     Desc,
 }
 
