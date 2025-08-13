@@ -40,7 +40,7 @@ kintone-rs supports a middleware system for handling cross-cutting concerns like
 
 - **RetryLayer**: Automatically retries failed requests with exponential backoff
 - **LoggingLayer**: Logs HTTP request and response information for debugging
-- **BasicAuthLayer**: Adds HTTP Basic authentication headers for proxy/reverse proxy access
+- **BasicAuthLayer**: Adds HTTP Basic authentication headers
 
 ### Example: Retry
 

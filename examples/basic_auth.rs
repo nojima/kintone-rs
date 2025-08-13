@@ -1,9 +1,7 @@
 //! # Basic Authentication Example
 //!
 //! This example demonstrates how to use the BasicAuthLayer middleware to add
-//! HTTP Basic authentication to Kintone API requests. This is useful when
-//! accessing Kintone through proxy servers or reverse proxies that require
-//! HTTP Basic authentication.
+//! HTTP Basic authentication to Kintone API requests.
 //!
 //! ## Usage
 //!
@@ -18,8 +16,8 @@
 //! export KINTONE_BASE_URL="https://your-domain.cybozu.com"
 //! export KINTONE_API_TOKEN="your-api-token"
 //! export KINTONE_APP_ID="123"
-//! export BASIC_AUTH_USERNAME="proxy_user"
-//! export BASIC_AUTH_PASSWORD="proxy_password"
+//! export BASIC_AUTH_USERNAME="basicauth_user"
+//! export BASIC_AUTH_PASSWORD="basicauth_password"
 //! cargo run --example basic_auth
 //! ```
 

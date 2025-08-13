@@ -445,20 +445,7 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 /// Middleware layer that adds HTTP Basic authentication headers to requests.
 ///
 /// This layer automatically adds the `Authorization` header with Basic authentication
-/// credentials to all outgoing requests. This is useful when accessing Kintone through
-/// proxy servers or reverse proxies that require HTTP Basic authentication.
-///
-/// # Use Cases
-///
-/// - Accessing Kintone through corporate proxy servers requiring authentication
-/// - Connecting to Kintone environments behind reverse proxies with Basic auth
-/// - Adding an additional layer of authentication on top of Kintone's own auth
-///
-/// # Security Considerations
-///
-/// - Credentials are base64-encoded (not encrypted) as per HTTP Basic auth standard
-/// - Use HTTPS to protect credentials in transit
-/// - Store credentials securely (environment variables, secure configuration, etc.)
+/// credentials to all outgoing requests.
 ///
 /// # Examples
 ///
@@ -482,7 +469,7 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 ///         "https://your-domain.cybozu.com",
 ///         Auth::api_token("your-api-token".to_owned())
 ///     )
-///     .layer(middleware::BasicAuthLayer::new(Some(("proxy_user".to_string(), "proxy_password".to_string()))))
+///     .layer(middleware::BasicAuthLayer::new(Some(("basicauth_user".to_string(), "basicauth_password".to_string()))))
 ///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
 ///     .layer(middleware::LoggingLayer::new())
 ///     .build();

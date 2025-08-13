@@ -595,7 +595,7 @@ where
 ///
 /// **Note**: If your domain requires Basic authentication, use [`crate::middleware::BasicAuthLayer`]
 /// middleware in addition to your Kintone authentication. BasicAuthLayer adds the necessary
-/// `Authorization: Basic` headers for proxy authentication, while the Auth configuration handles
+/// `Authorization: Basic` headers for domain-level authentication, while the Auth configuration handles
 /// Kintone's own authentication mechanism.
 ///
 /// # Examples
