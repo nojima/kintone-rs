@@ -465,7 +465,11 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 /// ```rust
 /// use kintone::middleware::BasicAuthLayer;
 ///
-/// let basic_auth = BasicAuthLayer::new("username", "password");
+/// // Enable Basic authentication
+/// let basic_auth = BasicAuthLayer::new(Some(("username".to_string(), "password".to_string())));
+///
+/// // Disable Basic authentication
+/// let no_auth = BasicAuthLayer::new(None);
 /// ```
 ///
 /// Combined with other middleware:
@@ -478,18 +482,41 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 ///         "https://your-domain.cybozu.com",
 ///         Auth::api_token("your-api-token".to_owned())
 ///     )
-///     .layer(middleware::BasicAuthLayer::new("proxy_user", "proxy_password"))
+///     .layer(middleware::BasicAuthLayer::new(Some(("proxy_user".to_string(), "proxy_password".to_string()))))
 ///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
 ///     .layer(middleware::LoggingLayer::new())
 ///     .build();
 /// ```
 pub struct BasicAuthLayer {
-    username: String,
-    password: String,
+    credentials: Option<(String, String)>,
 }
 
 impl BasicAuthLayer {
+    /// Creates a new Basic authentication layer with optional credentials.
+    ///
+    /// # Arguments
+    ///
+    /// * `credentials` - Optional tuple of (username, password) for Basic authentication.
+    ///   Pass `None` to disable Basic authentication, or `Some((username, password))` to enable it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::middleware::BasicAuthLayer;
+    ///
+    /// // Enable Basic authentication
+    /// let basic_auth = BasicAuthLayer::new(Some(("myuser".to_string(), "mypassword".to_string())));
+    ///
+    /// // Disable Basic authentication
+    /// let no_auth = BasicAuthLayer::new(None);
+    /// ```
+    pub fn new(credentials: Option<(String, String)>) -> Self {
+        BasicAuthLayer { credentials }
+    }
+
     /// Creates a new Basic authentication layer with the provided credentials.
+    ///
+    /// This is a convenience method that automatically wraps the credentials in `Some()`.
     ///
     /// # Arguments
     ///
@@ -501,27 +528,36 @@ impl BasicAuthLayer {
     /// ```rust
     /// use kintone::middleware::BasicAuthLayer;
     ///
-    /// let basic_auth = BasicAuthLayer::new("myuser", "mypassword");
+    /// let basic_auth = BasicAuthLayer::enabled("myuser", "mypassword");
     /// ```
-    pub fn new(username: impl Into<String>, password: impl Into<String>) -> Self {
+    pub fn enabled(username: impl Into<String>, password: impl Into<String>) -> Self {
         BasicAuthLayer {
-            username: username.into(),
-            password: password.into(),
+            credentials: Some((username.into(), password.into())),
         }
     }
 
-    /// Encodes the username and password into a Basic authentication header value.
+    /// Creates a new Basic authentication layer with authentication disabled.
     ///
-    /// This method creates the base64-encoded string that goes in the Authorization header,
-    /// following the HTTP Basic authentication specification (RFC 7617).
+    /// This is a convenience method that creates a layer that won't add any
+    /// authentication headers to requests.
     ///
-    /// # Returns
+    /// # Examples
     ///
-    /// A string in the format "Basic <base64-encoded-credentials>"
-    fn encode_credentials(&self) -> String {
-        let credentials = format!("{}:{}", self.username, self.password);
-        let encoded = BASE64.encode(credentials.as_bytes());
-        format!("Basic {encoded}")
+    /// ```rust
+    /// use kintone::middleware::BasicAuthLayer;
+    ///
+    /// let no_auth = BasicAuthLayer::disabled();
+    /// ```
+    pub fn disabled() -> Self {
+        BasicAuthLayer { credentials: None }
+    }
+
+    fn encode_credentials(&self) -> Option<String> {
+        self.credentials.as_ref().map(|(username, password)| {
+            let credentials = format!("{username}:{password}");
+            let encoded = BASE64.encode(credentials.as_bytes());
+            format!("Basic {encoded}")
+        })
     }
 }
 
@@ -548,9 +584,10 @@ impl<Inner: Handler> Handler for BasicAuthHandler<Inner> {
         &self,
         mut req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError> {
-        let auth_header_value = self.layer.encode_credentials();
-        req.headers_mut()
-            .insert(http::header::AUTHORIZATION, auth_header_value.parse().unwrap());
+        if let Some(auth_header_value) = self.layer.encode_credentials() {
+            req.headers_mut()
+                .insert(http::header::AUTHORIZATION, auth_header_value.parse().unwrap());
+        }
         self.inner.handle(req)
     }
 }

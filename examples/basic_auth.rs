@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create Kintone client with Basic authentication layer
     let client = KintoneClientBuilder::new(&base_url, Auth::api_token(api_token))
-        .layer(middleware::BasicAuthLayer::new(&basic_username, &basic_password))
+        .layer(middleware::BasicAuthLayer::enabled(&basic_username, &basic_password))
         .build();
 
     // Test the connection by fetching records

@@ -42,26 +42,7 @@ kintone-rs supports a middleware system for handling cross-cutting concerns like
 - **LoggingLayer**: Logs HTTP request and response information for debugging
 - **BasicAuthLayer**: Adds HTTP Basic authentication headers for proxy/reverse proxy access
 
-### Example: Using BasicAuthLayer
-
-When accessing Kintone through a proxy server or reverse proxy that requires HTTP Basic authentication:
-
-```rust
-use std::time::Duration;
-use kintone::client::{Auth, KintoneClientBuilder};
-use kintone::middleware;
-
-let client = KintoneClientBuilder::new(
-        "https://your-domain.cybozu.com",
-        Auth::api_token("your-api-token")
-    )
-    .layer(middleware::BasicAuthLayer::new("proxy_user", "proxy_password"))
-    .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
-    .layer(middleware::LoggingLayer::new())
-    .build();
-```
-
-### Example: Retry with Database Lock Handling
+### Example: Retry
 
 ```rust
 use std::time::Duration;
@@ -76,7 +57,7 @@ let client = KintoneClientBuilder::new(
         5,                              // max_attempts
         Duration::from_millis(500),     // initial_delay
         Duration::from_secs(30),        // max_delay
-        None                            // use default retry logic (retries GAIA_DA02 errors)
+        None                            // use default retry logic (retries any errors)
     ))
     .build();
 ```

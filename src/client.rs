@@ -593,6 +593,11 @@ where
 /// - API Token authentication
 /// - Username/Password authentication
 ///
+/// **Note**: If your domain requires Basic authentication, use [`crate::middleware::BasicAuthLayer`]
+/// middleware in addition to your Kintone authentication. BasicAuthLayer adds the necessary
+/// `Authorization: Basic` headers for proxy authentication, while the Auth configuration handles
+/// Kintone's own authentication mechanism.
+///
 /// # Examples
 ///
 /// ```rust
