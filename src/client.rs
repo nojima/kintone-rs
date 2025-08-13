@@ -36,6 +36,25 @@
 //! );
 //! ```
 //!
+//! ### Client Certificate Authentication (Mutual TLS)
+//!
+//! For Kintone's "Secure Access" feature (セキュアアクセス):
+//!
+//! ```rust
+//! use kintone::client::{Auth, KintoneClientBuilder};
+//!
+//! let cert_pem = std::fs::read("client.crt")?;
+//! let key_pem = std::fs::read("client.key")?;
+//!
+//! let client = KintoneClientBuilder::new(
+//!     "https://your-domain.cybozu.com",
+//!     Auth::api_token("your-api-token".to_owned())
+//! )
+//! .client_certificate_from_pem(&cert_pem, &key_pem)?
+//! .build();
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
 //! ## Client Configuration
 //!
 //! For advanced configuration, use the builder pattern:
@@ -317,13 +336,57 @@ impl<L> KintoneClientBuilder<L> {
         self
     }
 
+    /// Sets a client certificate for mutual TLS authentication.
+    ///
+    /// This method configures the client to use a client certificate for authentication,
+    /// which is required when using cybozu.com's "Secure Access" feature.
+    /// Secure Access is an enterprise security feature that requires mutual TLS (mTLS)
+    /// authentication using client certificates.
+    ///
+    /// The certificate and private key must be provided in PEM format.
+    ///
+    /// # Arguments
+    ///
+    /// * `cert_pem` - The client certificate in PEM format (as bytes)
+    /// * `key_pem` - The private key corresponding to the certificate in PEM format (as bytes)
+    ///
+    /// # Converting from PFX format
+    ///
+    /// Secure Access certificates are typically downloaded in PFX (PKCS#12) format.
+    /// You can convert them to PEM format using OpenSSL commands:
+    ///
+    /// ```bash
+    /// openssl pkcs12 -in input.pfx -nokeys -out client-cert.pem
+    /// openssl pkcs12 -in input.pfx -nocerts -out client-key.pem -nodes
+    /// ```
+    ///
+    /// The `-nodes` flag ensures the private key is not encrypted with a passphrase.
+    /// After conversion, you can load these PEM files using the example below.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    ///
+    /// // Load certificate and key from PEM files
+    /// let cert_pem = std::fs::read("client-cert.pem")?;
+    /// let key_pem = std::fs::read("client-key.pem")?;
+    ///
+    /// let client = KintoneClientBuilder::new(
+    ///         "https://your-domain.cybozu.com",
+    ///         Auth::api_token("your-api-token".to_owned())
+    ///     )
+    ///     .client_certificate_from_pem(&cert_pem, &key_pem)?
+    ///     .build();
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn client_certificate_from_pem(
         mut self,
         cert_pem: &[u8],
         key_pem: &[u8],
-    ) -> Result<Self, ApiError> {
-        let cert = Certificate::from_pem(cert_pem)?;
-        let key = PrivateKey::from_pem(key_pem)?;
+    ) -> Result<Self, std::io::Error> {
+        let cert = Certificate::from_pem(cert_pem).map_err(|e| e.into_io())?;
+        let key = PrivateKey::from_pem(key_pem).map_err(|e| e.into_io())?;
         self.client_cert = Some(ClientCert::new_with_certs(&[cert], key));
         Ok(self)
     }
