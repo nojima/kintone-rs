@@ -1,7 +1,29 @@
 //! # Kintone Record API
 //!
 //! This module provides functions for interacting with Kintone's record-related REST API endpoints.
-//! It includes operations for managing records, comments, assignees, and workflow statuses.
+//! It includes operations for managing records, comments, assignees, workflow statuses, and cursor-based pagination.
+//!
+//! ## Available Functions
+//!
+//! ### Record Operations
+//! - [`get_record`] - Retrieve a single record by ID
+//! - [`get_records`] - Retrieve multiple records with filtering and pagination
+//! - [`add_record`] - Create a new record
+//! - [`update_record`] - Update an existing record
+//!
+//! ### Comment Operations
+//! - [`get_comments`] - Retrieve comments for a record
+//! - [`add_comment`] - Add a new comment to a record
+//! - [`delete_comment`] - Delete a comment from a record
+//!
+//! ### Workflow Operations
+//! - [`update_assignees`] - Update the assignees of a record
+//! - [`update_status`] - Update the workflow status of a record
+//!
+//! ### Cursor-based Pagination
+//! - [`create_cursor`] - Create a cursor for efficient pagination through large datasets
+//! - [`get_records_by_cursor`] - Retrieve records using a cursor
+//! - [`delete_cursor`] - Delete a cursor to free up resources
 
 use serde::{Deserialize, Serialize};
 
@@ -649,6 +671,215 @@ impl UpdateStatusRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<UpdateStatusResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Creates a cursor for paginating through large result sets efficiently.
+///
+/// This function creates a request to generate a cursor that can be used to retrieve
+/// records in chunks. This is more efficient than using offset-based pagination for
+/// large datasets as it provides consistent results even when records are being
+/// added or modified during iteration.
+///
+/// # Arguments
+/// * `app` - The ID of the Kintone app to create a cursor for
+/// * `fields` (optional) - An array of field codes to include in the response
+/// * `query` (optional) - A query string following Kintone's query syntax
+/// * `size` (optional) - The number of records to retrieve per page (default: 100, max: 500)
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::create_cursor(123)
+///     .query("status = \"Active\"")
+///     .fields(&["name", "email", "status"])
+///     .size(100)
+///     .send(&client)?;
+/// println!("Created cursor: {}", response.id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/create-cursor/>
+pub fn create_cursor(app: u64) -> CreateCursorRequest {
+    let builder = RequestBuilder::new(http::Method::POST, "/v1/records/cursor.json");
+    CreateCursorRequest {
+        builder,
+        body: CreateCursorRequestBody {
+            app,
+            fields: None,
+            query: None,
+            size: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct CreateCursorRequest {
+    builder: RequestBuilder,
+    body: CreateCursorRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCursorRequestBody {
+    app: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    fields: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    query: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    size: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCursorResponse {
+    pub id: String,
+    #[serde(with = "stringified")]
+    pub total_count: u64,
+}
+
+impl CreateCursorRequest {
+    /// Specifies which fields to include in the response.
+    ///
+    /// # Arguments
+    /// * `fields` - An array of field codes to retrieve
+    pub fn fields(mut self, fields: &[&str]) -> Self {
+        self.body.fields = Some(fields.iter().map(|s| s.to_string()).collect());
+        self
+    }
+
+    /// Sets a query to filter the records.
+    ///
+    /// # Arguments
+    /// * `query` - A query string following Kintone's query syntax
+    pub fn query(mut self, query: &str) -> Self {
+        self.body.query = Some(query.to_string());
+        self
+    }
+
+    /// Sets the number of records to retrieve per page.
+    ///
+    /// # Arguments
+    /// * `size` - The page size (default: 100, max: 500)
+    pub fn size(mut self, size: u64) -> Self {
+        self.body.size = Some(size);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<CreateCursorResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Retrieves records using a previously created cursor.
+///
+/// This function creates a request to fetch records using a cursor ID obtained
+/// from `create_cursor`. The cursor maintains state to efficiently paginate
+/// through large result sets.
+///
+/// # Arguments
+/// * `id` - The cursor ID returned from `create_cursor`
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// // First create a cursor
+/// let cursor_response = kintone::v1::record::create_cursor(123)
+///     .query("status = \"Active\"")
+///     .size(100)
+///     .send(&client)?;
+///
+/// // Then retrieve records using the cursor
+/// let response = kintone::v1::record::get_records_by_cursor(&cursor_response.id)
+///     .send(&client)?;
+/// println!("Retrieved {} records", response.records.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/get-records-with-cursor/>
+pub fn get_records_by_cursor(id: &str) -> GetRecordsByCursorRequest {
+    let builder = RequestBuilder::new(http::Method::GET, "/v1/records/cursor.json").query("id", id);
+    GetRecordsByCursorRequest { builder }
+}
+
+#[must_use]
+pub struct GetRecordsByCursorRequest {
+    builder: RequestBuilder,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetRecordsByCursorResponse {
+    pub records: Vec<Record>,
+    pub next: bool,
+}
+
+impl GetRecordsByCursorRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<GetRecordsByCursorResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Deletes a cursor to free up resources.
+///
+/// This function creates a request to delete a cursor when you're done using it.
+/// While cursors automatically expire after a certain period, it's good practice
+/// to explicitly delete them when no longer needed.
+///
+/// # Arguments
+/// * `id` - The cursor ID to delete
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// # let cursor_id = "example-cursor-id";
+/// let response = kintone::v1::record::delete_cursor(cursor_id).send(&client)?;
+/// println!("Cursor deleted successfully");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-cursor/>
+pub fn delete_cursor(id: &str) -> DeleteCursorRequest {
+    let builder = RequestBuilder::new(http::Method::DELETE, "/v1/records/cursor.json");
+    DeleteCursorRequest {
+        builder,
+        body: DeleteCursorRequestBody { id: id.to_string() },
+    }
+}
+
+#[must_use]
+pub struct DeleteCursorRequest {
+    builder: RequestBuilder,
+    body: DeleteCursorRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteCursorRequestBody {
+    id: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeleteCursorResponse {
+    // Empty response body
+}
+
+impl DeleteCursorRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<DeleteCursorResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }

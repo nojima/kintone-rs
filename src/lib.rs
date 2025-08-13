@@ -60,7 +60,7 @@
 //! The library currently supports the following Kintone REST API endpoints:
 //!
 //! - [`v1::record`]: Record management APIs
-//!     - [`v1::record::get_record`], [`v1::record::get_records`], [`v1::record::add_record`], [`v1::record::update_record`], [`v1::record::update_assignees`], [`v1::record::update_status`], [`v1::record::get_comments`], [`v1::record::add_comment`], [`v1::record::delete_comment`]
+//!     - [`v1::record::get_record`], [`v1::record::get_records`], [`v1::record::add_record`], [`v1::record::update_record`], [`v1::record::update_assignees`], [`v1::record::update_status`], [`v1::record::get_comments`], [`v1::record::add_comment`], [`v1::record::delete_comment`], [`v1::record::create_cursor`], [`v1::record::get_records_by_cursor`], [`v1::record::delete_cursor`]
 //! - [`v1::file`]: File management APIs
 //!     - [`v1::file::upload`], [`v1::file::download`]
 //! - [`v1::space`]: Space management APIs
