@@ -174,6 +174,7 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use rand::RngCore as _;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use ureq::tls::{Certificate, ClientCert, PrivateKey, TlsConfig};
 
 use crate::error::ApiError;
 use crate::middleware;
@@ -275,6 +276,7 @@ pub struct KintoneClientBuilder<L> {
     auth: Auth,
     user_agent: Option<String>,
     guest_space_id: Option<u64>,
+    client_cert: Option<ClientCert>,
     layer: L,
 }
 
@@ -286,6 +288,7 @@ impl KintoneClientBuilder<middleware::NoLayer> {
             auth,
             user_agent: None,
             guest_space_id: None,
+            client_cert: None,
             layer: middleware::NoLayer,
         }
     }
@@ -299,6 +302,7 @@ impl<L> KintoneClientBuilder<L> {
             auth: self.auth,
             user_agent: self.user_agent,
             guest_space_id: self.guest_space_id,
+            client_cert: self.client_cert,
             layer: layer_stack,
         }
     }
@@ -312,6 +316,17 @@ impl<L> KintoneClientBuilder<L> {
         self.user_agent = Some(user_agent.into());
         self
     }
+
+    pub fn client_certificate_from_pem(
+        mut self,
+        cert_pem: &[u8],
+        key_pem: &[u8],
+    ) -> Result<Self, ApiError> {
+        let cert = Certificate::from_pem(cert_pem)?;
+        let key = PrivateKey::from_pem(key_pem)?;
+        self.client_cert = Some(ClientCert::new_with_certs(&[cert], key));
+        Ok(self)
+    }
 }
 
 impl<L> KintoneClientBuilder<L>
@@ -323,6 +338,7 @@ where
         let http_client: ureq::Agent = ureq::Agent::config_builder()
             .user_agent(&user_agent)
             .http_status_as_error(false)
+            .tls_config(TlsConfig::builder().client_cert(self.client_cert).build())
             .build()
             .into();
 
