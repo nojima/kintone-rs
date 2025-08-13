@@ -7,7 +7,7 @@
 //!
 //! - [`app`] - App management operations (create apps in preview environment)
 //! - [`record`] - Record management operations (CRUD operations, comments, workflow)
-//! - [`file`] - File upload and download operations
+//! - [`mod@file`] - File upload and download operations
 //! - [`space`] - Space and thread management operations
 
 pub mod app;

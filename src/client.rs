@@ -226,6 +226,34 @@ pub struct KintoneClient {
 }
 
 impl KintoneClient {
+    /// Creates a new Kintone client with the specified base URL and authentication.
+    ///
+    /// This is a convenience method that creates a client with default settings.
+    /// For advanced configuration (middleware, guest spaces, custom user agent, etc.),
+    /// use [`KintoneClientBuilder`] instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `auth` - Authentication configuration (API token or username/password)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::{Auth, KintoneClient};
+    ///
+    /// // Using API token authentication
+    /// let client = KintoneClient::new(
+    ///     "https://your-domain.cybozu.com",
+    ///     Auth::api_token("your-api-token".to_owned())
+    /// );
+    ///
+    /// // Using username/password authentication
+    /// let client = KintoneClient::new(
+    ///     "https://your-domain.cybozu.com", 
+    ///     Auth::password("username".to_owned(), "password".to_owned())
+    /// );
+    /// ```
     pub fn new(base_url: &str, auth: Auth) -> Self {
         KintoneClientBuilder::new(base_url, auth).build()
     }
@@ -300,6 +328,33 @@ pub struct KintoneClientBuilder<L> {
 }
 
 impl KintoneClientBuilder<middleware::NoLayer> {
+    /// Creates a new Kintone client builder with the specified base URL and authentication.
+    ///
+    /// This is the starting point for building a customized Kintone client. The builder
+    /// allows you to configure various aspects like middleware, guest spaces, user agent,
+    /// and client certificates before creating the final client.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `auth` - Authentication configuration (API token or username/password)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    ///
+    /// let builder = KintoneClientBuilder::new(
+    ///     "https://your-domain.cybozu.com",
+    ///     Auth::api_token("your-api-token".to_owned())
+    /// );
+    /// 
+    /// // Configure additional options and build the client
+    /// let client = builder
+    ///     .user_agent("MyApp/1.0")
+    ///     .guest_space_id(123)
+    ///     .build();
+    /// ```
     pub fn new(base_url: &str, auth: Auth) -> Self {
         let base_url = url::Url::parse(base_url).unwrap();
         Self {
@@ -314,6 +369,39 @@ impl KintoneClientBuilder<middleware::NoLayer> {
 }
 
 impl<L> KintoneClientBuilder<L> {
+    /// Adds a middleware layer to the client configuration.
+    ///
+    /// Middleware layers provide a way to intercept and modify requests and responses.
+    /// Common use cases include retry logic, logging, authentication, and error handling.
+    /// 
+    /// Layers are applied in a stack-like manner. The first layer added becomes the
+    /// outermost layer, and subsequent layers are nested inside. For requests, execution
+    /// flows from the outermost layer to the innermost, and for responses, it flows back
+    /// in reverse order.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `L2` - The type of the middleware layer to add
+    ///
+    /// # Arguments
+    ///
+    /// * `new_layer` - The middleware layer instance to add
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use std::time::Duration;
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::middleware;
+    ///
+    /// let client = KintoneClientBuilder::new(
+    ///         "https://your-domain.cybozu.com",
+    ///         Auth::api_token("your-api-token".to_owned())
+    ///     )
+    ///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+    ///     .layer(middleware::LoggingLayer::new())
+    ///     .build();
+    /// ```
     pub fn layer<L2>(self, new_layer: L2) -> KintoneClientBuilder<middleware::Stack<L, L2>> {
         let layer_stack = middleware::Stack::new(self.layer, new_layer);
         KintoneClientBuilder {
@@ -326,11 +414,60 @@ impl<L> KintoneClientBuilder<L> {
         }
     }
 
+    /// Configures the client to operate within a specific guest space.
+    ///
+    /// Guest spaces in Kintone provide isolated environments within your domain.
+    /// When a guest space ID is specified, all API requests will be made within
+    /// that guest space context.
+    ///
+    /// **Important**: Each guest space requires its own client instance. You cannot
+    /// use a single client to access multiple guest spaces or mix guest space and
+    /// regular space operations.
+    ///
+    /// # Arguments
+    ///
+    /// * `guest_space_id` - The numeric ID of the guest space
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    ///
+    /// // Client for guest space ID 123
+    /// let guest_client = KintoneClientBuilder::new(
+    ///         "https://your-domain.cybozu.com",
+    ///         Auth::api_token("your-api-token".to_owned())
+    ///     )
+    ///     .guest_space_id(123)
+    ///     .build();
+    /// ```
     pub fn guest_space_id(mut self, guest_space_id: u64) -> Self {
         self.guest_space_id = Some(guest_space_id);
         self
     }
 
+    /// Sets a custom User-Agent header for HTTP requests.
+    ///
+    /// The User-Agent header identifies your application to the Kintone server.
+    /// This can be useful for debugging, analytics, or server-side logging.
+    /// If not specified, defaults to "kintone-rs".
+    ///
+    /// # Arguments
+    ///
+    /// * `user_agent` - The User-Agent string to use for requests
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    ///
+    /// let client = KintoneClientBuilder::new(
+    ///         "https://your-domain.cybozu.com",
+    ///         Auth::api_token("your-api-token".to_owned())
+    ///     )
+    ///     .user_agent("MyApp/1.0")
+    ///     .build();
+    /// ```
     pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
         self.user_agent = Some(user_agent.into());
         self
@@ -405,6 +542,31 @@ impl<L> KintoneClientBuilder<L>
 where
     L: middleware::Layer<RequestHandler>,
 {
+    /// Builds the final [`KintoneClient`] instance with all configured options.
+    ///
+    /// This method consumes the builder and creates a ready-to-use Kintone client
+    /// with all the specified configuration including middleware layers, authentication,
+    /// guest space settings, and client certificates.
+    ///
+    /// # Returns
+    ///
+    /// A configured [`KintoneClient`] instance ready for making API requests.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use std::time::Duration;
+    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::middleware;
+    ///
+    /// let client = KintoneClientBuilder::new(
+    ///         "https://your-domain.cybozu.com",
+    ///         Auth::api_token("your-api-token".to_owned())
+    ///     )
+    ///     .user_agent("MyApp/1.0")
+    ///     .layer(middleware::LoggingLayer::new())
+    ///     .build();
+    /// ```
     pub fn build(self) -> KintoneClient {
         let user_agent = self.user_agent.unwrap_or_else(|| "kintone-rs".to_owned());
         let http_client: ureq::Agent = ureq::Agent::config_builder()
@@ -455,16 +617,68 @@ pub enum Auth {
 }
 
 impl Auth {
+    /// Creates password-based authentication configuration.
+    ///
+    /// This authentication method uses a Kintone username and password.
+    ///
+    /// # Arguments
+    ///
+    /// * `username` - The Kintone username
+    /// * `password` - The user's password
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::Auth;
+    ///
+    /// let auth = Auth::password("john.doe".to_owned(), "secret123".to_owned());
+    /// ```
     pub fn password(username: String, password: String) -> Self {
         Self::Password { username, password }
     }
 
+    /// Creates API token-based authentication configuration for a single token.
+    ///
+    /// API tokens provide secure, app-specific authentication without requiring
+    /// user passwords. Tokens can be generated from the Kintone app settings page.
+    ///
+    /// # Arguments
+    ///
+    /// * `token` - The API token string
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::Auth;
+    ///
+    /// let auth = Auth::api_token("your-api-token".to_owned());
+    /// ```
     pub fn api_token(token: String) -> Self {
         Self::ApiToken {
             tokens: vec![token],
         }
     }
 
+    /// Creates API token-based authentication configuration for multiple tokens.
+    ///
+    /// When your application needs to access multiple Kintone apps that have
+    /// different API tokens, you can specify multiple tokens. This is useful
+    /// when working with apps that have separate access controls.
+    ///
+    /// # Arguments
+    ///
+    /// * `tokens` - A vector of API token strings
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::Auth;
+    ///
+    /// let auth = Auth::api_tokens(vec![
+    ///     "token-for-app1".to_owned(),
+    ///     "token-for-app2".to_owned(),
+    /// ]);
+    /// ```
     pub fn api_tokens(tokens: Vec<String>) -> Self {
         Self::ApiToken { tokens }
     }
