@@ -39,12 +39,15 @@
 //!
 //! - [`RetryLayer`] - Automatically retries failed requests with exponential backoff
 //! - [`LoggingLayer`] - Logs request and response information for debugging
+//! - [`BasicAuthLayer`] - Adds HTTP Basic authentication headers to requests
 
 use std::{
     io::{Cursor, Read},
     sync::Arc,
 };
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use http::Request;
 use serde::de::DeserializeOwned;
 
@@ -434,6 +437,121 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
             Err(e) => eprintln!("Error: {e:?}"),
         }
         result
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Middleware layer that adds HTTP Basic authentication headers to requests.
+///
+/// This layer automatically adds the `Authorization` header with Basic authentication
+/// credentials to all outgoing requests. This is useful when accessing Kintone through
+/// proxy servers or reverse proxies that require HTTP Basic authentication.
+///
+/// # Use Cases
+///
+/// - Accessing Kintone through corporate proxy servers requiring authentication
+/// - Connecting to Kintone environments behind reverse proxies with Basic auth
+/// - Adding an additional layer of authentication on top of Kintone's own auth
+///
+/// # Security Considerations
+///
+/// - Credentials are base64-encoded (not encrypted) as per HTTP Basic auth standard
+/// - Use HTTPS to protect credentials in transit
+/// - Store credentials securely (environment variables, secure configuration, etc.)
+///
+/// # Examples
+///
+/// ```rust
+/// use kintone::middleware::BasicAuthLayer;
+///
+/// let basic_auth = BasicAuthLayer::new("username", "password");
+/// ```
+///
+/// Combined with other middleware:
+/// ```rust
+/// use std::time::Duration;
+/// use kintone::client::{Auth, KintoneClientBuilder};
+/// use kintone::middleware;
+///
+/// let client = KintoneClientBuilder::new(
+///         "https://your-domain.cybozu.com",
+///         Auth::api_token("your-api-token".to_owned())
+///     )
+///     .layer(middleware::BasicAuthLayer::new("proxy_user", "proxy_password"))
+///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+///     .layer(middleware::LoggingLayer::new())
+///     .build();
+/// ```
+pub struct BasicAuthLayer {
+    username: String,
+    password: String,
+}
+
+impl BasicAuthLayer {
+    /// Creates a new Basic authentication layer with the provided credentials.
+    ///
+    /// # Arguments
+    ///
+    /// * `username` - The username for Basic authentication
+    /// * `password` - The password for Basic authentication
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::middleware::BasicAuthLayer;
+    ///
+    /// let basic_auth = BasicAuthLayer::new("myuser", "mypassword");
+    /// ```
+    pub fn new(username: impl Into<String>, password: impl Into<String>) -> Self {
+        BasicAuthLayer {
+            username: username.into(),
+            password: password.into(),
+        }
+    }
+
+    /// Encodes the username and password into a Basic authentication header value.
+    ///
+    /// This method creates the base64-encoded string that goes in the Authorization header,
+    /// following the HTTP Basic authentication specification (RFC 7617).
+    ///
+    /// # Returns
+    ///
+    /// A string in the format "Basic <base64-encoded-credentials>"
+    fn encode_credentials(&self) -> String {
+        let credentials = format!("{}:{}", self.username, self.password);
+        let encoded = BASE64.encode(credentials.as_bytes());
+        format!("Basic {encoded}")
+    }
+}
+
+impl<Inner: Handler> Layer<Inner> for BasicAuthLayer {
+    type Outer = BasicAuthHandler<Inner>;
+    fn layer(self, inner: Inner) -> Self::Outer {
+        BasicAuthHandler { inner, layer: self }
+    }
+}
+
+/// Handler implementation that wraps another handler with Basic authentication.
+///
+/// This handler implements the actual Basic auth behavior for the [`BasicAuthLayer`].
+/// It adds the Authorization header to requests before passing them to the inner handler.
+///
+/// This is an internal implementation detail and should not be used directly.
+pub struct BasicAuthHandler<Inner> {
+    inner: Inner,
+    layer: BasicAuthLayer,
+}
+
+impl<Inner: Handler> Handler for BasicAuthHandler<Inner> {
+    fn handle(
+        &self,
+        mut req: http::Request<RequestBody>,
+    ) -> Result<http::Response<ResponseBody>, ApiError> {
+        let auth_header_value = self.layer.encode_credentials();
+        req.headers_mut()
+            .insert(http::header::AUTHORIZATION, auth_header_value.parse().unwrap());
+        self.inner.handle(req)
     }
 }
 

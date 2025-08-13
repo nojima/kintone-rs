@@ -32,6 +32,55 @@ for (field_code, field_value) in response.record.fields() {
 
 For detailed documentation, installation instructions, and usage examples, please refer to the [API documentation](https://docs.rs/kintone).
 
+## Middleware Support
+
+kintone-rs supports a middleware system for handling cross-cutting concerns like retries, logging, and authentication. Middleware layers can be easily composed to add functionality to your Kintone client.
+
+### Available Middleware
+
+- **RetryLayer**: Automatically retries failed requests with exponential backoff
+- **LoggingLayer**: Logs HTTP request and response information for debugging
+- **BasicAuthLayer**: Adds HTTP Basic authentication headers for proxy/reverse proxy access
+
+### Example: Using BasicAuthLayer
+
+When accessing Kintone through a proxy server or reverse proxy that requires HTTP Basic authentication:
+
+```rust
+use std::time::Duration;
+use kintone::client::{Auth, KintoneClientBuilder};
+use kintone::middleware;
+
+let client = KintoneClientBuilder::new(
+        "https://your-domain.cybozu.com",
+        Auth::api_token("your-api-token")
+    )
+    .layer(middleware::BasicAuthLayer::new("proxy_user", "proxy_password"))
+    .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+    .layer(middleware::LoggingLayer::new())
+    .build();
+```
+
+### Example: Retry with Database Lock Handling
+
+```rust
+use std::time::Duration;
+use kintone::client::{Auth, KintoneClientBuilder};
+use kintone::middleware;
+
+let client = KintoneClientBuilder::new(
+        "https://your-domain.cybozu.com",
+        Auth::api_token("your-api-token")
+    )
+    .layer(middleware::RetryLayer::new(
+        5,                              // max_attempts
+        Duration::from_millis(500),     // initial_delay
+        Duration::from_secs(30),        // max_delay
+        None                            // use default retry logic (retries GAIA_DA02 errors)
+    ))
+    .build();
+```
+
 ## Examples
 
 You can find runnable examples in the `examples` directory.

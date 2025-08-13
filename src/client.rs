@@ -250,7 +250,7 @@ impl KintoneClient {
     ///
     /// // Using username/password authentication
     /// let client = KintoneClient::new(
-    ///     "https://your-domain.cybozu.com", 
+    ///     "https://your-domain.cybozu.com",
     ///     Auth::password("username".to_owned(), "password".to_owned())
     /// );
     /// ```
@@ -348,7 +348,7 @@ impl KintoneClientBuilder<middleware::NoLayer> {
     ///     "https://your-domain.cybozu.com",
     ///     Auth::api_token("your-api-token".to_owned())
     /// );
-    /// 
+    ///
     /// // Configure additional options and build the client
     /// let client = builder
     ///     .user_agent("MyApp/1.0")
@@ -373,7 +373,7 @@ impl<L> KintoneClientBuilder<L> {
     ///
     /// Middleware layers provide a way to intercept and modify requests and responses.
     /// Common use cases include retry logic, logging, authentication, and error handling.
-    /// 
+    ///
     /// Layers are applied in a stack-like manner. The first layer added becomes the
     /// outermost layer, and subsequent layers are nested inside. For requests, execution
     /// flows from the outermost layer to the innermost, and for responses, it flows back
