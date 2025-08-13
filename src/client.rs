@@ -38,9 +38,9 @@
 //!
 //! ### Client Certificate Authentication (Mutual TLS)
 //!
-//! For Kintone's "Secure Access" feature (セキュアアクセス):
+//! For Kintone's "Secure Access" feature:
 //!
-//! ```rust
+//! ```no_run
 //! use kintone::client::{Auth, KintoneClientBuilder};
 //!
 //! let cert_pem = std::fs::read("client.crt")?;
