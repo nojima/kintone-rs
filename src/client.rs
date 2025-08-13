@@ -345,6 +345,15 @@ impl<L> KintoneClientBuilder<L> {
     ///
     /// The certificate and private key must be provided in PEM format.
     ///
+    /// # Important: Secure Access Base URL
+    ///
+    /// When using client certificate authentication with Kintone Secure Access, your base URL
+    /// **must** include the `.s` subdomain. For example:
+    /// - Correct: `https://your-domain.s.cybozu.com`
+    /// - Incorrect: `https://your-domain.cybozu.com`
+    ///
+    /// The `.s` subdomain is required for Secure Access endpoints that support client certificates.
+    ///
     /// # Arguments
     ///
     /// * `cert_pem` - The client certificate in PEM format (as bytes)
@@ -373,7 +382,7 @@ impl<L> KintoneClientBuilder<L> {
     /// let key_pem = std::fs::read("client-key.pem")?;
     ///
     /// let client = KintoneClientBuilder::new(
-    ///         "https://your-domain.cybozu.com",
+    ///         "https://your-domain.s.cybozu.com", // Don't forget ".s"
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
     ///     .client_certificate_from_pem(&cert_pem, &key_pem)?
