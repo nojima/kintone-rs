@@ -35,6 +35,25 @@
 //! println!("Title: {}", title);
 //! ```
 //!
+//! ## Alternative Initialization Methods
+//!
+//! You can also create records using the `From` trait with an array of field tuples:
+//!
+//! ```rust
+//! use kintone::model::record::{Record, FieldValue};
+//! use bigdecimal::BigDecimal;
+//!
+//! // Create a record with initial fields using From trait
+//! let record = Record::from([
+//!     ("name", FieldValue::SingleLineText("John Doe".to_string())),
+//!     ("age", FieldValue::Number(BigDecimal::from(30))),
+//!     ("email", FieldValue::SingleLineText("john@example.com".to_string())),
+//! ]);
+//!
+//! // This is equivalent to creating an empty record and adding fields one by one
+//! assert_eq!(record.field_codes().count(), 3);
+//! ```
+//!
 //! # Working with Table Fields
 //!
 //! Table fields contain multiple rows of related data:
@@ -123,6 +142,13 @@ impl Record {
     pub fn new() -> Self {
         Record {
             fields: HashMap::new(),
+        }
+    }
+
+    /// Creates a new record with the specified initial capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Record {
+            fields: HashMap::with_capacity(capacity),
         }
     }
 
@@ -425,6 +451,16 @@ impl Default for Record {
     }
 }
 
+impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for Record {
+    fn from(fields: [(S, FieldValue); N]) -> Self {
+        let mut record = Self::with_capacity(N);
+        for (key, value) in fields {
+            record.put_field(key.into(), value);
+        }
+        record
+    }
+}
+
 /// Represents the type of a field in a Kintone application.
 ///
 /// Each field in a Kintone app has a specific type that determines what kind of data
@@ -723,15 +759,11 @@ impl TableRow {
         }
     }
 
-    /// Adds or updates a field in the table row.
-    ///
-    /// Returns the previous value if the field already existed.
-    pub fn put_field(
-        &mut self,
-        field_code: impl Into<String>,
-        value: FieldValue,
-    ) -> Option<FieldValue> {
-        self.fields.insert(field_code.into(), value)
+    /// Creates a new table row with the specified initial capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            fields: HashMap::with_capacity(capacity),
+        }
     }
 
     /// Gets a field value by field code.
@@ -764,6 +796,17 @@ impl TableRow {
         self.fields.values()
     }
 
+    /// Adds or updates a field in the table row.
+    ///
+    /// Returns the previous value if the field already existed.
+    pub fn put_field(
+        &mut self,
+        field_code: impl Into<String>,
+        value: FieldValue,
+    ) -> Option<FieldValue> {
+        self.fields.insert(field_code.into(), value)
+    }
+
     /// Removes a field from the table row.
     pub fn remove_field(&mut self, field_code: &str) -> Option<FieldValue> {
         self.fields.remove(field_code)
@@ -789,6 +832,16 @@ impl std::fmt::Debug for TableRow {
 impl Default for TableRow {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for TableRow {
+    fn from(fields: [(S, FieldValue); N]) -> Self {
+        let mut row = Self::with_capacity(N);
+        for (key, value) in fields {
+            row.put_field(key.into(), value);
+        }
+        row
     }
 }
 
