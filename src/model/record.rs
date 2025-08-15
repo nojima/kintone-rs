@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
@@ -81,7 +81,7 @@ impl Record {
         let mut fields = HashMap::with_capacity(size);
         for (code, value) in self.fields() {
             if !value.field_type().is_builtin() {
-                fields.insert(code.clone(), value.clone());
+                fields.insert(code.to_owned(), value.clone());
             }
         }
         Record { fields }
@@ -141,7 +141,7 @@ impl Record {
 
     /// Returns an iterator over all field codes and values in the record.
     ///
-    /// The iterator yields tuples of `(&String, &FieldValue)` representing
+    /// The iterator yields tuples of `(&str, &FieldValue)` representing
     /// the field code and its corresponding value.
     ///
     /// # Examples
@@ -157,13 +157,13 @@ impl Record {
     ///     println!("{}: {:?}", field_code, field_value);
     /// }
     /// ```
-    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
-        self.fields.iter()
+    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ str, &'_ FieldValue)> + Clone {
+        self.fields.iter().map(|(k, v)| (k.borrow(), v))
     }
 
     /// Returns a mutable iterator over all field codes and values in the record.
     ///
-    /// The iterator yields tuples of `(&String, &mut FieldValue)` representing
+    /// The iterator yields tuples of `(&str, &mut FieldValue)` representing
     /// the field code and its corresponding mutable value reference.
     ///
     /// # Examples
@@ -182,8 +182,8 @@ impl Record {
     /// ```
     pub fn fields_mut(
         &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
-        self.fields.iter_mut()
+    ) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
+        self.fields.iter_mut().map(|(k, v)| (k.borrow(), v))
     }
 
     /// Returns an iterator over all field codes in the record.
@@ -197,11 +197,11 @@ impl Record {
     /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
     /// record.put_field("age", FieldValue::Number(30.into()));
     ///
-    /// let field_codes: Vec<&String> = record.field_codes().collect();
+    /// let field_codes: Vec<_> = record.field_codes().collect();
     /// assert_eq!(field_codes.len(), 2);
     /// ```
-    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
-        self.fields.keys()
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ str> + Clone {
+        self.fields.keys().map(|k| k.borrow())
     }
 
     /// Returns an iterator over all field values in the record.
@@ -215,7 +215,7 @@ impl Record {
     /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
     /// record.put_field("age", FieldValue::Number(30.into()));
     ///
-    /// let field_values: Vec<&FieldValue> = record.field_values().collect();
+    /// let field_values: Vec<_> = record.field_values().collect();
     /// assert_eq!(field_values.len(), 2);
     /// ```
     pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
@@ -679,20 +679,20 @@ impl TableRow {
     }
 
     /// Returns an iterator over all fields in the table row.
-    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ String, &'_ FieldValue)> + Clone {
-        self.fields.iter()
+    pub fn fields(&self) -> impl ExactSizeIterator<Item = (&'_ str, &'_ FieldValue)> + Clone {
+        self.fields.iter().map(|(k, v)| (k.borrow(), v))
     }
 
     /// Returns a mutable iterator over all fields in the table row.
     pub fn fields_mut(
         &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ String, &'_ mut FieldValue)> {
-        self.fields.iter_mut()
+    ) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
+        self.fields.iter_mut().map(|(k, v)| (k.borrow(), v))
     }
 
     /// Returns an iterator over all field codes in the table row.
-    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ String> + Clone {
-        self.fields.keys()
+    pub fn field_codes(&self) -> impl ExactSizeIterator<Item = &'_ str> + Clone {
+        self.fields.keys().map(|k| k.borrow())
     }
 
     /// Returns an iterator over all field values in the table row.
