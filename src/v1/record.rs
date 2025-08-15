@@ -162,9 +162,12 @@ impl GetRecordsRequest {
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::record::{Record, FieldValue};
+/// use bigdecimal::BigDecimal;
 ///
-/// let mut record = Record::new();
-/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
+/// let record = Record::from([
+///     ("name", FieldValue::SingleLineText("John Doe".to_owned())),
+///     ("age", FieldValue::Number(BigDecimal::from(30))),
+/// ]);
 ///
 /// let response = kintone::v1::record::add_record(123)
 ///     .record(record)
@@ -236,9 +239,12 @@ impl AddRecordRequest {
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::record::{Record, FieldValue};
+/// use chrono::NaiveDate;
 ///
-/// let mut record = Record::new();
-/// record.put_field("status", FieldValue::SingleLineText("Completed".to_owned()));
+/// let record = Record::from([
+///     ("status", FieldValue::SingleLineText("Completed".to_owned())),
+///     ("completion_date", FieldValue::Date(Some(NaiveDate::from_ymd_opt(2024, 1, 15).unwrap()))),
+/// ]);
 ///
 /// let response = kintone::v1::record::update_record(123)
 ///     .id(456)
