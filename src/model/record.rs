@@ -1,5 +1,5 @@
 //! # Kintone Record Models
-//! 
+//!
 //! This module provides the core data structures for working with records in Kintone applications.
 //! Records are the fundamental data containers that hold field values, similar to rows in a database.
 //!
@@ -455,9 +455,17 @@ impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for Record {
     fn from(fields: [(S, FieldValue); N]) -> Self {
         let mut record = Self::with_capacity(N);
         for (key, value) in fields {
-            record.put_field(key.into(), value);
+            record.put_field(key, value);
         }
         record
+    }
+}
+
+impl FromIterator<(String, FieldValue)> for Record {
+    fn from_iter<T: IntoIterator<Item = (String, FieldValue)>>(iter: T) -> Self {
+        Self {
+            fields: iter.into_iter().collect(),
+        }
     }
 }
 
@@ -839,9 +847,17 @@ impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for TableRow {
     fn from(fields: [(S, FieldValue); N]) -> Self {
         let mut row = Self::with_capacity(N);
         for (key, value) in fields {
-            row.put_field(key.into(), value);
+            row.put_field(key, value);
         }
         row
+    }
+}
+
+impl FromIterator<(String, FieldValue)> for TableRow {
+    fn from_iter<T: IntoIterator<Item = (String, FieldValue)>>(iter: T) -> Self {
+        Self {
+            fields: iter.into_iter().collect(),
+        }
     }
 }
 
