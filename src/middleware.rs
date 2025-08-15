@@ -42,6 +42,7 @@
 //! - [`BasicAuthLayer`] - Adds HTTP Basic authentication headers to requests
 
 use std::{
+    borrow::Borrow,
     io::{Cursor, Read},
     sync::Arc,
 };
@@ -230,21 +231,27 @@ pub trait Layer<Inner: Handler>: Send + Sync + 'static {
 
 /// Type alias for a function that determines whether a request should be retried.
 ///
-/// This function receives the original request (without body) and the response,
+/// This function receives the original request (without body) and the response (or `ApiError`),
 /// and returns `true` if the request should be retried. The request body is
-/// removed to avoid lifetime issues and because retry decisions are typically
+/// removed to avoid ownership issues and because retry decisions are typically
 /// based on response status rather than request content.
 ///
 /// # Examples
 ///
-/// ```ignore
-/// let should_retry: Box<ShouldRetryFn> = Box::new(|req, resp| {
+/// ```no_run
+/// use kintone::middleware::ShouldRetryFn;
+/// let should_retry: Box<ShouldRetryFn> = Box::new(|req, resp_or_err| {
+///     let Ok(resp) = resp_or_err else {
+///         return false;  // Never retry on API errors.
+///     };
 ///     // Retry on server errors (5xx) or specific client errors
 ///     resp.status().is_server_error() || resp.status() == 429
 /// });
 /// ```
-pub type ShouldRetryFn =
-    dyn Fn(&http::Request<()>, &http::Response<ResponseBody>) -> bool + Send + Sync + 'static;
+pub type ShouldRetryFn = dyn Fn(&http::Request<()>, Result<&http::Response<ResponseBody>, &ApiError>) -> bool
+    + Send
+    + Sync
+    + 'static;
 
 /// Middleware layer that automatically retries failed requests with exponential backoff.
 ///
@@ -281,6 +288,21 @@ pub struct RetryLayer {
 }
 
 impl RetryLayer {
+    const NONRETRYABLE_CODES: &[&str] = &[
+        "CB_IL02", // "不正なリクエストです。"
+    ];
+
+    pub const DEFAULT_SHOULD_RETRY_FN: &ShouldRetryFn = &|_, resp_or_err| match resp_or_err {
+        Ok(resp) => !resp.status().is_success(),
+        Err(err) => {
+            if let ApiError::Kintone(kintone_err) = err {
+                !Self::NONRETRYABLE_CODES.contains(&kintone_err.code.borrow())
+            } else {
+                true
+            }
+        }
+    };
+
     pub fn new(
         max_attempts: usize,
         initial_delay: std::time::Duration,
@@ -289,9 +311,7 @@ impl RetryLayer {
     ) -> Self {
         let should_retry: Box<ShouldRetryFn> = match should_retry {
             Some(f) => f,
-            None => Box::new(|_: &http::Request<()>, resp: &http::Response<ResponseBody>| {
-                !resp.status().is_success()
-            }),
+            None => Box::new(Self::DEFAULT_SHOULD_RETRY_FN),
         };
         RetryLayer {
             max_attempts,
@@ -346,7 +366,7 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
                         return Ok(resp);
                     }
                     let req_nobody = http::Request::from_parts(parts.clone(), ());
-                    let retry_ok = (self.layer.should_retry)(&req_nobody, &resp);
+                    let retry_ok = (self.layer.should_retry)(&req_nobody, Ok(&resp));
                     if !retry_ok {
                         return Ok(resp);
                     }
@@ -354,6 +374,11 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
                 }
                 Err(e) => {
                     if attempts >= self.layer.max_attempts {
+                        return Err(e);
+                    }
+                    let req_nobody = http::Request::from_parts(parts.clone(), ());
+                    let retry_ok = (self.layer.should_retry)(&req_nobody, Err(&e));
+                    if !retry_ok {
                         return Err(e);
                     }
                     // do retry

@@ -297,9 +297,7 @@ fn integration_test_record_operations() {
 
     // Test record CRUD operations
     // Create record
-    let record = Record::from([
-        ("title", FieldValue::SingleLineText("Test Record".to_owned())),
-    ]);
+    let record = Record::from([("title", FieldValue::SingleLineText("Test Record".to_owned()))]);
 
     let add_response = record::add_record(app_id)
         .record(record)
@@ -322,9 +320,8 @@ fn integration_test_record_operations() {
     }
 
     // Update record
-    let update_record = Record::from([
-        ("title", FieldValue::SingleLineText("Updated Test Record".to_owned())),
-    ]);
+    let update_record =
+        Record::from([("title", FieldValue::SingleLineText("Updated Test Record".to_owned()))]);
 
     let update_response = record::update_record(app_id)
         .id(record_id)
