@@ -699,6 +699,11 @@ impl TableRow {
     pub fn field_values(&self) -> impl ExactSizeIterator<Item = &'_ FieldValue> + Clone {
         self.fields.values()
     }
+
+    /// Removes a field from the table row.
+    pub fn remove_field(&mut self, field_code: &str) -> Option<FieldValue> {
+        self.fields.remove(field_code)
+    }
 }
 
 impl std::fmt::Debug for TableRow {
