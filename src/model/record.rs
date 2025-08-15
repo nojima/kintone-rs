@@ -180,9 +180,7 @@ impl Record {
     ///     }
     /// }
     /// ```
-    pub fn fields_mut(
-        &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
+    pub fn fields_mut(&mut self) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
         self.fields.iter_mut().map(|(k, v)| (k.borrow(), v))
     }
 
@@ -684,9 +682,7 @@ impl TableRow {
     }
 
     /// Returns a mutable iterator over all fields in the table row.
-    pub fn fields_mut(
-        &mut self,
-    ) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
+    pub fn fields_mut(&mut self) -> impl ExactSizeIterator<Item = (&'_ str, &'_ mut FieldValue)> {
         self.fields.iter_mut().map(|(k, v)| (k.borrow(), v))
     }
 

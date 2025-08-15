@@ -260,266 +260,476 @@ pub struct SingleLineTextFieldProperty {
     pub hide_expression: bool,
 }
 
+/// Properties for multi-line text fields.
+///
+/// Multi-line text fields allow users to enter longer text content with line breaks.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultiLineTextFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default value when creating new records
     pub default_value: Option<String>,
 }
 
+/// Properties for rich text fields.
+///
+/// Rich text fields support formatted text with styling options like bold, italic,
+/// links, and other HTML formatting.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RichTextFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default value when creating new records
     pub default_value: Option<String>,
 }
 
+/// Properties for number fields.
+///
+/// Number fields store numeric values with configurable validation rules,
+/// display formats, and decimal precision settings.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NumberFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Whether values must be unique across records
     pub unique: bool,
+    /// Maximum allowed value
     pub max_value: Option<BigDecimal>,
+    /// Minimum allowed value
     pub min_value: Option<BigDecimal>,
+    /// Default value when creating new records
     pub default_value: Option<BigDecimal>,
+    /// Whether to display numbers with digit grouping (e.g., 1,000)
     pub digit: bool,
+    /// Number of decimal places to display
     #[serde(with = "option_stringified")]
     pub display_scale: Option<u64>,
+    /// Unit text to display with the value
     pub unit: Option<String>,
+    /// Position of the unit text
     pub unit_position: Option<UnitPosition>,
 }
 
+/// Properties for date fields.
+///
+/// Date fields store date values without time information.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DateFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Whether values must be unique across records
     pub unique: bool,
+    /// Default date value when creating new records
     pub default_value: Option<NaiveDate>,
+    /// Whether to use the current date as default
     pub default_now_value: bool,
 }
 
+/// Properties for time fields.
+///
+/// Time fields store time values without date information.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default time value when creating new records
     pub default_value: Option<NaiveTime>,
+    /// Whether to use the current time as default
     pub default_now_value: bool,
 }
 
+/// Properties for date-time fields.
+///
+/// Date-time fields store both date and time information with timezone support.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DateTimeFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Whether values must be unique across records
     pub unique: bool,
+    /// Default date-time value when creating new records
     pub default_value: Option<DateTime<FixedOffset>>,
+    /// Whether to use the current date-time as default
     pub default_now_value: bool,
 }
 
+/// Properties for radio button fields.
+///
+/// Radio button fields allow users to select a single option from a predefined list.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RadioButtonFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected option
     pub default_value: Option<String>,
+    /// Layout alignment of the options
     pub align: Option<Alignment>,
+    /// Available options mapped by their values
     pub options: HashMap<String, FieldOption>,
 }
 
+/// Properties for checkbox fields.
+///
+/// Checkbox fields allow users to select multiple options from a predefined list.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckBoxFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected options
     pub default_value: Vec<String>,
+    /// Layout alignment of the options
     pub align: Option<Alignment>,
+    /// Available options mapped by their values
     pub options: HashMap<String, FieldOption>,
 }
 
+/// Properties for multi-select fields.
+///
+/// Multi-select fields allow users to select multiple options from a dropdown list.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultiSelectFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected options
     pub default_value: Vec<String>,
+    /// Available options mapped by their values
     pub options: HashMap<String, FieldOption>,
 }
 
+/// Properties for dropdown fields.
+///
+/// Dropdown fields allow users to select a single option from a dropdown list.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DropDownFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected option
     pub default_value: Option<String>,
+    /// Available options mapped by their values
     pub options: HashMap<String, FieldOption>,
 }
 
+/// Properties for file attachment fields.
+///
+/// File fields allow users to upload and attach files to records.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Size of thumbnail images in pixels
     #[serde(with = "option_stringified")]
     pub thumbnail_size: Option<u64>,
 }
 
+/// Properties for link fields.
+///
+/// Link fields store URL or other link information with protocol validation.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinkFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Whether values must be unique across records
     pub unique: bool,
+    /// Default link value when creating new records
     pub default_value: Option<String>,
+    /// Maximum allowed length
     #[serde(with = "option_stringified")]
     pub max_length: Option<u64>,
+    /// Minimum required length
     #[serde(with = "option_stringified")]
     pub min_length: Option<u64>,
+    /// Protocol type for the link
     pub protocol: LinkProtocol,
 }
 
+/// Properties for user selection fields.
+///
+/// User selection fields allow selection of users from the Kintone organization.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSelectFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected users
     pub default_value: Vec<Entity>,
+    /// Available users that can be selected
     pub entities: Vec<Entity>,
 }
 
+/// Properties for organization selection fields.
+///
+/// Organization selection fields allow selection of organizations from the Kintone system.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrganizationSelectFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected organizations
     pub default_value: Vec<Entity>,
+    /// Available organizations that can be selected
     pub entities: Vec<Entity>,
 }
 
+/// Properties for group selection fields.
+///
+/// Group selection fields allow selection of groups from the Kintone organization.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupSelectFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Whether the field is required
     pub required: bool,
+    /// Default selected groups
     pub default_value: Vec<Entity>,
+    /// Available groups that can be selected
     pub entities: Vec<Entity>,
 }
 
+/// Properties for reference table fields.
+///
+/// Reference table fields display data from related apps based on specified conditions.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceTableFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
+    /// Configuration for the referenced table
     pub reference_table: ReferenceTable,
 }
 
+/// Configuration for reference table relationships.
+///
+/// Defines how records from a related app are filtered and displayed.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceTable {
+    /// Information about the related app
     pub related_app: RelatedApp,
+    /// Condition that relates records between apps
     pub condition: ReferenceCondition,
+    /// Additional filter condition for the referenced records
     pub filter_cond: Option<String>,
+    /// Fields to display from the referenced app
     pub display_fields: Vec<String>,
+    /// Sort order for the referenced records
     pub sort: Option<String>,
+    /// Maximum number of records to display
     #[serde(with = "option_stringified")]
     pub size: Option<u64>,
 }
 
+/// Information about a related app.
+///
+/// Specifies which app to reference either by ID or by app code.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelatedApp {
+    /// App ID of the related app
     #[serde(with = "option_stringified")]
     pub app: Option<u64>,
+    /// App code of the related app (alternative to app ID)
     pub code: Option<String>,
 }
 
+/// Condition that relates records between apps.
+///
+/// Defines which fields are used to match records between the current app and the related app.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferenceCondition {
+    /// Field code in the current app
     pub field: String,
+    /// Field code in the related app
     pub related_field: String,
 }
 
+/// Configuration for lookup field functionality.
+///
+/// Lookup settings define how field values are automatically retrieved from related apps.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LookupSetting {
+    /// Information about the related app
     pub related_app: RelatedApp,
+    /// Key field in the related app used for lookup
     pub related_key_field: String,
+    /// Field mappings between current app and related app
     pub field_mappings: Vec<FieldMapping>,
+    /// Fields displayed in the lookup picker
     pub lookup_picker_fields: Vec<String>,
+    /// Filter condition for lookup records
     pub filter_cond: Option<String>,
+    /// Sort order for lookup records
     pub sort: Option<String>,
 }
 
+/// Mapping between fields in different apps.
+///
+/// Defines how a field in the current app maps to a field in the related app.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldMapping {
+    /// Field code in the current app
     pub field: String,
+    /// Field code in the related app
     pub related_field: String,
 }
 
+/// Properties for group fields.
+///
+/// Group fields are used to visually organize other fields together in the form layout.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label for the group
     pub label: String,
+    /// Whether to hide the group label
     pub no_label: bool,
+    /// Whether the group should be expanded by default
     pub open_group: bool,
 }
 
+/// Properties for subtable fields.
+///
+/// Subtable fields contain multiple rows of data, where each row can have multiple fields.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubtableFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label for the subtable
     pub label: String,
+    /// Whether to hide the subtable label
     pub no_label: bool,
+    /// Fields that make up each row in the subtable
     pub fields: HashMap<String, FieldProperty>,
 }
 
+/// Properties for lookup fields.
+///
+/// Lookup fields automatically retrieve values from related apps based on a key field.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LookupFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// The underlying field type for the lookup field
     #[serde(rename = "type")]
     pub field_type: FieldType,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: Option<bool>,
+    /// Whether the field is required
     pub required: Option<bool>,
+    /// Lookup configuration settings
     pub lookup: LookupSetting,
 }
 
@@ -538,67 +748,115 @@ impl Default for LookupFieldProperty {
 
 // System field properties (read-only)
 
+/// Properties for record number fields.
+///
+/// Record number fields automatically generate unique identifiers for each record.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordNumberFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
 }
 
+/// Properties for category fields.
+///
+/// Category fields are used for organizing records in views and reports.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CategoryFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether the category field is enabled
     pub enabled: bool,
 }
 
+/// Properties for workflow status fields.
+///
+/// Status fields track the current state of records in a workflow process.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether the status field is enabled
     pub enabled: bool,
 }
 
+/// Properties for status assignee fields.
+///
+/// Status assignee fields track who is currently assigned to handle a record in a workflow.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusAssigneeFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether the assignee field is enabled
     pub enabled: bool,
 }
 
+/// Properties for record creation time fields.
+///
+/// Created time fields automatically store when each record was created.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatedTimeFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
 }
 
+/// Properties for record update time fields.
+///
+/// Updated time fields automatically store when each record was last modified.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatedTimeFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
 }
 
+/// Properties for record creator fields.
+///
+/// Creator fields automatically store information about who created each record.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatorFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
 }
 
+/// Properties for record modifier fields.
+///
+/// Modifier fields automatically store information about who last modified each record.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModifierFieldProperty {
+    /// Field code (unique identifier)
     pub code: String,
+    /// Display label
     pub label: String,
+    /// Whether to hide the field label
     pub no_label: bool,
 }
 
