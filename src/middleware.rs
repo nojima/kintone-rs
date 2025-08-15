@@ -98,6 +98,10 @@ impl RequestBody {
         }
     }
 
+    pub fn into_reader(self) -> impl Read {
+        self.into_ureq_body().into_reader()
+    }
+
     pub(crate) fn into_ureq_body(self) -> ureq::SendBody<'static> {
         match self.0 {
             RequestBodyInner::Void => ureq::SendBody::none(),
@@ -431,6 +435,12 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError> {
         eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
+        if let Some(body) = req.body().try_clone() {
+            let mut buf = String::new();
+            if body.into_reader().read_to_string(&mut buf).is_ok() {
+                eprintln!("RequestBody: {buf}");
+            }
+        }
         let result = self.inner.handle(req);
         match &result {
             Ok(resp) => eprintln!("Response: status={:?}", resp.status().as_u16()),
