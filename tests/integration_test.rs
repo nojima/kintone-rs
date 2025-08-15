@@ -12,6 +12,9 @@
 //! - `KINTONE_USERNAME`: Your username for Kintone
 //! - `KINTONE_PASSWORD`: Your password for Kintone
 //!
+//! **Note**: The space operations test requires space creation and deletion permissions.
+//! This may require administrator privileges in your Kintone environment.
+//!
 //! ## Running the Tests
 //!
 //! These tests are marked with `#[ignore]` because they require a real Kintone environment.
@@ -28,6 +31,7 @@
 //!
 //! - `integration_test_full_workflow`: Complete app creation, field addition, deployment, record management, and querying
 //! - `integration_test_record_operations`: Record CRUD operations (Create, Read, Update)
+//! - `integration_test_space_operations`: Space and thread management operations
 
 use std::{
     env,
@@ -40,10 +44,12 @@ use kintone::{
     client::{Auth, KintoneClient, KintoneClientBuilder},
     middleware,
     model::{
+        Entity, EntityType,
         app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty},
         record::{FieldValue, Record},
+        space::ThreadComment,
     },
-    v1::{app, record},
+    v1::{app, record, space},
 };
 
 // Test configuration structure
@@ -80,6 +86,50 @@ impl TestConfig {
     }
 }
 
+/// Waits for app deployment to complete, polling the status at regular intervals.
+///
+/// # Arguments
+/// * `client` - The Kintone client to use for API calls
+/// * `app_id` - The ID of the app being deployed
+/// * `max_attempts` - Maximum number of polling attempts before timeout
+///
+/// # Panics
+/// Panics if deployment fails, is cancelled, times out, or no status is found.
+fn wait_for_deployment_completion(client: &KintoneClient, app_id: u64, max_attempts: u32) {
+    println!("Deployment started, waiting for completion...");
+
+    for attempt in 1..=max_attempts {
+        let status_response = app::settings::get_app_deploy_status()
+            .app(app_id)
+            .send(client)
+            .expect("Failed to check deployment status");
+
+        if let Some(app_status) = status_response.apps.first() {
+            match app_status.status {
+                app::settings::DeployStatus::Success => {
+                    println!("Deployment completed successfully");
+                    return;
+                }
+                app::settings::DeployStatus::Fail => {
+                    panic!("Deployment failed");
+                }
+                app::settings::DeployStatus::Cancel => {
+                    panic!("Deployment was cancelled");
+                }
+                app::settings::DeployStatus::Processing => {
+                    if attempt == max_attempts {
+                        panic!("Deployment did not complete within {max_attempts} attempts");
+                    }
+                    println!("Deployment still in progress (attempt {attempt}/{max_attempts})");
+                    thread::sleep(Duration::from_secs(1));
+                }
+            }
+        } else {
+            panic!("No deployment status found for app {app_id}");
+        }
+    }
+}
+
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_full_workflow() {
@@ -101,7 +151,7 @@ fn integration_test_full_workflow() {
         code: "name".to_owned(),
         label: "Name".to_owned(),
         required: true,
-        max_length: Some(100),
+        max_length: Some(50),
         ..Default::default()
     };
 
@@ -110,7 +160,7 @@ fn integration_test_full_workflow() {
         label: "Age".to_owned(),
         required: false,
         min_value: Some(BigDecimal::from(0)),
-        max_value: Some(BigDecimal::from(150)),
+        max_value: Some(BigDecimal::from(200)),
         ..Default::default()
     };
 
@@ -128,45 +178,7 @@ fn integration_test_full_workflow() {
         .send(&client)
         .expect("Failed to start deployment");
 
-    println!("Deployment started, waiting for completion...");
-
-    // Wait for deployment to complete
-    let max_attempts = 30; // Maximum 30 attempts (30 seconds)
-    let mut attempts = 0;
-
-    loop {
-        attempts += 1;
-        if attempts > max_attempts {
-            panic!("Deployment did not complete within {max_attempts} seconds");
-        }
-
-        let status_response = app::settings::get_app_deploy_status()
-            .app(app_id)
-            .send(&client)
-            .expect("Failed to check deployment status");
-
-        if let Some(app_status) = status_response.apps.first() {
-            match app_status.status {
-                app::settings::DeployStatus::Success => {
-                    println!("Deployment completed successfully");
-                    break;
-                }
-                app::settings::DeployStatus::Fail => {
-                    panic!("Deployment failed");
-                }
-                app::settings::DeployStatus::Cancel => {
-                    panic!("Deployment was cancelled");
-                }
-                app::settings::DeployStatus::Processing => {
-                    println!("Deployment still in progress (attempt {attempts}/{max_attempts})");
-                    thread::sleep(Duration::from_secs(1));
-                    continue;
-                }
-            }
-        } else {
-            panic!("No deployment status found for app {app_id}");
-        }
-    }
+    wait_for_deployment_completion(&client, app_id, 30);
 
     // 4. Add some records to the app
     let test_records = vec![("Alice", 25), ("Bob", 30), ("Charlie", 35), ("Diana", 28)];
@@ -174,9 +186,10 @@ fn integration_test_full_workflow() {
     let mut record_ids = Vec::new();
 
     for (name, age) in &test_records {
-        let mut record = Record::new();
-        record.put_field("name", FieldValue::SingleLineText(name.to_string()));
-        record.put_field("age", FieldValue::Number(BigDecimal::from(*age)));
+        let record = Record::from([
+            ("name", FieldValue::SingleLineText(name.to_string())),
+            ("age", FieldValue::Number(age.into())),
+        ]);
 
         let add_record_response = record::add_record(app_id)
             .record(record)
@@ -280,34 +293,13 @@ fn integration_test_record_operations() {
         .send(&client)
         .expect("Failed to start deployment");
 
-    // Wait for deployment
-    let max_attempts = 20;
-    for attempt in 1..=max_attempts {
-        let status_response = app::settings::get_app_deploy_status()
-            .app(app_id)
-            .send(&client)
-            .expect("Failed to check deployment status");
-
-        if let Some(app_status) = status_response.apps.first() {
-            match app_status.status {
-                app::settings::DeployStatus::Success => break,
-                app::settings::DeployStatus::Fail | app::settings::DeployStatus::Cancel => {
-                    panic!("Deployment failed or was cancelled");
-                }
-                app::settings::DeployStatus::Processing => {
-                    if attempt == max_attempts {
-                        panic!("Deployment timeout");
-                    }
-                    thread::sleep(Duration::from_secs(1));
-                }
-            }
-        }
-    }
+    wait_for_deployment_completion(&client, app_id, 20);
 
     // Test record CRUD operations
     // Create record
-    let mut record = Record::new();
-    record.put_field("title", FieldValue::SingleLineText("Test Record".to_owned()));
+    let record = Record::from([
+        ("title", FieldValue::SingleLineText("Test Record".to_owned())),
+    ]);
 
     let add_response = record::add_record(app_id)
         .record(record)
@@ -330,8 +322,9 @@ fn integration_test_record_operations() {
     }
 
     // Update record
-    let mut update_record = Record::new();
-    update_record.put_field("title", FieldValue::SingleLineText("Updated Test Record".to_owned()));
+    let update_record = Record::from([
+        ("title", FieldValue::SingleLineText("Updated Test Record".to_owned())),
+    ]);
 
     let update_response = record::update_record(app_id)
         .id(record_id)
@@ -355,4 +348,75 @@ fn integration_test_record_operations() {
     }
 
     println!("🎉 Record operations test passed!");
+}
+
+#[test]
+#[ignore] // This test requires real Kintone environment setup
+fn integration_test_space_operations() {
+    let config =
+        TestConfig::from_env().expect("Failed to load test configuration from environment");
+    let client = config.create_client();
+
+    // Test space lifecycle: create -> add thread -> add comment -> delete
+    let space_name = format!("Test Space {}", chrono::Utc::now().timestamp());
+
+    // 1. Create a new space
+    let create_space_response =
+        space::add_space(&space_name).send(&client).expect("Failed to create space");
+
+    let space_id = create_space_response.id;
+    println!("Created space '{space_name}' with ID: {space_id}");
+
+    // 2. Create a thread in the space
+    let thread_name = "Integration Test Thread";
+    let create_thread_response = space::add_thread(space_id, thread_name)
+        .send(&client)
+        .expect("Failed to create thread");
+
+    let thread_id = create_thread_response.id;
+    println!("Created thread '{thread_name}' with ID: {thread_id}");
+
+    // 3. Add comments to the thread
+    let comments = [
+        "This is the first comment in our integration test.",
+        "This is a second comment to test multiple comments.",
+        "Final comment to complete the test scenario.",
+    ];
+
+    let mut comment_ids = Vec::new();
+
+    for (i, comment_text) in comments.iter().enumerate() {
+        let comment = ThreadComment {
+            text: comment_text.to_string(),
+            mentions: vec![], // No mentions in this basic test
+        };
+
+        let add_comment_response = space::add_thread_comment(space_id, thread_id, comment)
+            .send(&client)
+            .unwrap_or_else(|_| panic!("Failed to add comment {}", i + 1));
+
+        comment_ids.push(add_comment_response.id);
+        println!("Added comment {} with ID: {}", i + 1, add_comment_response.id);
+    }
+
+    // 4. Test comment with mentions
+    let mention_comment = ThreadComment {
+        text: "This comment mentions a user @user".to_string(),
+        mentions: vec![Entity {
+            entity_type: EntityType::USER,
+            code: "user".to_string(),
+        }],
+    };
+
+    let mention_response = space::add_thread_comment(space_id, thread_id, mention_comment)
+        .send(&client)
+        .expect("Failed to add comment with mentions");
+
+    println!("Added comment with mentions, ID: {}", mention_response.id);
+
+    // 5. Clean up: Delete the space
+    // Note: This will delete the space and all its content (threads, comments)
+    space::delete_space(space_id).send(&client).expect("Failed to delete space");
+
+    println!("Successfully deleted space {space_id}");
 }
