@@ -1,3 +1,71 @@
+//! # Kintone Record Models
+//! 
+//! This module provides the core data structures for working with records in Kintone applications.
+//! Records are the fundamental data containers that hold field values, similar to rows in a database.
+//!
+//! # Core Types
+//!
+//! - [`Record`] - A collection of field values representing a single record
+//! - [`FieldValue`] - Enum containing all possible field value types
+//! - [`FieldType`] - Enum identifying the type of a field
+//! - [`TableRow`] - Represents a row within a table field
+//! - [`RecordComment`] - Comments associated with records
+//!
+//! # Basic Usage
+//!
+//! Create and manipulate records with field values:
+//!
+//! ```rust
+//! use kintone::model::record::{Record, FieldValue};
+//! use bigdecimal::BigDecimal;
+//!
+//! // Create a new record
+//! let mut record = Record::new();
+//!
+//! // Add various field types
+//! record.put_field("title", FieldValue::SingleLineText("Project Alpha".to_string()));
+//! record.put_field("budget", FieldValue::Number(BigDecimal::from(50000)));
+//! record.put_field("priority", FieldValue::RadioButton(Some("High".to_string())));
+//! record.put_field("active", FieldValue::CheckBox(vec!["Yes".to_string()]));
+//!
+//! // Read field value
+//! let Some(FieldValue::SingleLineText(title)) = record.get("title") else {
+//!     panic!("Title is not set");
+//! };
+//! println!("Title: {}", title);
+//! ```
+//!
+//! # Working with Table Fields
+//!
+//! Table fields contain multiple rows of related data:
+//!
+//! ```rust
+//! use kintone::model::record::{Record, FieldValue, TableRow};
+//!
+//! let mut record = Record::new();
+//! let mut table_rows = Vec::new();
+//!
+//! // Create table rows
+//! let mut row1 = TableRow::new();
+//! row1.put_field("item", FieldValue::SingleLineText("Item 1".to_string()));
+//! row1.put_field("quantity", FieldValue::Number(10.into()));
+//! table_rows.push(row1);
+//!
+//! let mut row2 = TableRow::new();
+//! row2.put_field("item", FieldValue::SingleLineText("Item 2".to_string()));
+//! row2.put_field("quantity", FieldValue::Number(5.into()));
+//! table_rows.push(row2);
+//!
+//! // Add subtable to record
+//! record.put_field("items", FieldValue::Subtable(table_rows));
+//! ```
+//!
+//! # Type-Safe Field Access
+//!
+//! The [`FieldValue`] enum provides type-safe access to field data while handling
+//! Kintone's dynamic field system. Each variant corresponds to a specific field type
+//! and ensures proper serialization/deserialization with the Kintone API.
+
 use std::{borrow::Borrow, collections::HashMap};
 
 use bigdecimal::BigDecimal;

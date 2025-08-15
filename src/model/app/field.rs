@@ -1,3 +1,87 @@
+//! # Kintone Field Models
+//!
+//! This module provides comprehensive type definitions for all supported Kintone field types,
+//! including their configuration properties, validation rules, and display options.
+//!
+//! # Basic Usage
+//!
+//! Create field configurations using struct initialization with defaults:
+//!
+//! ```rust
+//! use kintone::model::app::field::{
+//!     FieldProperty, SingleLineTextFieldProperty, NumberFieldProperty
+//! };
+//!
+//! // Text field with validation
+//! let name_field = SingleLineTextFieldProperty {
+//!     code: "name".to_string(),
+//!     label: "Full Name".to_string(),
+//!     required: true,
+//!     max_length: Some(50),
+//!     ..Default::default()
+//! };
+//!
+//! // Number field with currency formatting
+//! let price_field = NumberFieldProperty {
+//!     code: "price".to_string(),
+//!     label: "Price".to_string(),
+//!     required: true,
+//!     unit: Some("€".to_string()),
+//!     display_scale: Some(2),
+//!     ..Default::default()
+//! };
+//! ```
+//!
+//! # Type Conversions with `.into()`
+//!
+//! Instead of writing verbose enum variant names, you can use `.into()` to convert
+//! specific field property types to the generic [`FieldProperty`] enum:
+//!
+//! ```rust
+//! use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty, NumberFieldProperty};
+//!
+//! let text_field = SingleLineTextFieldProperty {
+//!     code: "description".to_string(),
+//!     label: "Description".to_string(),
+//!     ..Default::default()
+//! };
+//!
+//! // Concise conversion instead of FieldProperty::SingleLineText(text_field)
+//! let field_property: FieldProperty = text_field.into();
+//!
+//! // Use in collections
+//! let fields: Vec<FieldProperty> = vec![
+//!     SingleLineTextFieldProperty {
+//!         code: "title".to_string(),
+//!         label: "Title".to_string(),
+//!         ..Default::default()
+//!     }.into(),
+//!     NumberFieldProperty {
+//!         code: "amount".to_string(),
+//!         label: "Amount".to_string(),
+//!         ..Default::default()
+//!     }.into(),
+//! ];
+//! ```
+//!
+//! # Field Properties Access
+//!
+//! All field types implement common methods to access their properties:
+//!
+//! ```rust
+//! use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty};
+//!
+//! let field: FieldProperty = SingleLineTextFieldProperty {
+//!     code: "sample".to_string(),
+//!     label: "Sample Field".to_string(),
+//!     ..Default::default()
+//! }.into();
+//!
+//! // Access common properties
+//! assert_eq!(field.field_code(), "sample");
+//! println!("Field type: {:?}", field.field_type());
+//! ```
+
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;

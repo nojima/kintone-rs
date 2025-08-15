@@ -1,3 +1,7 @@
+//! # Kintone Space Models
+//!
+//! This module provides data structures for working with Kintone spaces.
+
 use serde::{Deserialize, Serialize};
 
 use crate::model::Entity;
