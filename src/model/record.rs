@@ -164,21 +164,24 @@ impl Record {
     /// use kintone::model::record::{Record, FieldValue};
     ///
     /// let mut original = Record::new();
+    /// original.put_field("$id", FieldValue::__ID__(42));
     /// original.put_field("name", FieldValue::SingleLineText("John".to_owned()));
-    /// // Assume the record also has built-in fields after being retrieved from Kintone
     ///
     /// let clean_copy = original.clone_without_builtins();
+    ///
     /// // clean_copy only contains user-defined fields, not system fields
+    /// assert_eq!(clean_copy.field_codes().collect::<Vec<_>>(), ["name"]);
     /// ```
     pub fn clone_without_builtins(&self) -> Self {
-        let size = self.field_values().filter(|v| !v.field_type().is_builtin()).count();
-        let mut fields = HashMap::with_capacity(size);
-        for (code, value) in self.fields() {
-            if !value.field_type().is_builtin() {
-                fields.insert(code.to_owned(), value.clone());
-            }
-        }
-        Record { fields }
+        self.fields()
+            .filter_map(|(code, value)| {
+                if value.field_type().is_builtin() {
+                    None
+                } else {
+                    Some((code.to_owned(), value.clone()))
+                }
+            })
+            .collect()
     }
 
     /// Gets a reference to the field value for the specified field code.
@@ -387,12 +390,13 @@ impl Record {
     /// # Examples
     ///
     /// ```rust
-    /// use kintone::model::record::Record;
+    /// use kintone::model::record::{Record, FieldValue};
     ///
-    /// let record = Record::new();
+    /// let mut record = Record::new();
     /// assert!(record.id().is_none()); // New records don't have IDs
     ///
-    /// // After saving to Kintone, the record would have an ID
+    /// record.put_field("$id", FieldValue::__ID__(42));
+    /// assert_eq!(record.id(), Some(42));
     /// ```
     pub fn id(&self) -> Option<u64> {
         let Some(FieldValue::__ID__(value)) = self.get("$id") else {
@@ -414,12 +418,13 @@ impl Record {
     /// # Examples
     ///
     /// ```rust
-    /// use kintone::model::record::Record;
+    /// use kintone::model::record::{Record, FieldValue};
     ///
-    /// let record = Record::new();
+    /// let mut record = Record::new();
     /// assert!(record.revision().is_none()); // New records don't have revisions
     ///
-    /// // After saving to Kintone, the record would have a revision number
+    /// record.put_field("$revision", FieldValue::__REVISION__(3));
+    /// assert_eq!(record.revision(), Some(3));
     /// ```
     pub fn revision(&self) -> Option<u64> {
         let Some(FieldValue::__REVISION__(value)) = self.get("$revision") else {
