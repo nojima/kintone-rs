@@ -19,14 +19,13 @@
 //! use kintone::model::record::{Record, FieldValue};
 //! use bigdecimal::BigDecimal;
 //!
-//! // Create a new record
-//! let mut record = Record::new();
-//!
-//! // Add various field types
-//! record.put_field("title", FieldValue::SingleLineText("Project Alpha".to_string()));
-//! record.put_field("budget", FieldValue::Number(BigDecimal::from(50000)));
-//! record.put_field("priority", FieldValue::RadioButton(Some("High".to_string())));
-//! record.put_field("active", FieldValue::CheckBox(vec!["Yes".to_string()]));
+//! // Create a record with initial fields
+//! let record = Record::from([
+//!     ("title", FieldValue::SingleLineText("Project Alpha".to_string())),
+//!     ("budget", FieldValue::Number(BigDecimal::from(50000))),
+//!     ("priority", FieldValue::RadioButton(Some("High".to_string()))),
+//!     ("active", FieldValue::CheckBox(vec!["Yes".to_string()])),
+//! ]);
 //!
 //! // Read field value
 //! let Some(FieldValue::SingleLineText(title)) = record.get("title") else {
@@ -61,22 +60,22 @@
 //! ```rust
 //! use kintone::model::record::{Record, FieldValue, TableRow};
 //!
-//! let mut record = Record::new();
-//! let mut table_rows = Vec::new();
-//!
 //! // Create table rows
-//! let mut row1 = TableRow::new();
-//! row1.put_field("item", FieldValue::SingleLineText("Item 1".to_string()));
-//! row1.put_field("quantity", FieldValue::Number(10.into()));
-//! table_rows.push(row1);
+//! let table_rows = vec![
+//!     TableRow::from([
+//!         ("item", FieldValue::SingleLineText("Item 1".to_string())),
+//!         ("quantity", FieldValue::Number(10.into())),
+//!     ]),
+//!     TableRow::from([
+//!         ("item", FieldValue::SingleLineText("Item 2".to_string())),
+//!         ("quantity", FieldValue::Number(5.into())),
+//!     ]),
+//! ];
 //!
-//! let mut row2 = TableRow::new();
-//! row2.put_field("item", FieldValue::SingleLineText("Item 2".to_string()));
-//! row2.put_field("quantity", FieldValue::Number(5.into()));
-//! table_rows.push(row2);
-//!
-//! // Add subtable to record
-//! record.put_field("items", FieldValue::Subtable(table_rows));
+//! // Create record with subtable
+//! let record = Record::from([
+//!     ("items", FieldValue::Subtable(table_rows)),
+//! ]);
 //! ```
 //!
 //! # Type-Safe Field Access
@@ -109,13 +108,12 @@ use crate::{
 /// ```rust
 /// use kintone::model::record::{Record, FieldValue};
 ///
-/// // Create a new record
-/// let mut record = Record::new();
-///
-/// // Add fields to the record
-/// record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
-/// record.put_field("age", FieldValue::Number(30.into()));
-/// record.put_field("email", FieldValue::Link("john@example.com".to_owned()));
+/// // Create a record with initial fields
+/// let record = Record::from([
+///     ("name", FieldValue::SingleLineText("John Doe".to_owned())),
+///     ("age", FieldValue::Number(30.into())),
+///     ("email", FieldValue::Link("john@example.com".to_owned())),
+/// ]);
 ///
 /// // Read field values
 /// if let Some(FieldValue::SingleLineText(name)) = record.get("name") {
@@ -246,9 +244,10 @@ impl Record {
     /// ```rust
     /// use kintone::model::record::{Record, FieldValue};
     ///
-    /// let mut record = Record::new();
-    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
-    /// record.put_field("age", FieldValue::Number(30.into()));
+    /// let record = Record::from([
+    ///     ("name", FieldValue::SingleLineText("John".to_owned())),
+    ///     ("age", FieldValue::Number(30.into())),
+    /// ]);
     ///
     /// for (field_code, field_value) in record.fields() {
     ///     println!("{}: {:?}", field_code, field_value);
@@ -288,9 +287,10 @@ impl Record {
     /// ```rust
     /// use kintone::model::record::{Record, FieldValue};
     ///
-    /// let mut record = Record::new();
-    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
-    /// record.put_field("age", FieldValue::Number(30.into()));
+    /// let record = Record::from([
+    ///     ("name", FieldValue::SingleLineText("John".to_owned())),
+    ///     ("age", FieldValue::Number(30.into())),
+    /// ]);
     ///
     /// let field_codes: Vec<_> = record.field_codes().collect();
     /// assert_eq!(field_codes.len(), 2);
@@ -306,9 +306,10 @@ impl Record {
     /// ```rust
     /// use kintone::model::record::{Record, FieldValue};
     ///
-    /// let mut record = Record::new();
-    /// record.put_field("name", FieldValue::SingleLineText("John".to_owned()));
-    /// record.put_field("age", FieldValue::Number(30.into()));
+    /// let record = Record::from([
+    ///     ("name", FieldValue::SingleLineText("John".to_owned())),
+    ///     ("age", FieldValue::Number(30.into())),
+    /// ]);
     ///
     /// let field_values: Vec<_> = record.field_values().collect();
     /// assert_eq!(field_values.len(), 2);
@@ -750,9 +751,10 @@ pub enum FieldValue {
 /// ```rust
 /// use kintone::model::record::{TableRow, FieldValue};
 ///
-/// let mut row = TableRow::new();
-/// row.put_field("name", FieldValue::SingleLineText("John Doe".to_string()));
-/// row.put_field("age", FieldValue::Number(25.into()));
+/// let row = TableRow::from([
+///     ("name", FieldValue::SingleLineText("John Doe".to_string())),
+///     ("age", FieldValue::Number(25.into())),
+/// ]);
 ///
 /// if let Some(name_field) = row.get("name") {
 ///     println!("Name: {:?}", name_field);
