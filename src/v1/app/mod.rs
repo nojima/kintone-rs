@@ -7,6 +7,7 @@
 //!
 //! ### App Management
 //! - [`add_app`] - Create a new app in the preview environment
+//! - [`get_apps`] - Retrieve information about multiple apps
 //!
 //! ### Settings Management
 //! - [`settings::deploy_app`] - Deploy app settings from preview to production environment
@@ -21,21 +22,33 @@
 //! ```no_run
 //! # use kintone::client::{Auth, KintoneClient};
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+//! // Create a new app (requires username/password auth)
 //! let response = kintone::v1::app::add_app("My App").send(&client)?;
 //! println!("Created app with ID: {}", response.app);
+//!
+//! // Get app information (can use API tokens)
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::api_token("token".to_owned()));
+//! let response = kintone::v1::app::get_apps()
+//!     .codes(["PROJECT", "TASK"])
+//!     .send(&client)?;
+//! for app in response.apps {
+//!     println!("App: {} (ID: {})", app.name, app.app_id);
+//! }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
-//! **Note**: App APIs require username/password authentication and cannot use API tokens.
+//! **Note**: Some app APIs like [`add_app`] require username/password authentication and cannot use API tokens.
 
 pub mod form;
 pub mod settings;
 
 use serde::{Deserialize, Serialize};
+use chrono::{DateTime, FixedOffset};
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
-use crate::internal::serde_helper::stringified;
+use crate::internal::serde_helper::{option_stringified, stringified};
+use crate::model::User;
 
 /// Creates a new app in the preview environment.
 ///
@@ -76,6 +89,54 @@ pub fn add_app(name: impl Into<String>) -> AddAppRequest {
             space: None,
             thread: None,
         },
+    }
+}
+
+/// Retrieves information about multiple apps.
+///
+/// This function creates a request to get information about apps that match the specified criteria.
+/// You can filter apps by IDs, codes, names, or space IDs. A maximum of 100 apps can be retrieved per request.
+///
+/// # Optional Parameters
+/// * `ids` - Array of app IDs (up to 100 IDs)
+/// * `codes` - Array of app codes (up to 100 codes)  
+/// * `name` - App name or partial name (case-insensitive partial match)
+/// * `space_ids` - Array of space IDs (up to 100 IDs)
+/// * `offset` - Number of apps to skip from the beginning (default: 0)
+/// * `limit` - Number of apps to retrieve (1-100, default: 100)
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::api_token("token".to_owned()));
+/// // Get all apps
+/// let response = kintone::v1::app::get_apps()
+///     .send(&client)?;
+/// 
+/// // Get apps by codes
+/// let response = kintone::v1::app::get_apps()
+///     .codes(["PROJECT", "TASK"])
+///     .send(&client)?;
+///
+/// // Get apps by name with pagination  
+/// let response = kintone::v1::app::get_apps()
+///     .name("Management")
+///     .offset(0)
+///     .limit(50)
+///     .send(&client)?;
+///
+/// for app in response.apps {
+///     println!("App: {} (ID: {})", app.name, app.app_id);
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-apps/>
+pub fn get_apps() -> GetAppsRequest {
+    let builder = RequestBuilder::new(http::Method::GET, "/v1/apps.json");
+    GetAppsRequest {
+        builder,
     }
 }
 
@@ -130,5 +191,105 @@ impl AddAppRequest {
     /// This API requires username/password authentication. API tokens cannot be used.
     pub fn send(self, client: &KintoneClient) -> Result<AddAppResponse, ApiError> {
         self.builder.send(client, self.body)
+    }
+}
+
+#[must_use]
+pub struct GetAppsRequest {
+    builder: RequestBuilder,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAppsResponse {
+    pub apps: Vec<AppInfo>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppInfo {
+    #[serde(with = "stringified")]
+    pub app_id: u64,
+    pub code: String,
+    pub name: String,
+    pub description: String,
+    #[serde(with = "option_stringified")]
+    pub space_id: Option<u64>,
+    #[serde(with = "option_stringified")]
+    pub thread_id: Option<u64>,
+    pub created_at: DateTime<FixedOffset>,
+    pub creator: User,
+    pub modified_at: DateTime<FixedOffset>,
+    pub modifier: User,
+}
+
+impl GetAppsRequest {
+    /// Sets the app IDs to filter by.
+    ///
+    /// Maximum of 100 app IDs can be specified.
+    pub fn ids<I, T>(mut self, ids: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<u64>,
+    {
+        let id_strings: Vec<String> = ids.into_iter().map(|id| id.into().to_string()).collect();
+        self.builder = self.builder.query_array("ids", &id_strings);
+        self
+    }
+
+    /// Sets the app codes to filter by.
+    ///
+    /// Maximum of 100 app codes can be specified.
+    pub fn codes<I, T>(mut self, codes: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<String>,
+    {
+        let code_strings: Vec<String> = codes.into_iter().map(Into::into).collect();
+        self.builder = self.builder.query_array("codes", &code_strings);
+        self
+    }
+
+    /// Sets the app name to search for (partial match, case-insensitive).
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.builder = self.builder.query("name", name.into());
+        self
+    }
+
+    /// Sets the space IDs to filter by.
+    ///
+    /// Maximum of 100 space IDs can be specified.
+    pub fn space_ids<I, T>(mut self, space_ids: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<u64>,
+    {
+        let space_id_strings: Vec<String> = space_ids.into_iter().map(|id| id.into().to_string()).collect();
+        self.builder = self.builder.query_array("spaceIds", &space_id_strings);
+        self
+    }
+
+    /// Sets the number of apps to skip from the beginning.
+    ///
+    /// Default is 0 if not specified.
+    pub fn offset(mut self, offset: u64) -> Self {
+        self.builder = self.builder.query("offset", offset.to_string());
+        self
+    }
+
+    /// Sets the maximum number of apps to retrieve.
+    ///
+    /// Must be between 1 and 100. Default is 100 if not specified.
+    pub fn limit(mut self, limit: u64) -> Self {
+        self.builder = self.builder.query("limit", limit.to_string());
+        self
+    }
+
+    /// Sends the request to get the apps.
+    ///
+    /// # Returns
+    /// A Result containing the GetAppsResponse with app information, or an ApiError.
+    pub fn send(self, client: &KintoneClient) -> Result<GetAppsResponse, ApiError> {
+        self.builder.call(client)
     }
 }
