@@ -188,7 +188,7 @@ fn integration_test_full_workflow() {
     for (name, age) in &test_records {
         let record = Record::from([
             ("name", FieldValue::SingleLineText(name.to_string())),
-            ("age", FieldValue::Number(age.into())),
+            ("age", FieldValue::Number(Some(age.into()))),
         ]);
 
         let add_record_response = record::add_record(app_id)
@@ -218,7 +218,7 @@ fn integration_test_full_workflow() {
         }
 
         // Verify age field
-        if let Some(FieldValue::Number(age_decimal)) = retrieved_record.get("age") {
+        if let Some(FieldValue::Number(Some(age_decimal))) = retrieved_record.get("age") {
             let age: i32 = age_decimal.to_string().parse().expect("Failed to parse age");
             assert_eq!(age, expected_age, "Age field mismatch for record {record_id}");
         } else {

@@ -42,8 +42,8 @@
 pub mod form;
 pub mod settings;
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, FixedOffset};
+use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
@@ -112,7 +112,7 @@ pub fn add_app(name: impl Into<String>) -> AddAppRequest {
 /// // Get all apps
 /// let response = kintone::v1::app::get_apps()
 ///     .send(&client)?;
-/// 
+///
 /// // Get apps by codes
 /// let response = kintone::v1::app::get_apps()
 ///     .codes(["PROJECT", "TASK"])
@@ -135,9 +135,7 @@ pub fn add_app(name: impl Into<String>) -> AddAppRequest {
 /// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-apps/>
 pub fn get_apps() -> GetAppsRequest {
     let builder = RequestBuilder::new(http::Method::GET, "/v1/apps.json");
-    GetAppsRequest {
-        builder,
-    }
+    GetAppsRequest { builder }
 }
 
 #[must_use]
@@ -264,7 +262,8 @@ impl GetAppsRequest {
         I: IntoIterator<Item = T>,
         T: Into<u64>,
     {
-        let space_id_strings: Vec<String> = space_ids.into_iter().map(|id| id.into().to_string()).collect();
+        let space_id_strings: Vec<String> =
+            space_ids.into_iter().map(|id| id.into().to_string()).collect();
         self.builder = self.builder.query_array("spaceIds", &space_id_strings);
         self
     }

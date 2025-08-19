@@ -23,6 +23,39 @@ pub(crate) mod stringified {
     }
 }
 
+pub(crate) mod stringified_or_empty {
+    use std::fmt::Display;
+    use std::str::FromStr;
+
+    use serde::Deserialize;
+
+    // cf. https://stackoverflow.com/questions/75527167/serde-deserialize-string-into-u64
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: FromStr,
+        <T as FromStr>::Err: Display,
+    {
+        let s: String = String::deserialize(deserializer)?;
+        if s.is_empty() {
+            return Ok(None);
+        }
+        let v = s.parse::<T>().map_err(serde::de::Error::custom)?;
+        Ok(Some(v))
+    }
+
+    pub fn serialize<T, S>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Display,
+        S: serde::Serializer,
+    {
+        match value {
+            Some(v) => serializer.serialize_str(&v.to_string()),
+            None => serializer.serialize_str(""),
+        }
+    }
+}
+
 pub(crate) mod option_stringified {
     use std::fmt::Display;
     use std::str::FromStr;
@@ -42,7 +75,6 @@ pub(crate) mod option_stringified {
         Ok(Some(v))
     }
 
-    #[allow(dead_code)]
     pub fn serialize<T, S>(v: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
     where
         T: Display,

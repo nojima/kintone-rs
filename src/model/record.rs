@@ -92,7 +92,7 @@ use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    internal::serde_helper::stringified,
+    internal::serde_helper::{stringified, stringified_or_empty},
     model::{Entity, FileBody, Group, Organization, User},
 };
 
@@ -697,7 +697,7 @@ pub enum FieldValue {
     MultiSelect(Vec<String>),
 
     #[assoc(field_type = FieldType::Number)]
-    Number(BigDecimal),
+    Number(#[serde(with = "stringified_or_empty")] Option<BigDecimal>),
 
     #[assoc(field_type = FieldType::OrganizationSelect)]
     OrganizationSelect(Vec<Organization>),
@@ -724,7 +724,7 @@ pub enum FieldValue {
     Subtable(Vec<TableRow>),
 
     #[assoc(field_type = FieldType::Time)]
-    Time(NaiveTime),
+    Time(Option<NaiveTime>),
 
     #[assoc(field_type = FieldType::UpdatedTime)]
     UpdatedTime(DateTime<FixedOffset>),
