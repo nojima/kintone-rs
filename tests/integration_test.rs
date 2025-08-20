@@ -39,7 +39,6 @@ use std::{
     time::Duration,
 };
 
-use bigdecimal::BigDecimal;
 use kintone::{
     client::{Auth, KintoneClient, KintoneClientBuilder},
     middleware,
@@ -159,8 +158,8 @@ fn integration_test_full_workflow() {
         code: "age".to_owned(),
         label: "Age".to_owned(),
         required: false,
-        min_value: Some(BigDecimal::from(0)),
-        max_value: Some(BigDecimal::from(200)),
+        min_value: Some(0.into()),
+        max_value: Some(200.into()),
         ..Default::default()
     };
 

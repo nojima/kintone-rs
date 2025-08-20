@@ -166,7 +166,7 @@ impl GetRecordsRequest {
 ///
 /// let record = Record::from([
 ///     ("name", FieldValue::SingleLineText("John Doe".to_owned())),
-///     ("age", FieldValue::Number(BigDecimal::from(30))),
+///     ("age", FieldValue::Number(Some(30.into()))),
 /// ]);
 ///
 /// let response = kintone::v1::record::add_record(123)

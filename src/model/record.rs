@@ -22,7 +22,7 @@
 //! // Create a record with initial fields
 //! let record = Record::from([
 //!     ("title", FieldValue::SingleLineText("Project Alpha".to_string())),
-//!     ("budget", FieldValue::Number(BigDecimal::from(50000))),
+//!     ("budget", FieldValue::Number(Some(50000.into()))),
 //!     ("priority", FieldValue::RadioButton(Some("High".to_string()))),
 //!     ("active", FieldValue::CheckBox(vec!["Yes".to_string()])),
 //! ]);
@@ -45,7 +45,7 @@
 //! // Create a record with initial fields using From trait
 //! let record = Record::from([
 //!     ("name", FieldValue::SingleLineText("John Doe".to_string())),
-//!     ("age", FieldValue::Number(BigDecimal::from(30))),
+//!     ("age", FieldValue::Number(Some(30.into()))),
 //!     ("email", FieldValue::SingleLineText("john@example.com".to_string())),
 //! ]);
 //!
@@ -64,11 +64,11 @@
 //! let table_rows = vec![
 //!     TableRow::from([
 //!         ("item", FieldValue::SingleLineText("Item 1".to_string())),
-//!         ("quantity", FieldValue::Number(10.into())),
+//!         ("quantity", FieldValue::Number(Some(10.into()))),
 //!     ]),
 //!     TableRow::from([
 //!         ("item", FieldValue::SingleLineText("Item 2".to_string())),
-//!         ("quantity", FieldValue::Number(5.into())),
+//!         ("quantity", FieldValue::Number(Some(5.into()))),
 //!     ]),
 //! ];
 //!
@@ -111,7 +111,7 @@ use crate::{
 /// // Create a record with initial fields
 /// let record = Record::from([
 ///     ("name", FieldValue::SingleLineText("John Doe".to_owned())),
-///     ("age", FieldValue::Number(30.into())),
+///     ("age", FieldValue::Number(Some(30.into()))),
 ///     ("email", FieldValue::Link("john@example.com".to_owned())),
 /// ]);
 ///
@@ -239,7 +239,7 @@ impl Record {
     ///
     /// let record = Record::from([
     ///     ("name", FieldValue::SingleLineText("John".to_owned())),
-    ///     ("age", FieldValue::Number(30.into())),
+    ///     ("age", FieldValue::Number(Some(30.into()))),
     /// ]);
     ///
     /// for (field_code, field_value) in record.fields() {
@@ -282,7 +282,7 @@ impl Record {
     ///
     /// let record = Record::from([
     ///     ("name", FieldValue::SingleLineText("John".to_owned())),
-    ///     ("age", FieldValue::Number(30.into())),
+    ///     ("age", FieldValue::Number(Some(30.into()))),
     /// ]);
     ///
     /// let field_codes: Vec<_> = record.field_codes().collect();
@@ -301,7 +301,7 @@ impl Record {
     ///
     /// let record = Record::from([
     ///     ("name", FieldValue::SingleLineText("John".to_owned())),
-    ///     ("age", FieldValue::Number(30.into())),
+    ///     ("age", FieldValue::Number(Some(30.into()))),
     /// ]);
     ///
     /// let field_values: Vec<_> = record.field_values().collect();
@@ -634,7 +634,7 @@ pub enum FieldType {
 /// let date_value = FieldValue::Date(Some(date));
 ///
 /// // Number field
-/// let number_value = FieldValue::Number(42.into());
+/// let number_value = FieldValue::Number(Some(42.into()));
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
 #[serde(tag = "type", content = "value", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -740,7 +740,7 @@ pub enum FieldValue {
 ///
 /// let row = TableRow::from([
 ///     ("name", FieldValue::SingleLineText("John Doe".to_string())),
-///     ("age", FieldValue::Number(25.into())),
+///     ("age", FieldValue::Number(Some(25.into()))),
 /// ]);
 ///
 /// if let Some(name_field) = row.get("name") {

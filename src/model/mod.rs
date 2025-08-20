@@ -11,7 +11,7 @@
 //!
 //! let mut record = Record::new();
 //! record.put_field("name", FieldValue::SingleLineText("John Doe".to_owned()));
-//! record.put_field("age", FieldValue::Number(30.into()));
+//! record.put_field("age", FieldValue::Number(Some(30.into())));
 //! println!("record = {record:?}");
 //! ```
 //!
@@ -23,7 +23,7 @@
 //!     println!("Name: {}", name);
 //! }
 //! if let Some(FieldValue::Number(age)) = record.get("age") {
-//!     println!("Age: {}", age);
+//!     println!("Age: {:?}", age);
 //! }
 //! ```
 
