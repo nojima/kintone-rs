@@ -84,7 +84,7 @@
 //! Kintone's dynamic field system. Each variant corresponds to a specific field type
 //! and ensures proper serialization/deserialization with the Kintone API.
 
-use std::{borrow::Borrow, collections::HashMap};
+use std::{borrow::Borrow, collections::BTreeMap};
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
@@ -123,7 +123,7 @@ use crate::{
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Record {
     #[serde(flatten)]
-    fields: HashMap<String, FieldValue>,
+    fields: BTreeMap<String, FieldValue>,
 }
 
 impl Record {
@@ -139,14 +139,7 @@ impl Record {
     /// ```
     pub fn new() -> Self {
         Record {
-            fields: HashMap::new(),
-        }
-    }
-
-    /// Creates a new record with the specified initial capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Record {
-            fields: HashMap::with_capacity(capacity),
+            fields: BTreeMap::new(),
         }
     }
 
@@ -439,12 +432,8 @@ impl std::fmt::Debug for Record {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("Record");
 
-        let mut keys: Vec<_> = self.fields.keys().by_ref().collect();
-        keys.sort();
-
-        for key in keys {
-            let value = self.fields.get(key).unwrap();
-            debug_struct.field(key, value);
+        for (field_code, field_value) in self.fields() {
+            debug_struct.field(field_code, field_value);
         }
 
         debug_struct.finish()
@@ -459,18 +448,16 @@ impl Default for Record {
 
 impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for Record {
     fn from(fields: [(S, FieldValue); N]) -> Self {
-        let mut record = Self::with_capacity(N);
-        for (key, value) in fields {
-            record.put_field(key, value);
+        Self {
+            fields: BTreeMap::from(fields.map(|(k, v)| (k.into(), v))),
         }
-        record
     }
 }
 
 impl FromIterator<(String, FieldValue)> for Record {
     fn from_iter<T: IntoIterator<Item = (String, FieldValue)>>(iter: T) -> Self {
         Self {
-            fields: iter.into_iter().collect(),
+            fields: BTreeMap::from_iter(iter),
         }
     }
 }
@@ -763,21 +750,14 @@ pub enum FieldValue {
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TableRow {
     #[serde(flatten)]
-    fields: HashMap<String, FieldValue>,
+    fields: BTreeMap<String, FieldValue>,
 }
 
 impl TableRow {
     /// Creates a new empty table row.
     pub fn new() -> Self {
         Self {
-            fields: HashMap::new(),
-        }
-    }
-
-    /// Creates a new table row with the specified initial capacity.
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            fields: HashMap::with_capacity(capacity),
+            fields: BTreeMap::new(),
         }
     }
 
@@ -832,12 +812,8 @@ impl std::fmt::Debug for TableRow {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("TableRow");
 
-        let mut keys: Vec<_> = self.fields.keys().by_ref().collect();
-        keys.sort();
-
-        for key in keys {
-            let value = self.fields.get(key).unwrap();
-            debug_struct.field(key, value);
+        for (field_code, field_value) in self.fields() {
+            debug_struct.field(field_code, field_value);
         }
 
         debug_struct.finish()
@@ -852,18 +828,16 @@ impl Default for TableRow {
 
 impl<const N: usize, S: Into<String>> From<[(S, FieldValue); N]> for TableRow {
     fn from(fields: [(S, FieldValue); N]) -> Self {
-        let mut row = Self::with_capacity(N);
-        for (key, value) in fields {
-            row.put_field(key, value);
+        Self {
+            fields: BTreeMap::from(fields.map(|(k, v)| (k.into(), v))),
         }
-        row
     }
 }
 
 impl FromIterator<(String, FieldValue)> for TableRow {
     fn from_iter<T: IntoIterator<Item = (String, FieldValue)>>(iter: T) -> Self {
         Self {
-            fields: iter.into_iter().collect(),
+            fields: BTreeMap::from_iter(iter),
         }
     }
 }
