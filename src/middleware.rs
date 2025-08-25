@@ -423,21 +423,53 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// Request: method=GET, url="https://example.cybozu.com/k/v1/records.json?app=123"
 /// Response: status=200
 /// ```
+/// LoggingLayer controls logging of HTTP requests and responses.
+///
+/// The `enabled` attribute can be set to false to disable logging.
 pub struct LoggingLayer {
     log_target: String,
+    enabled: bool,
 }
 
 impl LoggingLayer {
     const DEFAULT_LOG_TARGET: &str = "kintone";
 
+    /// Creates a new LoggingLayer with logging enabled by default.
     pub fn new() -> Self {
         LoggingLayer {
             log_target: Self::DEFAULT_LOG_TARGET.to_owned(),
+            enabled: true,
         }
     }
 
-    pub fn set_log_target(&mut self, target: String) {
-        self.log_target = target;
+    /// Enables or disables logging for this layer. (builder style)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::middleware::LoggingLayer;
+    /// let logging_layer = LoggingLayer::new().with_enabled(false);
+    /// ```
+    pub fn with_enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
+        self
+    }
+
+    /// Sets the log target for this layer. (builder style)
+    ///
+    /// See the document of [log][log] crate for log targets.
+    ///
+    /// [log]: https://docs.rs/log/latest/log/
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::middleware::LoggingLayer;
+    /// let logging_layer = LoggingLayer::new().with_log_target("kintone::access_log");
+    /// ```
+    pub fn with_log_target(mut self, target: impl Into<String>) -> Self {
+        self.log_target = target.into();
+        self
     }
 }
 
@@ -453,6 +485,7 @@ impl<Inner: Handler> Layer<Inner> for LoggingLayer {
         LoggingHandler {
             inner,
             log_target: self.log_target,
+            enabled: self.enabled,
         }
     }
 }
@@ -467,6 +500,7 @@ impl<Inner: Handler> Layer<Inner> for LoggingLayer {
 pub struct LoggingHandler<Inner> {
     inner: Inner,
     log_target: String,
+    enabled: bool,
 }
 
 impl<Inner: Handler> Handler for LoggingHandler<Inner> {
@@ -474,6 +508,10 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
         &self,
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError> {
+        if !self.enabled {
+            return self.inner.handle(req);
+        }
+
         info!(target: &self.log_target, "Request: method={}, url={:?}", req.method(), req.uri());
         if let Some(body) = req.body().try_clone() {
             let mut buf = String::new();
