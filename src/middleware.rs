@@ -22,8 +22,8 @@
 //! When you stack layers like this:
 //! ```ignore
 //! client_builder
-//!     .layer(RetryLayer::new(...))     // Layer A
-//!     .layer(LoggingLayer::new())      // Layer B
+//!     .layer(RetryLayer::new().with_max_attempts(5)) // Layer A
+//!     .layer(LoggingLayer::new())                    // Layer B
 //!     .build()
 //! ```
 //!
@@ -274,13 +274,14 @@ pub type ShouldRetryFn = dyn Fn(&http::Request<()>, Result<&http::Response<Respo
 /// use kintone::middleware::RetryLayer;
 ///
 /// // Retry up to 5 times with exponential backoff
-/// let retry_layer = RetryLayer::new(
-///     5,                              // max_attempts
-///     Duration::from_millis(500),     // initial_delay
-///     Duration::from_secs(30),        // max_delay
-///     None                            // use default retry logic
-/// );
+/// let retry_layer = RetryLayer::new()
+///     .with_max_attempts(5)
+///     .with_initial_delay(Duration::from_millis(500))
+///     .with_max_delay(Duration::from_secs(30));
 /// ```
+/// RetryLayer controls automatic retry logic for failed requests.
+///
+/// Use builder-style methods to configure retry policy.
 pub struct RetryLayer {
     max_attempts: usize,
     initial_delay: std::time::Duration,
@@ -293,6 +294,9 @@ impl RetryLayer {
         "CB_IL02", // "不正なリクエストです。"
     ];
 
+    pub const DEFAULT_MAX_ATTEMPTS: usize = 5;
+    pub const DEFAULT_INITIAL_DELAY: std::time::Duration = std::time::Duration::from_secs(1);
+    pub const DEFAULT_MAX_DELAY: std::time::Duration = std::time::Duration::from_secs(8);
     pub const DEFAULT_SHOULD_RETRY_FN: &ShouldRetryFn = &|_, resp_or_err| match resp_or_err {
         Ok(resp) => !resp.status().is_success(),
         Err(err) => {
@@ -304,22 +308,49 @@ impl RetryLayer {
         }
     };
 
-    pub fn new(
-        max_attempts: usize,
-        initial_delay: std::time::Duration,
-        max_delay: std::time::Duration,
-        should_retry: Option<Box<ShouldRetryFn>>,
-    ) -> Self {
-        let should_retry: Box<ShouldRetryFn> = match should_retry {
-            Some(f) => f,
-            None => Box::new(Self::DEFAULT_SHOULD_RETRY_FN),
-        };
+    /// Creates a new RetryLayer with default settings.
+    pub fn new() -> Self {
         RetryLayer {
-            max_attempts,
-            initial_delay,
-            max_delay,
-            should_retry,
+            max_attempts: Self::DEFAULT_MAX_ATTEMPTS,
+            initial_delay: Self::DEFAULT_INITIAL_DELAY,
+            max_delay: Self::DEFAULT_MAX_DELAY,
+            should_retry: Box::new(Self::DEFAULT_SHOULD_RETRY_FN),
         }
+    }
+
+    /// Sets the maximum number of retry attempts.
+    /// `max_attempts` must be ≧ 1.
+    /// If `max_attempts` is 1, retries are disabled.
+    pub fn with_max_attempts(mut self, max_attempts: usize) -> Self {
+        if max_attempts == 0 {
+            panic!("max_attempts must be >= 1");
+        }
+        self.max_attempts = max_attempts;
+        self
+    }
+
+    /// Sets the initial delay before the first retry.
+    pub fn with_initial_delay(mut self, initial_delay: std::time::Duration) -> Self {
+        self.initial_delay = initial_delay;
+        self
+    }
+
+    /// Sets the maximum delay between retries.
+    pub fn with_max_delay(mut self, max_delay: std::time::Duration) -> Self {
+        self.max_delay = max_delay;
+        self
+    }
+
+    /// Sets the retry decision function.
+    pub fn with_should_retry(mut self, should_retry: Box<ShouldRetryFn>) -> Self {
+        self.should_retry = should_retry;
+        self
+    }
+}
+
+impl Default for RetryLayer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -347,9 +378,13 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
         &self,
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError> {
+        if self.layer.max_attempts == 1 {
+            return self.inner.handle(req);
+        }
+
         let (parts, body) = req.into_parts();
 
-        let mut attempts = 0;
+        let mut attempts = 1;
         let mut delay = self.layer.initial_delay;
 
         loop {
@@ -404,8 +439,7 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// # Logged Information
 ///
 /// - Request: HTTP method and URL
-/// - Response: HTTP status code
-/// - Errors: Full error details
+/// - Response: HTTP status code or error details
 ///
 /// # Examples
 ///
@@ -413,19 +447,7 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// use kintone::middleware::LoggingLayer;
 ///
 /// let logging_layer = LoggingLayer::new();
-/// // or
-/// let logging_layer = LoggingLayer::default();
 /// ```
-///
-/// # Output Example
-///
-/// ```text
-/// Request: method=GET, url="https://example.cybozu.com/k/v1/records.json?app=123"
-/// Response: status=200
-/// ```
-/// LoggingLayer controls logging of HTTP requests and responses.
-///
-/// The `enabled` attribute can be set to false to disable logging.
 pub struct LoggingLayer {
     log_target: String,
     enabled: bool,
@@ -560,7 +582,11 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 ///         Auth::api_token("your-api-token".to_owned())
 ///     )
 ///     .layer(middleware::BasicAuthLayer::new(Some(("basicauth_user".to_string(), "basicauth_password".to_string()))))
-///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+///     .layer(middleware::RetryLayer::new()
+///         .with_max_attempts(5)
+///         .with_initial_delay(Duration::from_secs(1))
+///         .with_max_delay(Duration::from_secs(8))
+///     )
 ///     .layer(middleware::LoggingLayer::new())
 ///     .build();
 /// ```

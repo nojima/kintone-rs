@@ -89,12 +89,11 @@
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
-//!     .layer(middleware::RetryLayer::new(
-//!         5,                              // max_attempts
-//!         Duration::from_secs(1),         // initial_delay
-//!         Duration::from_secs(8),         // max_delay
-//!         None                            // Optional custom should_retry function
-//!     ))
+//!     .layer(middleware::RetryLayer::new()
+//!         .with_max_attempts(5)
+//!         .with_initial_delay(Duration::from_secs(1))
+//!         .with_max_delay(Duration::from_secs(8))
+//!     )
 //!     .build();
 //! ```
 //!
@@ -132,12 +131,11 @@
 //!         "https://your-domain.cybozu.com",
 //!         Auth::password("username".to_owned(), "password".to_owned())
 //!     )
-//!     .layer(middleware::RetryLayer::new(      // Layer A (outermost) - handles retries
-//!         5,
-//!         Duration::from_secs(1),
-//!         Duration::from_secs(8),
-//!         None
-//!     ))
+//!     .layer(middleware::RetryLayer::new()
+//!         .with_max_attempts(5)
+//!         .with_initial_delay(Duration::from_secs(1))
+//!         .with_max_delay(Duration::from_secs(8))
+//!     )
 //!     .layer(middleware::LoggingLayer::new())  // Layer B (inner) - logs actual requests
 //!     .build();
 //!
@@ -314,7 +312,11 @@ impl middleware::Handler for RequestHandler {
 ///     )
 ///     .user_agent("MyApp/1.0")
 ///     .guest_space_id(123)
-///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+///     .layer(middleware::RetryLayer::new()
+///         .with_max_attempts(5)
+///         .with_initial_delay(Duration::from_secs(1))
+///         .with_max_delay(Duration::from_secs(8))
+///     )
 ///     .layer(middleware::LoggingLayer::new())
 ///     .build();
 /// ```
@@ -398,7 +400,11 @@ impl<L> KintoneClientBuilder<L> {
     ///         "https://your-domain.cybozu.com",
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
-    ///     .layer(middleware::RetryLayer::new(5, Duration::from_secs(1), Duration::from_secs(8), None))
+    ///     .layer(middleware::RetryLayer::new()
+    ///         .with_max_attempts(5)
+    ///         .with_initial_delay(Duration::from_secs(1))
+    ///         .with_max_delay(Duration::from_secs(8))
+    ///     )
     ///     .layer(middleware::LoggingLayer::new())
     ///     .build();
     /// ```
