@@ -16,10 +16,14 @@ base64 = "0.21"
 bigdecimal = { version = "0.4", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 enum-assoc = "1"
-ureq = { version = "3", features = ["json"] }
+http = "1"
+log = "0.4"
+rand = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-http = "1"
+ureq = { version = "3", features = ["json"] }
 url = "2"
-rand = "0.9"
+
+[dev-dependencies]
+env_logger = "0.11"

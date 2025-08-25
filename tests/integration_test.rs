@@ -51,6 +51,11 @@ use kintone::{
     v1::{app, record, space},
 };
 
+fn setup_logger() {
+    // https://docs.rs/env_logger/latest/env_logger/#capturing-logs-in-tests
+    let _ = env_logger::builder().is_test(true).try_init();
+}
+
 // Test configuration structure
 struct TestConfig {
     base_url: String,
@@ -132,6 +137,8 @@ fn wait_for_deployment_completion(client: &KintoneClient, app_id: u64, max_attem
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_full_workflow() {
+    setup_logger();
+
     let config =
         TestConfig::from_env().expect("Failed to load test configuration from environment");
     let client = config.create_client();
@@ -260,6 +267,8 @@ fn integration_test_full_workflow() {
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_record_operations() {
+    setup_logger();
+
     let config =
         TestConfig::from_env().expect("Failed to load test configuration from environment");
     let client = config.create_client();
@@ -269,8 +278,6 @@ fn integration_test_record_operations() {
     let create_response = app::add_app(&app_name).send(&client).expect("Failed to create app");
 
     let app_id = create_response.app;
-
-    sleep(Duration::from_secs(2));
 
     // Add a simple text field
     let text_field = SingleLineTextFieldProperty {
@@ -349,6 +356,8 @@ fn integration_test_record_operations() {
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_space_operations() {
+    setup_logger();
+
     let config =
         TestConfig::from_env().expect("Failed to load test configuration from environment");
     let client = config.create_client();

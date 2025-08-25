@@ -50,6 +50,7 @@ use std::{
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use http::Request;
+use log::info;
 use serde::de::DeserializeOwned;
 
 use crate::error::ApiError;
@@ -422,11 +423,21 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// Request: method=GET, url="https://example.cybozu.com/k/v1/records.json?app=123"
 /// Response: status=200
 /// ```
-pub struct LoggingLayer;
+pub struct LoggingLayer {
+    log_target: String,
+}
 
 impl LoggingLayer {
+    const DEFAULT_LOG_TARGET: &str = "kintone";
+
     pub fn new() -> Self {
-        LoggingLayer
+        LoggingLayer {
+            log_target: Self::DEFAULT_LOG_TARGET.to_owned(),
+        }
+    }
+
+    pub fn set_log_target(&mut self, target: String) {
+        self.log_target = target;
     }
 }
 
@@ -439,7 +450,10 @@ impl Default for LoggingLayer {
 impl<Inner: Handler> Layer<Inner> for LoggingLayer {
     type Outer = LoggingHandler<Inner>;
     fn layer(self, inner: Inner) -> Self::Outer {
-        LoggingHandler { inner }
+        LoggingHandler {
+            inner,
+            log_target: self.log_target,
+        }
     }
 }
 
@@ -452,6 +466,7 @@ impl<Inner: Handler> Layer<Inner> for LoggingLayer {
 /// This is an internal implementation detail and should not be used directly.
 pub struct LoggingHandler<Inner> {
     inner: Inner,
+    log_target: String,
 }
 
 impl<Inner: Handler> Handler for LoggingHandler<Inner> {
@@ -459,17 +474,19 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
         &self,
         req: http::Request<RequestBody>,
     ) -> Result<http::Response<ResponseBody>, ApiError> {
-        eprintln!("Request: method={}, url={:?}", req.method(), req.uri());
+        info!(target: &self.log_target, "Request: method={}, url={:?}", req.method(), req.uri());
         if let Some(body) = req.body().try_clone() {
             let mut buf = String::new();
             if body.into_reader().read_to_string(&mut buf).is_ok() {
-                eprintln!("RequestBody: {buf}");
+                info!(target: &self.log_target, "Request body:\n{buf}");
             }
         }
         let result = self.inner.handle(req);
         match &result {
-            Ok(resp) => eprintln!("Response: status={:?}", resp.status().as_u16()),
-            Err(e) => eprintln!("Error: {e:?}"),
+            Ok(resp) => {
+                info!(target: &self.log_target, "Response: status={}", resp.status().as_u16());
+            }
+            Err(e) => info!(target: &self.log_target, "Response: error={e}"),
         }
         result
     }
