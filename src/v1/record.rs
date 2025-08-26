@@ -13,6 +13,7 @@
 //! - [`update_record`] - Update an existing record
 //! - [`update_records`] - Update multiple records at once
 //! - [`delete_records`] - Delete multiple records at once
+//! - [`bulk_request`] - Execute multiple API operations atomically
 //!
 //! ### Comment Operations
 //! - [`get_comments`] - Retrieve comments for a record
@@ -193,7 +194,7 @@ pub fn add_record(app: u64) -> AddRecordRequest {
 #[must_use]
 pub struct AddRecordRequest {
     builder: RequestBuilder,
-    body: AddRecordRequestBody,
+    pub(crate) body: AddRecordRequestBody,
 }
 
 #[derive(Serialize)]
@@ -274,7 +275,7 @@ pub fn add_records(app: u64, records: Vec<Record>) -> AddRecordsRequest {
 #[must_use]
 pub struct AddRecordsRequest {
     builder: RequestBuilder,
-    body: AddRecordsRequestBody,
+    pub(crate) body: AddRecordsRequestBody,
 }
 
 #[derive(Serialize)]
@@ -411,7 +412,7 @@ pub struct UpdateKey {
 #[must_use]
 pub struct UpdateRecordRequest {
     builder: RequestBuilder,
-    body: UpdateRecordRequestBody,
+    pub(crate) body: UpdateRecordRequestBody,
 }
 
 #[derive(Serialize)]
@@ -586,7 +587,7 @@ impl Default for UpdateRecordData {
 #[must_use]
 pub struct UpdateRecordsRequest {
     builder: RequestBuilder,
-    body: UpdateRecordsRequestBody,
+    pub(crate) body: UpdateRecordsRequestBody,
 }
 
 #[derive(Serialize)]
@@ -681,7 +682,7 @@ pub fn delete_records(app: u64, ids: Vec<u64>) -> DeleteRecordsRequest {
 #[must_use]
 pub struct DeleteRecordsRequest {
     builder: RequestBuilder,
-    body: DeleteRecordsRequestBody,
+    pub(crate) body: DeleteRecordsRequestBody,
 }
 
 #[derive(Serialize)]
@@ -955,7 +956,7 @@ pub fn update_assignees(app: u64, id: u64, assignees: Vec<String>) -> UpdateAssi
 #[must_use]
 pub struct UpdateAssigneesRequest {
     builder: RequestBuilder,
-    body: UpdateAssigneesRequestBody,
+    pub(crate) body: UpdateAssigneesRequestBody,
 }
 
 #[derive(Serialize)]
@@ -1031,7 +1032,7 @@ pub fn update_status(app: u64, id: u64, action: String) -> UpdateStatusRequest {
 #[must_use]
 pub struct UpdateStatusRequest {
     builder: RequestBuilder,
-    body: UpdateStatusRequestBody,
+    pub(crate) body: UpdateStatusRequestBody,
 }
 
 #[derive(Serialize)]
@@ -1272,6 +1273,181 @@ pub struct DeleteCursorResponse {
 
 impl DeleteCursorRequest {
     pub fn send(self, client: &KintoneClient) -> Result<DeleteCursorResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Executes multiple API requests in a single bulk operation.
+///
+/// This function creates a request to execute multiple API operations atomically.
+/// If any operation fails, all operations are rolled back. This is useful for
+/// maintaining data consistency across multiple apps or complex operations.
+///
+/// # Arguments
+/// * `requests` - A vector of BulkRequestItem containing the operations to execute
+///
+/// # Limits
+/// - Maximum 20 requests can be executed in a single bulk request
+/// - All operations are executed atomically (all succeed or all fail)
+/// - Supports record operations, status updates, and assignee updates
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::{Record, FieldValue};
+/// use kintone::v1::record::{BulkRequestItem, bulk_request};
+///
+/// let requests = vec![
+///     // Add a record
+///     kintone::v1::record::add_record(100)
+///         .record(Record::from([
+///             ("name", FieldValue::SingleLineText("New Record".to_owned())),
+///         ]))
+///         .try_into()?,
+///     // Update a record
+///     kintone::v1::record::update_record(101)
+///         .id(456)
+///         .record(Record::from([
+///             ("status", FieldValue::SingleLineText("Updated".to_owned())),
+///         ]))
+///         .try_into()?,
+///     // Delete records
+///     kintone::v1::record::delete_records(102, vec![789, 790])
+///         .try_into()?,
+/// ];
+///
+/// let response = bulk_request(requests).send(&client)?;
+/// println!("Executed {} operations", response.results.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/bulk-request/>
+pub fn bulk_request(requests: Vec<BulkRequestItem>) -> BulkRequestRequest {
+    let builder = RequestBuilder::new(http::Method::POST, "/v1/bulkRequest.json");
+    BulkRequestRequest {
+        builder,
+        body: BulkRequestRequestBody { requests },
+    }
+}
+
+/// Represents a single request item in a bulk operation.
+#[derive(Debug, Clone, Serialize)]
+pub struct BulkRequestItem {
+    /// HTTP method for the request
+    #[serde(with = "stringified")]
+    pub method: http::Method,
+    /// API endpoint path
+    pub api: String,
+    /// Request payload
+    pub payload: serde_json::Value,
+}
+
+impl TryFrom<AddRecordRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: AddRecordRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::POST,
+            api: "/k/v1/record.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<AddRecordsRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: AddRecordsRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::POST,
+            api: "/k/v1/records.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<UpdateRecordRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: UpdateRecordRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::PUT,
+            api: "/k/v1/record.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<UpdateRecordsRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: UpdateRecordsRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::PUT,
+            api: "/k/v1/records.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<DeleteRecordsRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: DeleteRecordsRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::DELETE,
+            api: "/k/v1/records.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<UpdateAssigneesRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: UpdateAssigneesRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::PUT,
+            api: "/k/v1/record/assignees.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+impl TryFrom<UpdateStatusRequest> for BulkRequestItem {
+    type Error = serde_json::Error;
+
+    fn try_from(request: UpdateStatusRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            method: http::Method::PUT,
+            api: "/k/v1/record/status.json".to_string(),
+            payload: serde_json::to_value(request.body)?,
+        })
+    }
+}
+
+#[must_use]
+pub struct BulkRequestRequest {
+    builder: RequestBuilder,
+    body: BulkRequestRequestBody,
+}
+
+#[derive(Serialize)]
+struct BulkRequestRequestBody {
+    requests: Vec<BulkRequestItem>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BulkRequestResponse {
+    pub results: Vec<serde_json::Value>,
+}
+
+impl BulkRequestRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<BulkRequestResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
