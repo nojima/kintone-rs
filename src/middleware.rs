@@ -433,12 +433,16 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// Middleware layer that logs HTTP request and response information.
 ///
 /// This layer provides debugging capabilities by logging details about each
-/// HTTP request and response. It logs to stderr using `eprintln!` macros,
-/// making it suitable for development and debugging scenarios.
+/// HTTP request and response.
+///
+/// - Uses the [`log`](https://docs.rs/log/latest/log/) crate for logging output.
+/// - All logs are emitted at the `info` level.
+/// - You can use any logger compatible with the `log` crate (e.g., `env_logger`, `tracing`, etc.).
 ///
 /// # Logged Information
 ///
 /// - Request: HTTP method and URL
+/// - Request body (if available)
 /// - Response: HTTP status code or error details
 ///
 /// # Examples
@@ -446,6 +450,7 @@ impl<Inner: Handler> Handler for RetryHandler<Inner> {
 /// ```rust
 /// use kintone::middleware::LoggingLayer;
 ///
+/// env_logger::init();
 /// let logging_layer = LoggingLayer::new();
 /// ```
 pub struct LoggingLayer {
