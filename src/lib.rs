@@ -4,14 +4,6 @@
 //!
 //! **WARNING**: This library is under development and is likely to undergo incompatible changes in the future.
 //!
-//! ## Installation
-//!
-//! Add the following line to your `Cargo.toml` under the `[dependencies]` section:
-//!
-//! ```toml
-//! kintone = { git = "https://github.com/nojima/kintone-rs" }
-//! ```
-//!
 //! ## Usage
 //!
 //! This library provides a fluent API for interacting with Kintone REST APIs using method chaining. All API functions return request builders that can be configured with additional parameters and then sent to the Kintone server.
