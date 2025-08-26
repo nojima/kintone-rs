@@ -11,6 +11,7 @@
 //! - [`add_record`] - Create a new record
 //! - [`add_records`] - Create multiple records at once
 //! - [`update_record`] - Update an existing record
+//! - [`update_records`] - Update multiple records at once
 //!
 //! ### Comment Operations
 //! - [`get_comments`] - Retrieve comments for a record
@@ -26,6 +27,7 @@
 //! - [`get_records_by_cursor`] - Retrieve records using a cursor
 //! - [`delete_cursor`] - Delete a cursor to free up resources
 
+use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
@@ -346,11 +348,63 @@ pub fn update_record(app: u64) -> UpdateRecordRequest {
     }
 }
 
+/// Value type for unique key field updates.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateKeyValue {
+    /// String value for text fields
+    String(String),
+    /// Numeric value for number fields
+    Number(BigDecimal),
+}
+
+impl From<String> for UpdateKeyValue {
+    fn from(value: String) -> Self {
+        UpdateKeyValue::String(value)
+    }
+}
+
+impl From<&str> for UpdateKeyValue {
+    fn from(value: &str) -> Self {
+        UpdateKeyValue::String(value.to_string())
+    }
+}
+
+impl From<BigDecimal> for UpdateKeyValue {
+    fn from(value: BigDecimal) -> Self {
+        UpdateKeyValue::Number(value)
+    }
+}
+
+impl From<i64> for UpdateKeyValue {
+    fn from(value: i64) -> Self {
+        UpdateKeyValue::Number(BigDecimal::from(value))
+    }
+}
+
+impl From<u64> for UpdateKeyValue {
+    fn from(value: u64) -> Self {
+        UpdateKeyValue::Number(BigDecimal::from(value))
+    }
+}
+
+impl From<i32> for UpdateKeyValue {
+    fn from(value: i32) -> Self {
+        UpdateKeyValue::Number(BigDecimal::from(value))
+    }
+}
+
+impl From<u32> for UpdateKeyValue {
+    fn from(value: u32) -> Self {
+        UpdateKeyValue::Number(BigDecimal::from(value))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateKey {
     pub field: String,
-    pub value: String,
+    pub value: UpdateKeyValue,
 }
 
 #[must_use]
@@ -382,8 +436,11 @@ impl UpdateRecordRequest {
         self
     }
 
-    pub fn update_key(mut self, field: String, value: String) -> Self {
-        self.body.update_key = Some(UpdateKey { field, value });
+    pub fn update_key(mut self, field: String, value: impl Into<UpdateKeyValue>) -> Self {
+        self.body.update_key = Some(UpdateKey {
+            field,
+            value: value.into(),
+        });
         self
     }
 
@@ -398,6 +455,170 @@ impl UpdateRecordRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<UpdateRecordResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Updates multiple existing records in a Kintone app.
+///
+/// This function creates a request to update multiple records in the specified app at once.
+/// Records can be identified either by their ID or by a unique key field. This is more efficient
+/// than updating records one by one when you need to modify many records.
+///
+/// # Arguments
+/// * `app` - The ID of the Kintone app containing the records to update
+/// * `records` - A vector of UpdateRecordData containing the record update information
+///
+/// # Limits
+/// - Maximum 100 records can be updated in a single request
+/// - If any record update fails, all updates in the request are rolled back
+/// - UPSERT mode can insert new records if they don't exist
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::{Record, FieldValue};
+/// use kintone::v1::record::UpdateRecordData;
+///
+/// let updates = vec![
+///     UpdateRecordData::new()
+///         .id(123)
+///         .record(Record::from([
+///             ("status", FieldValue::SingleLineText("Completed".to_owned())),
+///         ]))
+///         .revision(5),
+///     UpdateRecordData::new()
+///         .update_key("code".to_owned(), "ABC123")  // String field
+///         .record(Record::from([
+///             ("priority", FieldValue::SingleLineText("High".to_owned())),
+///         ])),
+///     UpdateRecordData::new()
+///         .update_key("employee_id".to_owned(), 12345)  // Number field
+///         .record(Record::from([
+///             ("department", FieldValue::SingleLineText("Engineering".to_owned())),
+///         ])),
+/// ];
+///
+/// let response = kintone::v1::record::update_records(456, updates)
+///     .upsert(true)
+///     .send(&client)?;
+/// println!("Updated {} records", response.records.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-records/>
+pub fn update_records(app: u64, records: Vec<UpdateRecordData>) -> UpdateRecordsRequest {
+    let builder = RequestBuilder::new(http::Method::PUT, "/v1/records.json");
+    UpdateRecordsRequest {
+        builder,
+        body: UpdateRecordsRequestBody {
+            app,
+            records,
+            upsert: None,
+        },
+    }
+}
+
+/// Data for updating a single record in a bulk update operation.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRecordData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub update_key: Option<UpdateKey>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub record: Option<Record>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub revision: Option<u64>,
+}
+
+impl UpdateRecordData {
+    /// Creates a new UpdateRecordData instance.
+    pub fn new() -> Self {
+        Self {
+            id: None,
+            update_key: None,
+            record: None,
+            revision: None,
+        }
+    }
+
+    /// Sets the record ID to update.
+    pub fn id(mut self, id: u64) -> Self {
+        self.id = Some(id);
+        self
+    }
+
+    /// Sets the unique key to identify the record to update.
+    pub fn update_key(mut self, field: String, value: impl Into<UpdateKeyValue>) -> Self {
+        self.update_key = Some(UpdateKey {
+            field,
+            value: value.into(),
+        });
+        self
+    }
+
+    /// Sets the record data to update.
+    pub fn record(mut self, record: Record) -> Self {
+        self.record = Some(record);
+        self
+    }
+
+    /// Sets the expected revision number for optimistic locking.
+    pub fn revision(mut self, revision: u64) -> Self {
+        self.revision = Some(revision);
+        self
+    }
+}
+
+impl Default for UpdateRecordData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[must_use]
+pub struct UpdateRecordsRequest {
+    builder: RequestBuilder,
+    body: UpdateRecordsRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRecordsRequestBody {
+    app: u64,
+    records: Vec<UpdateRecordData>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    upsert: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRecordsResponse {
+    pub records: Vec<UpdatedRecordInfo>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdatedRecordInfo {
+    pub id: String,
+    pub revision: String,
+    pub operation: String,
+}
+
+impl UpdateRecordsRequest {
+    /// Enables UPSERT mode. When enabled, records that don't exist will be created.
+    pub fn upsert(mut self, upsert: bool) -> Self {
+        self.body.upsert = Some(upsert);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateRecordsResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
