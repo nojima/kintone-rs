@@ -52,8 +52,11 @@ use kintone::{
 };
 
 fn setup_logger() {
+    // https://docs.rs/env_logger/latest/env_logger/#specifying-defaults-for-environment-variables
     // https://docs.rs/env_logger/latest/env_logger/#capturing-logs-in-tests
-    let _ = env_logger::builder().is_test(true).try_init();
+    let _ = env_logger::Builder::from_env(
+        env_logger::Env::default().default_filter_or("info")
+    ).is_test(true).try_init();
 }
 
 // Test configuration structure
