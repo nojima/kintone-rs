@@ -9,6 +9,7 @@
 //! - [`get_record`] - Retrieve a single record by ID
 //! - [`get_records`] - Retrieve multiple records with filtering and pagination
 //! - [`add_record`] - Create a new record
+//! - [`add_records`] - Create multiple records at once
 //! - [`update_record`] - Update an existing record
 //!
 //! ### Comment Operations
@@ -215,6 +216,80 @@ impl AddRecordRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<AddRecordResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Creates multiple new records in a Kintone app.
+///
+/// This function creates a request to add multiple records to the specified app at once.
+/// This is more efficient than adding records one by one when you need to create many records.
+///
+/// # Arguments
+/// * `app` - The ID of the Kintone app to add records to
+/// * `records` - A vector of Records containing the field data for the new records
+///
+/// # Limits
+/// - Maximum 100 records can be added in a single request
+/// - If any record fails, all records in the request are rolled back
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::model::record::{Record, FieldValue};
+///
+/// let records = vec![
+///     Record::from([
+///         ("name", FieldValue::SingleLineText("Alice".to_owned())),
+///         ("age", FieldValue::Number(Some(25.into()))),
+///     ]),
+///     Record::from([
+///         ("name", FieldValue::SingleLineText("Bob".to_owned())),
+///         ("age", FieldValue::Number(Some(30.into()))),
+///     ]),
+/// ];
+///
+/// let response = kintone::v1::record::add_records(123, records)
+///     .send(&client)?;
+/// println!("Created {} records", response.ids.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/add-records/>
+pub fn add_records(app: u64, records: Vec<Record>) -> AddRecordsRequest {
+    let builder = RequestBuilder::new(http::Method::POST, "/v1/records.json");
+    AddRecordsRequest {
+        builder,
+        body: AddRecordsRequestBody { app, records },
+    }
+}
+
+#[must_use]
+pub struct AddRecordsRequest {
+    builder: RequestBuilder,
+    body: AddRecordsRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRecordsRequestBody {
+    app: u64,
+    records: Vec<Record>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRecordsResponse {
+    pub ids: Vec<String>,
+    pub revisions: Vec<String>,
+}
+
+impl AddRecordsRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<AddRecordsResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
