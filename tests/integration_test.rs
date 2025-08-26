@@ -52,9 +52,9 @@ use kintone::{
 fn setup_logger() {
     // https://docs.rs/env_logger/latest/env_logger/#specifying-defaults-for-environment-variables
     // https://docs.rs/env_logger/latest/env_logger/#capturing-logs-in-tests
-    let _ = env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info")
-    ).is_test(true).try_init();
+    let _ = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+        .is_test(true)
+        .try_init();
 }
 
 // Test configuration structure
@@ -248,12 +248,13 @@ fn integration_test_full_workflow() {
     // We expect Bob (30), Charlie (35) to match the filter
     assert_eq!(filtered_records.len(), 2, "Expected 2 records with age >= 30");
 
-    let mut found_names = Vec::new();
-    for record in filtered_records {
-        if let Some(FieldValue::SingleLineText(name)) = record.get("name") {
-            found_names.push(name.clone());
-        }
-    }
+    let mut found_names: Vec<_> = filtered_records
+        .iter()
+        .filter_map(|record| match record.get("name") {
+            Some(FieldValue::SingleLineText(name)) => Some(name.clone()),
+            _ => None,
+        })
+        .collect();
 
     found_names.sort();
     let mut expected_names = vec!["Bob".to_string(), "Charlie".to_string()];
