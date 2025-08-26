@@ -12,6 +12,7 @@
 //! - [`add_records`] - Create multiple records at once
 //! - [`update_record`] - Update an existing record
 //! - [`update_records`] - Update multiple records at once
+//! - [`delete_records`] - Delete multiple records at once
 //!
 //! ### Comment Operations
 //! - [`get_comments`] - Retrieve comments for a record
@@ -619,6 +620,95 @@ impl UpdateRecordsRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<UpdateRecordsResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+/// Deletes multiple records from a Kintone app.
+///
+/// This function creates a request to delete multiple records from the specified app at once.
+/// This is more efficient than deleting records one by one when you need to remove many records.
+///
+/// # Arguments
+/// * `app` - The ID of the Kintone app containing the records to delete
+/// * `ids` - A vector of record IDs to delete
+///
+/// # Limits
+/// - Maximum 100 records can be deleted in a single request
+/// - If any record deletion fails, all deletions in the request are rolled back
+/// - Optional revision numbers can be provided for optimistic locking
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let record_ids = vec![123, 456, 789];
+/// let response = kintone::v1::record::delete_records(100, record_ids)
+///     .send(&client)?;
+/// println!("Records deleted successfully");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Example with revision numbers
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let record_ids = vec![123, 456];
+/// let revisions = vec![5, 8];
+/// let response = kintone::v1::record::delete_records(100, record_ids)
+///     .revisions(revisions)
+///     .send(&client)?;
+/// println!("Records deleted successfully with revision check");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/delete-records/>
+pub fn delete_records(app: u64, ids: Vec<u64>) -> DeleteRecordsRequest {
+    let builder = RequestBuilder::new(http::Method::DELETE, "/v1/records.json");
+    DeleteRecordsRequest {
+        builder,
+        body: DeleteRecordsRequestBody {
+            app,
+            ids,
+            revisions: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct DeleteRecordsRequest {
+    builder: RequestBuilder,
+    body: DeleteRecordsRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteRecordsRequestBody {
+    app: u64,
+    ids: Vec<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    revisions: Option<Vec<u64>>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeleteRecordsResponse {
+    // Empty response body
+}
+
+impl DeleteRecordsRequest {
+    /// Sets the expected revision numbers for optimistic locking.
+    ///
+    /// The length of the revisions vector should match the length of the IDs vector.
+    /// Use -1 or omit to skip revision checking for specific records.
+    pub fn revisions(mut self, revisions: Vec<u64>) -> Self {
+        self.body.revisions = Some(revisions);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<DeleteRecordsResponse, ApiError> {
         self.builder.send(client, self.body)
     }
 }
