@@ -43,12 +43,10 @@ use kintone::{
     client::{Auth, KintoneClient, KintoneClientBuilder},
     middleware,
     model::{
-        Entity, EntityType,
         app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty},
         record::{FieldValue, Record},
-        space::ThreadComment,
     },
-    v1::{app, record, space},
+    v1::{app, record},
 };
 
 fn setup_logger() {
@@ -356,6 +354,7 @@ fn integration_test_record_operations() {
     println!("🎉 Record operations test passed!");
 }
 
+/*
 #[test]
 #[ignore] // This test requires real Kintone environment setup
 fn integration_test_space_operations() {
@@ -428,3 +427,4 @@ fn integration_test_space_operations() {
 
     println!("Successfully deleted space {space_id}");
 }
+*/
