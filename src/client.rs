@@ -813,13 +813,13 @@ impl UploadRequest {
         content: impl Read + Send + Sync + 'static,
     ) -> Result<Resp, ApiError> {
         let mut rng = rand::rng();
-        let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
+        let boundary = format!("{:x}{:x}", rng.next_u64(), rng.next_u64());
 
         let outer_content_type = format!("multipart/form-data; boundary={boundary}");
         let headers = [("content-type".to_owned(), outer_content_type)];
 
         let inner_content_type_header = match content_type {
-            Some(ref ct) => format!("Content-Type: {}\r\n", ct),
+            Some(ref ct) => format!("Content-Type: {ct}\r\n"),
             None => String::new(),
         };
 
