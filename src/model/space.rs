@@ -27,9 +27,22 @@ use crate::model::Entity;
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename = "camelCase")]
 pub struct ThreadComment {
     /// The text content of the comment
     pub text: String,
     /// List of entities mentioned in the comment
     pub mentions: Vec<Entity>,
+    /// List of attachment files
+    pub files: Vec<ThreadCommentFile>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename = "camelCase")]
+pub struct ThreadCommentFile {
+    /// The fileKey of the attachment file.
+    pub file_key: String,
+    /// Width can be specified if the attachment file is an image.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub width: Option<u64>,
 }

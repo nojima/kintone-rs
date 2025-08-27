@@ -13,6 +13,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let comment = ThreadComment {
         text: "Hello, World!".to_owned(),
         mentions: vec![],
+        files: vec![],
     };
     let resp = kintone::v1::space::add_thread_comment(2, 4, comment).send(&client)?;
 
