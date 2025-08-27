@@ -809,20 +809,30 @@ impl UploadRequest {
     pub fn send<Resp: DeserializeOwned>(
         self,
         client: &KintoneClient,
+        content_type: Option<String>,
         content: impl Read + Send + Sync + 'static,
     ) -> Result<Resp, ApiError> {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
-        let content_type = format!("multipart/form-data; boundary={boundary}");
-        let headers = [("content-type".to_owned(), content_type)];
+        let outer_content_type = format!("multipart/form-data; boundary={boundary}");
+        let headers = [("content-type".to_owned(), outer_content_type)];
+
+        let inner_content_type_header = match content_type {
+            Some(ref ct) => format!("Content-Type: {}\r\n", ct),
+            None => String::new(),
+        };
 
         let header = format!(
             "--{boundary}\r\n\
-             Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
+             Content-Disposition: form-data; name=\"{}\"; filename*=utf8''{}\r\n\
+             {inner_content_type_header}\
              \r\n",
             percent_encoding::utf8_percent_encode(&self.name, Self::CONTROLS_AND_QUOTES),
-            percent_encoding::utf8_percent_encode(&self.filename, Self::CONTROLS_AND_QUOTES),
+            percent_encoding::utf8_percent_encode(
+                &self.filename,
+                percent_encoding::NON_ALPHANUMERIC
+            ),
         );
         let footer = format!("\r\n--{boundary}--\r\n");
 

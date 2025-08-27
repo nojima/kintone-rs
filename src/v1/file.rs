@@ -36,12 +36,16 @@ use crate::error::ApiError;
 pub fn upload(filename: impl Into<String>) -> UploadFileRequest {
     let upload_request =
         UploadRequest::new(http::Method::POST, "/v1/file.json", "file".to_owned(), filename.into());
-    UploadFileRequest { upload_request }
+    UploadFileRequest {
+        upload_request,
+        content_type: None,
+    }
 }
 
 #[must_use]
 pub struct UploadFileRequest {
     upload_request: UploadRequest,
+    content_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -51,6 +55,13 @@ pub struct UploadFileResponse {
 }
 
 impl UploadFileRequest {
+    /// Sets the content type of the file being uploaded.
+    /// This is required when the filename does not have a extension.
+    pub fn content_type(mut self, content_type: impl Into<String>) -> Self {
+        self.content_type = Some(content_type.into());
+        self
+    }
+
     /// Sends the upload request to the Kintone API with file content.
     ///
     /// # Arguments
@@ -64,7 +75,7 @@ impl UploadFileRequest {
         client: &KintoneClient,
         content: impl Read + Send + Sync + 'static,
     ) -> Result<UploadFileResponse, ApiError> {
-        self.upload_request.send(client, content)
+        self.upload_request.send(client, self.content_type, content)
     }
 }
 

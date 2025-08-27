@@ -27,7 +27,7 @@
 //! }
 //! ```
 
-use crate::internal::serde_helper::stringified;
+use crate::internal::serde_helper::option_stringified;
 use serde::{Deserialize, Serialize};
 
 pub mod app;
@@ -192,8 +192,9 @@ pub struct Organization {
 ///
 /// # Fields
 ///
+/// * `file_key` - The unique identifier for the file in Kintone's storage system.
+///   When you writing a record, only this field is required.
 /// * `content_type` - The MIME type of the file (e.g., "image/jpeg", "application/pdf")
-/// * `file_key` - The unique identifier for the file in Kintone's storage system
 /// * `name` - The original filename when the file was uploaded
 /// * `size` - The file size in bytes
 ///
@@ -203,22 +204,20 @@ pub struct Organization {
 /// use kintone::model::FileBody;
 ///
 /// let file = FileBody {
-///     content_type: "application/pdf".to_owned(),
 ///     file_key: "abc123def456".to_owned(),
-///     name: "document.pdf".to_owned(),
-///     size: 1024768,
+///     content_type: None,
+///     name: None,
+///     size: None,
 /// };
-///
-/// println!("File: {} ({} bytes)", file.name, file.size);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileBody {
-    pub content_type: String,
     pub file_key: String,
-    pub name: String,
-    #[serde(with = "stringified")]
-    pub size: usize,
+    pub content_type: Option<String>,
+    pub name: Option<String>,
+    #[serde(with = "option_stringified")]
+    pub size: Option<usize>,
 }
 
 /// Represents the sort order for query results.
