@@ -804,7 +804,7 @@ impl UploadRequest {
     }
 
     const CONTROLS_AND_QUOTES: &percent_encoding::AsciiSet =
-        &percent_encoding::CONTROLS.add(b'\'').add(b'"');
+        &percent_encoding::CONTROLS.add(b'\'').add(b'"').add(b'\\');
 
     pub fn send<Resp: DeserializeOwned>(
         self,
@@ -882,9 +882,8 @@ impl DownloadRequest {
         }
     }
 
-    pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
-        let value_str = serde_json::to_string(&value).unwrap();
-        self.query.push((key.to_owned(), value_str));
+    pub fn query<V: ToString>(mut self, key: &str, value: V) -> Self {
+        self.query.push((key.to_owned(), value.to_string()));
         self
     }
 
