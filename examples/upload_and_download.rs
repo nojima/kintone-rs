@@ -1,5 +1,5 @@
-use std::error::Error;
 use std::fs::File;
+use std::{error::Error, io::BufReader};
 
 use kintone::{
     client::{Auth, KintoneClient},
@@ -19,8 +19,9 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // 1. ファイルをアップロード
     let file_path = "sample.txt";
     let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
 
-    let upload_resp = kintone::v1::file::upload("日本語.txt".to_owned()).send(&client, file)?;
+    let upload_resp = kintone::v1::file::upload("日本語.txt".to_owned()).send(&client, reader)?;
     println!("File uploaded successfully. File key: {}", upload_resp.file_key);
 
     // 2. ファイルをレコードに添付

@@ -24,9 +24,10 @@ use crate::error::ApiError;
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use std::fs::File;
+/// use std::io::BufReader;
 ///
 /// let file = File::open("./document.pdf")?;
-/// let response = kintone::v1::file::upload("document.pdf").send(&client, file)?;
+/// let response = kintone::v1::file::upload("document.pdf").send(&client, BufReader::new(file))?;
 /// println!("Uploaded file key: {}", response.file_key);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```

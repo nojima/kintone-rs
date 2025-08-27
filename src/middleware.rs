@@ -66,6 +66,9 @@ use crate::error::ApiError;
 /// # Examples
 ///
 /// ```ignore
+/// use std::fs::File;
+/// use std::io::BufReader;
+///
 /// // Empty body
 /// let body = RequestBody::void();
 ///
@@ -74,8 +77,8 @@ use crate::error::ApiError;
 /// let body = RequestBody::from_bytes(json_bytes);
 ///
 /// // Streaming body from file
-/// let file = std::fs::File::open("large_file.txt")?;
-/// let body = RequestBody::from_reader(file);
+/// let file = File::open("large_file.txt")?;
+/// let body = RequestBody::from_reader(BufReader::new(file));
 /// ```
 pub struct RequestBody(RequestBodyInner);
 

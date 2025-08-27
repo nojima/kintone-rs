@@ -89,7 +89,6 @@ fn is_json_response<T>(response: &http::Response<T>) -> bool {
 }
 
 impl From<http::Response<ureq::Body>> for ApiError {
-
     fn from(mut response: http::Response<ureq::Body>) -> ApiError {
         const MAX_JSON_SIZE: u64 = 10 * 1024 * 1024;
 
