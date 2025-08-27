@@ -19,8 +19,8 @@
 
 use kintone::client::{Auth, KintoneClient};
 use kintone::model::app::field::{
-    Alignment, DateFieldProperty, FieldOption, FieldProperty, MultiLineTextFieldProperty,
-    NumberFieldProperty, RadioButtonFieldProperty, SingleLineTextFieldProperty, UnitPosition,
+    Alignment, FieldOption, UnitPosition, date_field_property, multi_line_text_field_property,
+    number_field_property, radio_button_field_property, single_line_text_field_property,
 };
 use kintone::v1::app::form;
 use std::collections::HashMap;
@@ -48,35 +48,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create various field types to demonstrate the API
 
     // 1. Single Line Text Field
-    let customer_name_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
-        code: "customer_name".to_owned(),
-        label: "Customer Name".to_owned(),
-        required: true,
-        max_length: Some(100),
-        ..Default::default()
-    });
+    let customer_name_field = single_line_text_field_property("customer_name")
+        .label("Customer Name")
+        .required(true)
+        .max_length(100)
+        .build();
 
     // 2. Number Field
-    let price_field = FieldProperty::Number(NumberFieldProperty {
-        code: "price".to_owned(),
-        label: "Price".to_owned(),
-        required: true,
-        min_value: Some(0.into()),
-        digit: true,            // Show thousand separators
-        display_scale: Some(2), // 2 decimal places
-        unit: Some("USD".to_owned()),
-        unit_position: Some(UnitPosition::Before),
-        ..Default::default()
-    });
+    let price_field = number_field_property("price")
+        .label("Price")
+        .required(true)
+        .min_value(0.into())
+        .digit(true) // Show thousand separators
+        .display_scale(2) // 2 decimal places
+        .unit("USD")
+        .unit_position(UnitPosition::Before)
+        .build();
 
     // 3. Date Field
-    let order_date_field = FieldProperty::Date(DateFieldProperty {
-        code: "order_date".to_owned(),
-        label: "Order Date".to_owned(),
-        required: true,
-        default_now_value: true, // Default to current date
-        ..Default::default()
-    });
+    let order_date_field = date_field_property("order_date")
+        .label("Order Date")
+        .required(true)
+        .default_now_value(true) // Default to current date
+        .build();
 
     // 4. Radio Button Field (choice field)
     let mut priority_options = HashMap::new();
@@ -102,30 +96,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     );
 
-    let priority_field = FieldProperty::RadioButton(RadioButtonFieldProperty {
-        code: "priority".to_owned(),
-        label: "Priority".to_owned(),
-        required: true,
-        options: priority_options,
-        default_value: Some("Medium".to_owned()),
-        align: Some(Alignment::Horizontal),
-        ..Default::default()
-    });
+    let priority_field = radio_button_field_property("priority")
+        .label("Priority")
+        .required(true)
+        .options(priority_options)
+        .default_value("Medium")
+        .align(Alignment::Horizontal)
+        .build();
 
     // 5. Multi-line Text Field
-    let description_field = FieldProperty::MultiLineText(MultiLineTextFieldProperty {
-        code: "description".to_owned(),
-        label: "Description".to_owned(),
-        ..Default::default()
-    });
+    let description_field =
+        multi_line_text_field_property("description").label("Description").build();
 
     // Send the request to add all fields
     let response = form::add_form_field(app_id)
-        .field(customer_name_field)
-        .field(price_field)
-        .field(order_date_field)
-        .field(priority_field)
-        .field(description_field)
+        .field(customer_name_field.into())
+        .field(price_field.into())
+        .field(order_date_field.into())
+        .field(priority_field.into())
+        .field(description_field.into())
         .send(&client)?;
 
     println!("Successfully added form fields!");

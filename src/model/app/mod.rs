@@ -12,16 +12,14 @@
 //! Working with app field configurations:
 //!
 //! ```rust
-//! use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty};
+//! use kintone::model::app::field::{single_line_text_field_property, FieldProperty};
 //!
-//! // Create a text field configuration
-//! let text_field = SingleLineTextFieldProperty {
-//!     code: "employee_name".to_string(),
-//!     label: "Employee Name".to_string(),
-//!     required: true,
-//!     max_length: Some(50),
-//!     ..Default::default()
-//! };
+//! // Create a text field configuration using builder pattern
+//! let text_field = single_line_text_field_property("employee_name")
+//!     .label("Employee Name")
+//!     .required(true)
+//!     .max_length(50)
+//!     .build();
 //!
 //! // Convert to the generic FieldProperty enum
 //! let field_property: FieldProperty = text_field.into();

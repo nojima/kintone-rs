@@ -5,11 +5,37 @@
 //!
 //! # Basic Usage
 //!
-//! Create field configurations using struct initialization with defaults:
+//! Create field configurations using the builder pattern (recommended):
 //!
 //! ```rust
 //! use kintone::model::app::field::{
-//!     FieldProperty, SingleLineTextFieldProperty, NumberFieldProperty
+//!     single_line_text_field_property, number_field_property, UnitPosition
+//! };
+//!
+//! // Text field with validation
+//! let name_field = single_line_text_field_property("name")
+//!     .label("Full Name")
+//!     .required(true)
+//!     .max_length(50)
+//!     .build();
+//!
+//! // Number field with currency formatting
+//! let price_field = number_field_property("price")
+//!     .label("Price")
+//!     .required(true)
+//!     .unit("€")
+//!     .unit_position(UnitPosition::After)
+//!     .display_scale(2)
+//!     .build();
+//! ```
+//!
+//! # Alternative: Direct Struct Initialization
+//!
+//! You can also create fields using direct struct initialization:
+//!
+//! ```rust
+//! use kintone::model::app::field::{
+//!     SingleLineTextFieldProperty, NumberFieldProperty, UnitPosition
 //! };
 //!
 //! // Text field with validation
@@ -27,6 +53,7 @@
 //!     label: "Price".to_string(),
 //!     required: true,
 //!     unit: Some("€".to_string()),
+//!     unit_position: Some(UnitPosition::After),
 //!     display_scale: Some(2),
 //!     ..Default::default()
 //! };
@@ -38,7 +65,7 @@
 //!
 //! ```rust
 //! use kintone::model::app::field::{
-//!     single_line_text_field_property, number_field_property, 
+//!     single_line_text_field_property, number_field_property,
 //!     date_field_property, radio_button_field_property,
 //!     created_time_field_property, status_field_property
 //! };
@@ -102,29 +129,25 @@
 //! specific field property types to the generic [`FieldProperty`] enum:
 //!
 //! ```rust
-//! use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty, NumberFieldProperty};
+//! use kintone::model::app::field::{single_line_text_field_property, number_field_property, FieldProperty};
 //!
-//! let text_field = SingleLineTextFieldProperty {
-//!     code: "description".to_string(),
-//!     label: "Description".to_string(),
-//!     ..Default::default()
-//! };
+//! let text_field = single_line_text_field_property("description")
+//!     .label("Description")
+//!     .build();
 //!
-//! // Concise conversion instead of FieldProperty::SingleLineText(text_field)
+//! // Concise conversion to FieldProperty
 //! let field_property: FieldProperty = text_field.into();
 //!
 //! // Use in collections
 //! let fields: Vec<FieldProperty> = vec![
-//!     SingleLineTextFieldProperty {
-//!         code: "title".to_string(),
-//!         label: "Title".to_string(),
-//!         ..Default::default()
-//!     }.into(),
-//!     NumberFieldProperty {
-//!         code: "amount".to_string(),
-//!         label: "Amount".to_string(),
-//!         ..Default::default()
-//!     }.into(),
+//!     single_line_text_field_property("title")
+//!         .label("Title")
+//!         .build()
+//!         .into(),
+//!     number_field_property("amount")
+//!         .label("Amount")
+//!         .build()
+//!         .into(),
 //! ];
 //! ```
 //!
@@ -133,13 +156,12 @@
 //! All field types implement common methods to access their properties:
 //!
 //! ```rust
-//! use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty};
+//! use kintone::model::app::field::{single_line_text_field_property, FieldProperty};
 //!
-//! let field: FieldProperty = SingleLineTextFieldProperty {
-//!     code: "sample".to_string(),
-//!     label: "Sample Field".to_string(),
-//!     ..Default::default()
-//! }.into();
+//! let field: FieldProperty = single_line_text_field_property("sample")
+//!     .label("Sample Field")
+//!     .build()
+//!     .into();
 //!
 //! // Access common properties
 //! assert_eq!(field.field_code(), "sample");
@@ -168,15 +190,14 @@ use crate::model::record::FieldType;
 /// # Examples
 ///
 /// ```rust
-/// use kintone::model::app::field::{FieldProperty, SingleLineTextFieldProperty};
+/// use kintone::model::app::field::{single_line_text_field_property, FieldProperty};
 ///
-/// let text_field = FieldProperty::SingleLineText(SingleLineTextFieldProperty {
-///     code: "name".to_string(),
-///     label: "Full Name".to_string(),
-///     required: true,
-///     max_length: Some(100),
-///     ..Default::default()
-/// });
+/// let text_field: FieldProperty = single_line_text_field_property("name")
+///     .label("Full Name")
+///     .required(true)
+///     .max_length(100)
+///     .build()
+///     .into();
 ///
 /// // Get the field code
 /// assert_eq!(text_field.field_code(), "name");
@@ -1212,7 +1233,7 @@ pub fn calc_field_property(code: impl Into<String>) -> CalcFieldPropertyBuilder 
             hide_expression: false,
             unit: None,
             unit_position: None,
-        }
+        },
     }
 }
 
@@ -1307,7 +1328,9 @@ impl From<CalcFieldPropertyBuilder> for CalcFieldProperty {
 ///     .default_value("John Doe")
 ///     .build();
 /// ```
-pub fn single_line_text_field_property(code: impl Into<String>) -> SingleLineTextFieldPropertyBuilder {
+pub fn single_line_text_field_property(
+    code: impl Into<String>,
+) -> SingleLineTextFieldPropertyBuilder {
     SingleLineTextFieldPropertyBuilder {
         property: SingleLineTextFieldProperty {
             code: code.into(),
@@ -1320,7 +1343,7 @@ pub fn single_line_text_field_property(code: impl Into<String>) -> SingleLineTex
             default_value: None,
             expression: None,
             hide_expression: false,
-        }
+        },
     }
 }
 
@@ -1435,7 +1458,7 @@ pub fn number_field_property(code: impl Into<String>) -> NumberFieldPropertyBuil
             display_scale: None,
             unit: None,
             unit_position: None,
-        }
+        },
     }
 }
 
@@ -1539,7 +1562,9 @@ impl From<NumberFieldPropertyBuilder> for NumberFieldProperty {
 ///     .default_value("Enter description here...")
 ///     .build();
 /// ```
-pub fn multi_line_text_field_property(code: impl Into<String>) -> MultiLineTextFieldPropertyBuilder {
+pub fn multi_line_text_field_property(
+    code: impl Into<String>,
+) -> MultiLineTextFieldPropertyBuilder {
     MultiLineTextFieldPropertyBuilder {
         property: MultiLineTextFieldProperty {
             code: code.into(),
@@ -1547,7 +1572,7 @@ pub fn multi_line_text_field_property(code: impl Into<String>) -> MultiLineTextF
             no_label: false,
             required: false,
             default_value: None,
-        }
+        },
     }
 }
 
@@ -1621,7 +1646,7 @@ pub fn date_field_property(code: impl Into<String>) -> DateFieldPropertyBuilder 
             unique: false,
             default_value: None,
             default_now_value: false,
-        }
+        },
     }
 }
 
@@ -1703,7 +1728,7 @@ pub fn rich_text_field_property(code: impl Into<String>) -> RichTextFieldPropert
             no_label: false,
             required: false,
             default_value: None,
-        }
+        },
     }
 }
 
@@ -1775,7 +1800,7 @@ pub fn time_field_property(code: impl Into<String>) -> TimeFieldPropertyBuilder 
             required: false,
             default_value: None,
             default_now_value: false,
-        }
+        },
     }
 }
 
@@ -1855,7 +1880,7 @@ pub fn date_time_field_property(code: impl Into<String>) -> DateTimeFieldPropert
             unique: false,
             default_value: None,
             default_now_value: false,
-        }
+        },
     }
 }
 
@@ -1952,7 +1977,7 @@ pub fn radio_button_field_property(code: impl Into<String>) -> RadioButtonFieldP
             default_value: None,
             align: None,
             options: HashMap::new(),
-        }
+        },
     }
 }
 
@@ -2000,7 +2025,12 @@ impl RadioButtonFieldPropertyBuilder {
     }
 
     /// Adds a single option to the field.
-    pub fn add_option(mut self, value: impl Into<String>, label: impl Into<String>, index: u64) -> Self {
+    pub fn add_option(
+        mut self,
+        value: impl Into<String>,
+        label: impl Into<String>,
+        index: u64,
+    ) -> Self {
         let option = FieldOption {
             label: label.into(),
             index,
@@ -2059,7 +2089,7 @@ pub fn checkbox_field_property(code: impl Into<String>) -> CheckBoxFieldProperty
             default_value: Vec::new(),
             align: None,
             options: HashMap::new(),
-        }
+        },
     }
 }
 
@@ -2107,7 +2137,12 @@ impl CheckBoxFieldPropertyBuilder {
     }
 
     /// Adds a single option to the field.
-    pub fn add_option(mut self, value: impl Into<String>, label: impl Into<String>, index: u64) -> Self {
+    pub fn add_option(
+        mut self,
+        value: impl Into<String>,
+        label: impl Into<String>,
+        index: u64,
+    ) -> Self {
         let option = FieldOption {
             label: label.into(),
             index,
@@ -2164,7 +2199,7 @@ pub fn multi_select_field_property(code: impl Into<String>) -> MultiSelectFieldP
             required: false,
             default_value: Vec::new(),
             options: HashMap::new(),
-        }
+        },
     }
 }
 
@@ -2206,7 +2241,12 @@ impl MultiSelectFieldPropertyBuilder {
     }
 
     /// Adds a single option to the field.
-    pub fn add_option(mut self, value: impl Into<String>, label: impl Into<String>, index: u64) -> Self {
+    pub fn add_option(
+        mut self,
+        value: impl Into<String>,
+        label: impl Into<String>,
+        index: u64,
+    ) -> Self {
         let option = FieldOption {
             label: label.into(),
             index,
@@ -2263,7 +2303,7 @@ pub fn dropdown_field_property(code: impl Into<String>) -> DropDownFieldProperty
             required: false,
             default_value: None,
             options: HashMap::new(),
-        }
+        },
     }
 }
 
@@ -2305,7 +2345,12 @@ impl DropDownFieldPropertyBuilder {
     }
 
     /// Adds a single option to the field.
-    pub fn add_option(mut self, value: impl Into<String>, label: impl Into<String>, index: u64) -> Self {
+    pub fn add_option(
+        mut self,
+        value: impl Into<String>,
+        label: impl Into<String>,
+        index: u64,
+    ) -> Self {
         let option = FieldOption {
             label: label.into(),
             index,
@@ -2349,7 +2394,7 @@ pub fn file_field_property(code: impl Into<String>) -> FileFieldPropertyBuilder 
             no_label: false,
             required: false,
             thumbnail_size: None,
-        }
+        },
     }
 }
 
@@ -2427,7 +2472,7 @@ pub fn link_field_property(code: impl Into<String>) -> LinkFieldPropertyBuilder 
             max_length: None,
             min_length: None,
             protocol: LinkProtocol::default(),
-        }
+        },
     }
 }
 
@@ -2512,11 +2557,11 @@ impl From<LinkFieldPropertyBuilder> for LinkFieldProperty {
 ///     .label("Assignee")
 ///     .required(true)
 ///     .default_value(vec![
-///         Entity { code: "user1".to_string(), entity_type: EntityType::User }
+///         Entity { code: "user1".to_string(), entity_type: EntityType::USER }
 ///     ])
 ///     .entities(vec![
-///         Entity { code: "user1".to_string(), entity_type: EntityType::User },
-///         Entity { code: "user2".to_string(), entity_type: EntityType::User },
+///         Entity { code: "user1".to_string(), entity_type: EntityType::USER },
+///         Entity { code: "user2".to_string(), entity_type: EntityType::USER },
 ///     ])
 ///     .build();
 /// ```
@@ -2529,7 +2574,7 @@ pub fn user_select_field_property(code: impl Into<String>) -> UserSelectFieldPro
             required: false,
             default_value: Vec::new(),
             entities: Vec::new(),
-        }
+        },
     }
 }
 
@@ -2571,7 +2616,11 @@ impl UserSelectFieldPropertyBuilder {
     }
 
     /// Adds a single user to the available entities.
-    pub fn add_entity(mut self, code: impl Into<String>, entity_type: crate::model::EntityType) -> Self {
+    pub fn add_entity(
+        mut self,
+        code: impl Into<String>,
+        entity_type: crate::model::EntityType,
+    ) -> Self {
         let entity = Entity {
             code: code.into(),
             entity_type,
@@ -2606,15 +2655,17 @@ impl From<UserSelectFieldPropertyBuilder> for UserSelectFieldProperty {
 ///     .label("Department")
 ///     .required(true)
 ///     .default_value(vec![
-///         Entity { code: "eng".to_string(), entity_type: EntityType::Organization }
+///         Entity { code: "eng".to_string(), entity_type: EntityType::ORGANIZATION }
 ///     ])
 ///     .entities(vec![
-///         Entity { code: "eng".to_string(), entity_type: EntityType::Organization },
-///         Entity { code: "sales".to_string(), entity_type: EntityType::Organization },
+///         Entity { code: "eng".to_string(), entity_type: EntityType::ORGANIZATION },
+///         Entity { code: "sales".to_string(), entity_type: EntityType::ORGANIZATION },
 ///     ])
 ///     .build();
 /// ```
-pub fn organization_select_field_property(code: impl Into<String>) -> OrganizationSelectFieldPropertyBuilder {
+pub fn organization_select_field_property(
+    code: impl Into<String>,
+) -> OrganizationSelectFieldPropertyBuilder {
     OrganizationSelectFieldPropertyBuilder {
         property: OrganizationSelectFieldProperty {
             code: code.into(),
@@ -2623,7 +2674,7 @@ pub fn organization_select_field_property(code: impl Into<String>) -> Organizati
             required: false,
             default_value: Vec::new(),
             entities: Vec::new(),
-        }
+        },
     }
 }
 
@@ -2665,7 +2716,11 @@ impl OrganizationSelectFieldPropertyBuilder {
     }
 
     /// Adds a single organization to the available entities.
-    pub fn add_entity(mut self, code: impl Into<String>, entity_type: crate::model::EntityType) -> Self {
+    pub fn add_entity(
+        mut self,
+        code: impl Into<String>,
+        entity_type: crate::model::EntityType,
+    ) -> Self {
         let entity = Entity {
             code: code.into(),
             entity_type,
@@ -2700,11 +2755,11 @@ impl From<OrganizationSelectFieldPropertyBuilder> for OrganizationSelectFieldPro
 ///     .label("Team")
 ///     .required(true)
 ///     .default_value(vec![
-///         Entity { code: "backend".to_string(), entity_type: EntityType::Group }
+///         Entity { code: "backend".to_string(), entity_type: EntityType::GROUP }
 ///     ])
 ///     .entities(vec![
-///         Entity { code: "backend".to_string(), entity_type: EntityType::Group },
-///         Entity { code: "frontend".to_string(), entity_type: EntityType::Group },
+///         Entity { code: "backend".to_string(), entity_type: EntityType::GROUP },
+///         Entity { code: "frontend".to_string(), entity_type: EntityType::GROUP },
 ///     ])
 ///     .build();
 /// ```
@@ -2717,7 +2772,7 @@ pub fn group_select_field_property(code: impl Into<String>) -> GroupSelectFieldP
             required: false,
             default_value: Vec::new(),
             entities: Vec::new(),
-        }
+        },
     }
 }
 
@@ -2759,7 +2814,11 @@ impl GroupSelectFieldPropertyBuilder {
     }
 
     /// Adds a single group to the available entities.
-    pub fn add_entity(mut self, code: impl Into<String>, entity_type: crate::model::EntityType) -> Self {
+    pub fn add_entity(
+        mut self,
+        code: impl Into<String>,
+        entity_type: crate::model::EntityType,
+    ) -> Self {
         let entity = Entity {
             code: code.into(),
             entity_type,
@@ -2809,14 +2868,16 @@ impl From<GroupSelectFieldPropertyBuilder> for GroupSelectFieldProperty {
 ///     .reference_table(reference_table)
 ///     .build();
 /// ```
-pub fn reference_table_field_property(code: impl Into<String>) -> ReferenceTableFieldPropertyBuilder {
+pub fn reference_table_field_property(
+    code: impl Into<String>,
+) -> ReferenceTableFieldPropertyBuilder {
     ReferenceTableFieldPropertyBuilder {
         property: ReferenceTableFieldProperty {
             code: code.into(),
             label: String::new(),
             no_label: false,
             reference_table: ReferenceTable::default(),
-        }
+        },
     }
 }
 
@@ -2878,7 +2939,7 @@ pub fn group_field_property(code: impl Into<String>) -> GroupFieldPropertyBuilde
             label: String::new(),
             no_label: false,
             open_group: false,
-        }
+        },
     }
 }
 
@@ -2948,7 +3009,7 @@ pub fn subtable_field_property(code: impl Into<String>) -> SubtableFieldProperty
             label: String::new(),
             no_label: false,
             fields: HashMap::new(),
-        }
+        },
     }
 }
 
@@ -3015,7 +3076,7 @@ pub fn record_number_field_property(code: impl Into<String>) -> RecordNumberFiel
             code: code.into(),
             label: String::new(),
             no_label: false,
-        }
+        },
     }
 }
 
@@ -3070,7 +3131,7 @@ pub fn category_field_property(code: impl Into<String>) -> CategoryFieldProperty
             code: code.into(),
             label: String::new(),
             enabled: true,
-        }
+        },
     }
 }
 
@@ -3125,7 +3186,7 @@ pub fn status_field_property(code: impl Into<String>) -> StatusFieldPropertyBuil
             code: code.into(),
             label: String::new(),
             enabled: true,
-        }
+        },
     }
 }
 
@@ -3174,13 +3235,15 @@ impl From<StatusFieldPropertyBuilder> for StatusFieldProperty {
 ///     .enabled(true)
 ///     .build();
 /// ```
-pub fn status_assignee_field_property(code: impl Into<String>) -> StatusAssigneeFieldPropertyBuilder {
+pub fn status_assignee_field_property(
+    code: impl Into<String>,
+) -> StatusAssigneeFieldPropertyBuilder {
     StatusAssigneeFieldPropertyBuilder {
         property: StatusAssigneeFieldProperty {
             code: code.into(),
             label: String::new(),
             enabled: true,
-        }
+        },
     }
 }
 
@@ -3235,7 +3298,7 @@ pub fn created_time_field_property(code: impl Into<String>) -> CreatedTimeFieldP
             code: code.into(),
             label: String::new(),
             no_label: false,
-        }
+        },
     }
 }
 
@@ -3290,7 +3353,7 @@ pub fn updated_time_field_property(code: impl Into<String>) -> UpdatedTimeFieldP
             code: code.into(),
             label: String::new(),
             no_label: false,
-        }
+        },
     }
 }
 
@@ -3345,7 +3408,7 @@ pub fn creator_field_property(code: impl Into<String>) -> CreatorFieldPropertyBu
             code: code.into(),
             label: String::new(),
             no_label: false,
-        }
+        },
     }
 }
 
@@ -3400,7 +3463,7 @@ pub fn modifier_field_property(code: impl Into<String>) -> ModifierFieldProperty
             code: code.into(),
             label: String::new(),
             no_label: false,
-        }
+        },
     }
 }
 

@@ -15,14 +15,13 @@
 //! ```no_run
 //! # use kintone::client::{Auth, KintoneClient};
 //! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-//! use kintone::model::app::field::SingleLineTextFieldProperty;
-//! let field = SingleLineTextFieldProperty {
-//!     code: "my_field".to_owned(),
-//!     label: "My Field".to_owned(),
-//!     required: true,
-//!     max_length: Some(50),
-//!     ..Default::default()
-//! };
+//! use kintone::model::app::field::single_line_text_field_property;
+//!
+//! let field = single_line_text_field_property("my_field")
+//!     .label("My Field")
+//!     .required(true)
+//!     .max_length(50)
+//!     .build();
 //!
 //! let response = kintone::v1::app::form::add_form_field(123)
 //!     .field(field.into()) // Don't forget .into()
@@ -60,18 +59,16 @@ use crate::model::app::field::FieldProperty;
 /// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-/// use kintone::model::app::field::SingleLineTextFieldProperty;
+/// use kintone::model::app::field::single_line_text_field_property;
 ///
-/// let text_field = SingleLineTextFieldProperty {
-///     code: "customer_name".to_owned(),
-///     label: "Customer Name".to_owned(),
-///     required: true,
-///     max_length: Some(50),
-///     ..Default::default()
-/// };
+/// let text_field = single_line_text_field_property("customer_name")
+///     .label("Customer Name")
+///     .required(true)
+///     .max_length(50)
+///     .build();
 ///
 /// let response = kintone::v1::app::form::add_form_field(123)
-///     .field(text_field.into()) // Don't forget .into()
+///     .field(text_field.into())
 ///     .send(&client)?;
 /// println!("Added field, new revision: {}", response.revision);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
