@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use kintone::client::{Auth, KintoneClient};
-use kintone::model::space::ThreadComment;
+use kintone::model::space::thread_comment;
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let base_url = std::env::var("KINTONE_BASE_URL").expect("KINTONE_BASE_URL is not set");
@@ -10,11 +10,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let client = KintoneClient::new(&base_url, Auth::password(username, password));
 
-    let comment = ThreadComment {
-        text: "Hello, World!".to_owned(),
-        mentions: vec![],
-        files: vec![],
-    };
+    let comment = thread_comment("Hello, World!").build();
     let resp = kintone::v1::space::add_thread_comment(2, 4, comment).send(&client)?;
 
     println!("resp = {resp:?}");

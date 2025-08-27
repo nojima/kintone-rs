@@ -29,12 +29,11 @@
 //! println!("Created thread with ID: {}", thread_response.id);
 //!
 //! // Add a comment to a thread
-//! use kintone::model::space::ThreadComment;
-//! let comment = ThreadComment {
-//!     text: "Hello from the thread!".to_owned(),
-//!     mentions: vec![],
-//! };
-//! let comment_response = kintone::v1::space::add_thread_comment(space_response.id, thread_response.id, comment).send(&client)?;
+//! use kintone::model::space::thread_comment;
+//! let comment = thread_comment("Hello from the thread!").build();
+//! let comment_response = kintone::v1::space::add_thread_comment(
+//!     space_response.id, thread_response.id, comment,
+//! ).send(&client)?;
 //! println!("Added comment with ID: {}", comment_response.id);
 //!
 //! // Later, delete the space when no longer needed
@@ -273,10 +272,17 @@ impl AddThreadRequest {
 /// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-/// use kintone::model::space::ThreadComment;
+/// use kintone::model::space::{ThreadComment, thread_comment};
+///
+/// // Using the builder pattern (recommended)
+/// let comment = thread_comment("This is a thread comment.")
+///     .build();
+///
+/// // Or construct directly
 /// let comment = ThreadComment {
 ///     text: "This is a thread comment.".to_owned(),
 ///     mentions: vec![],
+///     files: vec![],
 /// };
 /// let response = kintone::v1::space::add_thread_comment(123, 456, comment).send(&client)?;
 /// println!("Added thread comment with ID: {}", response.id);
