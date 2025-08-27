@@ -24,10 +24,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     println!("File uploaded successfully. File key: {}", upload_resp.file_key);
 
     // 2. ファイルをレコードに添付
-    let resp = kintone::v1::record::add_record(96)
+    let app_id = 96;
+    let resp = kintone::v1::record::add_record(app_id)
         .record(Record::from([(
             "Attachment",
-            kintone::model::record::FieldValue::File(vec![FileBody {
+            FieldValue::File(vec![FileBody {
                 file_key: upload_resp.file_key,
                 content_type: None,
                 name: None,
@@ -37,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .send(&client)?;
 
     // 3. レコードを取得
-    let resp = kintone::v1::record::get_record(96, resp.id).send(&client)?;
+    let resp = kintone::v1::record::get_record(app_id, resp.id).send(&client)?;
     let Some(FieldValue::File(files)) = resp.record.get("Attachment") else {
         panic!("Attachment field was not found");
     };
