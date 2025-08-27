@@ -803,6 +803,9 @@ impl UploadRequest {
         }
     }
 
+    const CONTROLS_AND_QUOTES: &percent_encoding::AsciiSet =
+        &percent_encoding::CONTROLS.add(b'\'').add(b'"');
+
     pub fn send<Resp: DeserializeOwned>(
         self,
         client: &KintoneClient,
@@ -811,22 +814,23 @@ impl UploadRequest {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
-        let content_type = format!("multipart/form-data; boundary=\"{boundary}\"");
+        let content_type = format!("multipart/form-data; boundary={boundary}");
         let mut headers = HashMap::with_capacity(1);
         headers.insert("content-type".to_owned(), content_type);
 
-        let header = Cursor::new(
-            format!(
-                "--{boundary}\r\n\
-                 content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
-                 \r\n",
-                self.name, self.filename
-            )
-            .into_bytes(),
+        let header = format!(
+            "--{boundary}\r\n\
+             Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
+             \r\n",
+            percent_encoding::utf8_percent_encode(&self.name, Self::CONTROLS_AND_QUOTES),
+            percent_encoding::utf8_percent_encode(&self.filename, Self::CONTROLS_AND_QUOTES),
         );
-        let footer = Cursor::new(format!("\r\n--{boundary}--\r\n").into_bytes());
-        let body = header.chain(content).chain(footer);
-        let body = middleware::RequestBody::from_reader(body);
+        let footer = format!("\r\n--{boundary}--\r\n");
+
+        let header_reader = Cursor::new(header.into_bytes());
+        let footer_reader = Cursor::new(footer.into_bytes());
+        let body_reader = header_reader.chain(content).chain(footer_reader);
+        let body = middleware::RequestBody::from_reader(body_reader);
 
         let req = make_request(client, self.method, &self.api_path, headers, HashMap::new())?
             .map(|_| body);
