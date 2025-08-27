@@ -1,7 +1,10 @@
 use std::error::Error;
 use std::fs::File;
 
-use kintone::{client::{Auth, KintoneClient, KintoneClientBuilder}, middleware::LoggingLayer};
+use kintone::{
+    client::{Auth, KintoneClient, KintoneClientBuilder},
+    middleware::LoggingLayer,
+};
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let base_url = std::env::var("KINTONE_BASE_URL").expect("KINTONE_BASE_URL is not set");

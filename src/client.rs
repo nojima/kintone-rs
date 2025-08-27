@@ -183,8 +183,8 @@
 //! ```
 
 use std::fmt::Debug;
+use std::io::Cursor;
 use std::io::Read;
-use std::{collections::HashMap, io::Cursor};
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -712,9 +712,9 @@ impl Debug for Auth {
 
 pub(crate) struct RequestBuilder {
     method: http::Method,
-    api_path: String,                 // DO NOT include "/k" prefix
-    headers: HashMap<String, String>, // keys and values are NOT encoded
-    query: HashMap<String, String>,   // keys and values are NOT encoded
+    api_path: String,               // DO NOT include "/k" prefix
+    headers: Vec<(String, String)>, // keys and values are NOT encoded
+    query: Vec<(String, String)>,   // keys and values are NOT encoded
 }
 
 impl RequestBuilder {
@@ -722,20 +722,20 @@ impl RequestBuilder {
         Self {
             method,
             api_path: api_path.into(),
-            headers: HashMap::new(),
-            query: HashMap::new(),
+            headers: Vec::new(),
+            query: Vec::new(),
         }
     }
 
     pub fn query<V: ToString>(mut self, key: &str, value: V) -> Self {
-        self.query.insert(key.to_owned(), value.to_string());
+        self.query.push((key.to_owned(), value.to_string()));
         self
     }
 
     pub fn query_array<V: ToString>(mut self, key: &str, values: &[V]) -> Self {
         for (i, v) in values.iter().enumerate() {
             let name = format!("{key}[{i}]");
-            self.query.insert(name, v.to_string());
+            self.query.push((name, v.to_string()));
         }
         self
     }
@@ -752,7 +752,7 @@ impl RequestBuilder {
         body: Body,
     ) -> Result<Resp, ApiError> {
         let body = middleware::RequestBody::from_bytes(serde_json::to_vec_pretty(&body)?);
-        self.headers.insert("content-type".to_owned(), "application/json".to_owned());
+        self.headers.push(("content-type".to_owned(), "application/json".to_owned()));
         let req = make_request(client, self.method, &self.api_path, self.headers, self.query)?
             .map(|_| body);
         let resp = client.run(req)?;
@@ -815,8 +815,7 @@ impl UploadRequest {
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
         let content_type = format!("multipart/form-data; boundary={boundary}");
-        let mut headers = HashMap::with_capacity(1);
-        headers.insert("content-type".to_owned(), content_type);
+        let headers = [("content-type".to_owned(), content_type)];
 
         let header = format!(
             "--{boundary}\r\n\
@@ -832,8 +831,7 @@ impl UploadRequest {
         let body_reader = header_reader.chain(content).chain(footer_reader);
         let body = middleware::RequestBody::from_reader(body_reader);
 
-        let req = make_request(client, self.method, &self.api_path, headers, HashMap::new())?
-            .map(|_| body);
+        let req = make_request(client, self.method, &self.api_path, headers, vec![])?.map(|_| body);
 
         let resp = client.run(req)?;
         resp.into_body().read_json()
@@ -850,8 +848,8 @@ impl UploadRequest {
 /// Use the [`crate::v1::file::download`] function instead.
 pub(crate) struct DownloadRequest {
     method: http::Method,
-    api_path: String,               // DO NOT include "/k" prefix
-    query: HashMap<String, String>, // keys and values are NOT encoded
+    api_path: String,             // DO NOT include "/k" prefix
+    query: Vec<(String, String)>, // keys and values are NOT encoded
 }
 
 /// Response from a file download operation.
@@ -880,13 +878,13 @@ impl DownloadRequest {
         Self {
             method,
             api_path: api_path.into(),
-            query: HashMap::new(),
+            query: Vec::new(),
         }
     }
 
     pub fn query<V: Serialize>(mut self, key: &str, value: V) -> Self {
         let value_str = serde_json::to_string(&value).unwrap();
-        self.query.insert(key.to_owned(), value_str);
+        self.query.push((key.to_owned(), value_str));
         self
     }
 
@@ -897,7 +895,7 @@ impl DownloadRequest {
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<DownloadResponse, ApiError> {
-        let req = make_request(client, self.method, &self.api_path, HashMap::new(), self.query)?;
+        let req = make_request(client, self.method, &self.api_path, vec![], self.query)?;
         let resp = client.run(req)?;
         let mime_type = Self::get_content_type(&resp);
         let content_reader = Box::new(resp.into_body().into_reader());
@@ -912,23 +910,21 @@ fn make_request(
     client: &KintoneClient,
     method: http::Method,
     api_path: &str,
-    mut headers: HashMap<String, String>,
-    query: HashMap<String, String>,
+    headers: impl IntoIterator<Item = (String, String)>,
+    query: impl IntoIterator<Item = (String, String)>,
 ) -> Result<http::Request<middleware::RequestBody>, http::Error> {
     // Add headers for auth
-    match client.auth {
+    let auth_headers = match client.auth {
         Auth::Password {
             ref username,
             ref password,
         } => {
             let body = format!("{username}:{password}");
             let header_value = BASE64.encode(body);
-            headers.insert("x-cybozu-authorization".to_owned(), header_value);
+            [("x-cybozu-authorization".to_owned(), header_value)]
         }
-        Auth::ApiToken { ref tokens } => {
-            headers.insert("x-cybozu-api-token".to_owned(), tokens.join(","));
-        }
-    }
+        Auth::ApiToken { ref tokens } => [("x-cybozu-api-token".to_owned(), tokens.join(","))],
+    };
 
     // Construct URL
     let mut u = client.base_url.clone();
@@ -944,7 +940,8 @@ fn make_request(
     }
 
     let mut req = http::Request::builder().method(method).uri(u.as_str());
-    for (key, value) in headers {
+    let all_headers = headers.into_iter().chain(auth_headers);
+    for (key, value) in all_headers {
         req = req.header(&key, &value);
     }
     req.body(middleware::RequestBody::void())
