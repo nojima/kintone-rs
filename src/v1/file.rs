@@ -126,7 +126,7 @@ impl DownloadFileRequest {
 /// * `mime_type` - The MIME type of the downloaded file (e.g., "application/pdf", "image/jpeg")
 /// * `content` - A readable stream containing the file data
 pub struct DownloadFileResponse {
-    pub mime_type: String,
+    pub mime_type: Option<mime::Mime>,
     pub content: Box<dyn Read + Send + Sync + 'static>,
 }
 

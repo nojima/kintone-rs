@@ -811,15 +811,15 @@ impl UploadRequest {
         let mut rng = rand::rng();
         let boundary = format!("{:#x}{:#x}", rng.next_u64(), rng.next_u64());
 
-        let content_type = format!("multipart/form-data; boundary={boundary}");
+        let content_type = format!("multipart/form-data; boundary=\"{boundary}\"");
         let mut headers = HashMap::with_capacity(1);
         headers.insert("content-type".to_owned(), content_type);
 
         let header = Cursor::new(
             format!(
                 "--{boundary}\r\n\
-             content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
-             \r\n",
+                 content-disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n\
+                 \r\n",
                 self.name, self.filename
             )
             .into_bytes(),
@@ -867,7 +867,7 @@ pub(crate) struct DownloadRequest {
 /// std::io::copy(&mut response.content, &mut file)?;
 /// ```
 pub(crate) struct DownloadResponse {
-    pub mime_type: String,
+    pub mime_type: Option<mime::Mime>,
     pub content: Box<dyn Read + Send + Sync + 'static>,
 }
 
@@ -886,16 +886,16 @@ impl DownloadRequest {
         self
     }
 
-    fn get_content_type<B>(resp: &http::Response<B>) -> Option<String> {
+    fn get_content_type<B>(resp: &http::Response<B>) -> Option<mime::Mime> {
         let content_type = resp.headers().get(http::header::CONTENT_TYPE)?;
         let content_type = content_type.to_str().ok()?;
-        Some(content_type.to_owned())
+        content_type.parse().ok()
     }
 
     pub fn send(self, client: &KintoneClient) -> Result<DownloadResponse, ApiError> {
         let req = make_request(client, self.method, &self.api_path, HashMap::new(), self.query)?;
         let resp = client.run(req)?;
-        let mime_type = Self::get_content_type(&resp).unwrap_or_default();
+        let mime_type = Self::get_content_type(&resp);
         let content_reader = Box::new(resp.into_body().into_reader());
         Ok(DownloadResponse {
             mime_type,

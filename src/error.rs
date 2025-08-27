@@ -85,8 +85,10 @@ fn is_json_response<T>(response: &http::Response<T>) -> bool {
     let Ok(content_type) = content_type.to_str() else {
         return false;
     };
-    // TODO: parse
-    content_type == "application/json" || content_type.starts_with("application/json;")
+    let Ok(content_type) = content_type.parse::<mime::Mime>() else {
+        return false;
+    };
+    content_type.essence_str() == "application/json"
 }
 
 impl From<http::Response<ureq::Body>> for ApiError {
