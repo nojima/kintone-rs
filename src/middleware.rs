@@ -138,6 +138,8 @@ enum RequestBodyInner {
 pub struct ResponseBody(ureq::Body);
 
 impl ResponseBody {
+    const MAX_JSON_SIZE: u64 = 10 * 1024 * 1024;
+
     pub(crate) fn from_ureq_body(body: ureq::Body) -> Self {
         ResponseBody(body)
     }
@@ -147,7 +149,8 @@ impl ResponseBody {
     }
 
     pub fn read_json<D: DeserializeOwned>(&mut self) -> Result<D, ApiError> {
-        self.0.read_json().map_err(|e| e.into())
+        let body = self.0.with_config().limit(Self::MAX_JSON_SIZE).read_to_vec()?;
+        serde_json::from_slice(&body).map_err(|e| e.into())
     }
 }
 

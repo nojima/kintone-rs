@@ -56,6 +56,9 @@ pub enum ApiError {
     #[error("http error: {0}")]
     Http(#[from] HttpError),
 
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+
     #[error("kintone error: {0}")]
     Kintone(#[from] KintoneError),
 }
@@ -68,12 +71,6 @@ impl From<ureq::Error> for ApiError {
 
 impl From<http::Error> for ApiError {
     fn from(err: http::Error) -> Self {
-        Self::Io(ureq::Error::from(err).into_io())
-    }
-}
-
-impl From<serde_json::Error> for ApiError {
-    fn from(err: serde_json::Error) -> Self {
         Self::Io(ureq::Error::from(err).into_io())
     }
 }
@@ -92,7 +89,10 @@ fn is_json_response<T>(response: &http::Response<T>) -> bool {
 }
 
 impl From<http::Response<ureq::Body>> for ApiError {
+
     fn from(mut response: http::Response<ureq::Body>) -> ApiError {
+        const MAX_JSON_SIZE: u64 = 10 * 1024 * 1024;
+
         if !is_json_response(&response) {
             let status = response.status().as_u16();
             return match response.body_mut().read_to_string() {
@@ -101,7 +101,11 @@ impl From<http::Response<ureq::Body>> for ApiError {
             };
         };
         // If the response is JSON, attempt to parse it as KintoneError.
-        match response.body_mut().read_json::<KintoneErrorJson>() {
+        let body = match response.body_mut().with_config().limit(MAX_JSON_SIZE).read_to_vec() {
+            Ok(body) => body,
+            Err(e) => return e.into(),
+        };
+        match serde_json::from_slice::<KintoneErrorJson>(&body) {
             Ok(error_json) => KintoneError {
                 status: response.status().as_u16(),
                 code: error_json.code,
@@ -109,7 +113,7 @@ impl From<http::Response<ureq::Body>> for ApiError {
                 message: error_json.message,
             }
             .into(),
-            Err(io_error) => io_error.into(),
+            Err(e) => e.into(),
         }
     }
 }
