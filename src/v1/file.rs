@@ -93,15 +93,14 @@ impl UploadFileRequest {
 /// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-/// use std::io::copy;
 /// use std::fs::File;
 ///
 /// let mut response = kintone::v1::file::download("file_key_from_upload")
 ///     .send(&client)?;
 ///
 /// let mut output_file = File::create("./downloaded_file.pdf")?;
-/// copy(&mut response.content, &mut output_file)?;
-/// println!("Downloaded file with MIME type: {}", response.mime_type);
+/// std::io::copy(&mut response.content, &mut output_file)?;
+/// println!("Downloaded file with MIME type: {:?}", response.mime_type);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
