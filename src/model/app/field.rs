@@ -71,7 +71,7 @@
 //! };
 //! use kintone::model::app::field::{FieldOption, Alignment, UnitPosition};
 //! use bigdecimal::BigDecimal;
-//! use std::collections::HashMap;
+//! use std::collections::BTreeMap;
 //!
 //! // Text field with builder pattern
 //! let name_field = single_line_text_field_property("name")
@@ -99,7 +99,7 @@
 //!     .build();
 //!
 //! // Radio button field with options
-//! let mut options = HashMap::new();
+//! let mut options = BTreeMap::new();
 //! options.insert("high".to_string(), FieldOption { label: "High".to_string(), index: 0 });
 //! options.insert("medium".to_string(), FieldOption { label: "Medium".to_string(), index: 1 });
 //! options.insert("low".to_string(), FieldOption { label: "Low".to_string(), index: 2 });
@@ -172,7 +172,7 @@ use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::model::Entity;
@@ -583,7 +583,7 @@ pub struct RadioButtonFieldProperty {
     /// Layout alignment of the options
     pub align: Option<Alignment>,
     /// Available options mapped by their values
-    pub options: HashMap<String, FieldOption>,
+    pub options: BTreeMap<String, FieldOption>,
 }
 
 /// Properties for checkbox fields.
@@ -605,7 +605,7 @@ pub struct CheckBoxFieldProperty {
     /// Layout alignment of the options
     pub align: Option<Alignment>,
     /// Available options mapped by their values
-    pub options: HashMap<String, FieldOption>,
+    pub options: BTreeMap<String, FieldOption>,
 }
 
 /// Properties for multi-select fields.
@@ -625,7 +625,7 @@ pub struct MultiSelectFieldProperty {
     /// Default selected options
     pub default_value: Vec<String>,
     /// Available options mapped by their values
-    pub options: HashMap<String, FieldOption>,
+    pub options: BTreeMap<String, FieldOption>,
 }
 
 /// Properties for dropdown fields.
@@ -645,7 +645,7 @@ pub struct DropDownFieldProperty {
     /// Default selected option
     pub default_value: Option<String>,
     /// Available options mapped by their values
-    pub options: HashMap<String, FieldOption>,
+    pub options: BTreeMap<String, FieldOption>,
 }
 
 /// Properties for file attachment fields.
@@ -878,7 +878,7 @@ pub struct SubtableFieldProperty {
     /// Whether to hide the subtable label
     pub no_label: bool,
     /// Fields that make up each row in the subtable
-    pub fields: HashMap<String, FieldProperty>,
+    pub fields: BTreeMap<String, FieldProperty>,
 }
 
 /// Properties for lookup fields.
@@ -1947,9 +1947,9 @@ impl From<DateTimeFieldPropertyBuilder> for DateTimeFieldProperty {
 /// # Examples
 /// ```rust
 /// use kintone::model::app::field::{radio_button_field_property, FieldOption, Alignment};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut options = HashMap::new();
+/// let mut options = BTreeMap::new();
 /// options.insert("small".to_string(), FieldOption {
 ///     label: "Small".to_string(),
 ///     index: 0,
@@ -1976,7 +1976,7 @@ pub fn radio_button_field_property(code: impl Into<String>) -> RadioButtonFieldP
             required: false,
             default_value: None,
             align: None,
-            options: HashMap::new(),
+            options: BTreeMap::new(),
         },
     }
 }
@@ -2019,7 +2019,7 @@ impl RadioButtonFieldPropertyBuilder {
     }
 
     /// Sets the available options.
-    pub fn options(mut self, options: HashMap<String, FieldOption>) -> Self {
+    pub fn options(mut self, options: BTreeMap<String, FieldOption>) -> Self {
         self.property.options = options;
         self
     }
@@ -2059,9 +2059,9 @@ impl From<RadioButtonFieldPropertyBuilder> for RadioButtonFieldProperty {
 /// # Examples
 /// ```rust
 /// use kintone::model::app::field::{checkbox_field_property, FieldOption, Alignment};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut options = HashMap::new();
+/// let mut options = BTreeMap::new();
 /// options.insert("red".to_string(), FieldOption {
 ///     label: "Red".to_string(),
 ///     index: 0,
@@ -2088,7 +2088,7 @@ pub fn checkbox_field_property(code: impl Into<String>) -> CheckBoxFieldProperty
             required: false,
             default_value: Vec::new(),
             align: None,
-            options: HashMap::new(),
+            options: BTreeMap::new(),
         },
     }
 }
@@ -2131,7 +2131,7 @@ impl CheckBoxFieldPropertyBuilder {
     }
 
     /// Sets the available options.
-    pub fn options(mut self, options: HashMap<String, FieldOption>) -> Self {
+    pub fn options(mut self, options: BTreeMap<String, FieldOption>) -> Self {
         self.property.options = options;
         self
     }
@@ -2171,9 +2171,9 @@ impl From<CheckBoxFieldPropertyBuilder> for CheckBoxFieldProperty {
 /// # Examples
 /// ```rust
 /// use kintone::model::app::field::{multi_select_field_property, FieldOption};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut options = HashMap::new();
+/// let mut options = BTreeMap::new();
 /// options.insert("red".to_string(), FieldOption {
 ///     label: "Red".to_string(),
 ///     index: 0,
@@ -2198,7 +2198,7 @@ pub fn multi_select_field_property(code: impl Into<String>) -> MultiSelectFieldP
             no_label: false,
             required: false,
             default_value: Vec::new(),
-            options: HashMap::new(),
+            options: BTreeMap::new(),
         },
     }
 }
@@ -2235,7 +2235,7 @@ impl MultiSelectFieldPropertyBuilder {
     }
 
     /// Sets the available options.
-    pub fn options(mut self, options: HashMap<String, FieldOption>) -> Self {
+    pub fn options(mut self, options: BTreeMap<String, FieldOption>) -> Self {
         self.property.options = options;
         self
     }
@@ -2275,9 +2275,9 @@ impl From<MultiSelectFieldPropertyBuilder> for MultiSelectFieldProperty {
 /// # Examples
 /// ```rust
 /// use kintone::model::app::field::{dropdown_field_property, FieldOption};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut options = HashMap::new();
+/// let mut options = BTreeMap::new();
 /// options.insert("high".to_string(), FieldOption {
 ///     label: "High".to_string(),
 ///     index: 0,
@@ -2302,7 +2302,7 @@ pub fn dropdown_field_property(code: impl Into<String>) -> DropDownFieldProperty
             no_label: false,
             required: false,
             default_value: None,
-            options: HashMap::new(),
+            options: BTreeMap::new(),
         },
     }
 }
@@ -2339,7 +2339,7 @@ impl DropDownFieldPropertyBuilder {
     }
 
     /// Sets the available options.
-    pub fn options(mut self, options: HashMap<String, FieldOption>) -> Self {
+    pub fn options(mut self, options: BTreeMap<String, FieldOption>) -> Self {
         self.property.options = options;
         self
     }
@@ -2988,9 +2988,9 @@ impl From<GroupFieldPropertyBuilder> for GroupFieldProperty {
 /// # Examples
 /// ```rust
 /// use kintone::model::app::field::{subtable_field_property, single_line_text_field_property};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut fields = HashMap::new();
+/// let mut fields = BTreeMap::new();
 /// fields.insert("name".to_string(), single_line_text_field_property("name")
 ///     .label("Name")
 ///     .required(true)
@@ -3008,7 +3008,7 @@ pub fn subtable_field_property(code: impl Into<String>) -> SubtableFieldProperty
             code: code.into(),
             label: String::new(),
             no_label: false,
-            fields: HashMap::new(),
+            fields: BTreeMap::new(),
         },
     }
 }
@@ -3033,7 +3033,7 @@ impl SubtableFieldPropertyBuilder {
     }
 
     /// Sets the fields that make up each row in the subtable.
-    pub fn fields(mut self, fields: HashMap<String, FieldProperty>) -> Self {
+    pub fn fields(mut self, fields: BTreeMap<String, FieldProperty>) -> Self {
         self.property.fields = fields;
         self
     }

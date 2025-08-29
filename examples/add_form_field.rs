@@ -23,7 +23,7 @@ use kintone::model::app::field::{
     number_field_property, radio_button_field_property, single_line_text_field_property,
 };
 use kintone::v1::app::form;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build();
 
     // 4. Radio Button Field (choice field)
-    let mut priority_options = HashMap::new();
+    let mut priority_options = BTreeMap::new();
     priority_options.insert(
         "High".to_owned(),
         FieldOption {
