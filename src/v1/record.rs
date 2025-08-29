@@ -801,12 +801,9 @@ impl GetCommentsRequest {
 /// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
-/// use kintone::model::record::RecordComment;
+/// use kintone::model::record::record_comment;
 ///
-/// let comment = RecordComment {
-///     text: "This task is now complete.".to_owned(),
-///     mentions: vec![],
-/// };
+/// let comment = record_comment("This task is now complete.").build();
 /// let response = kintone::v1::record::add_comment(123, 456, comment).send(&client)?;
 /// println!("Added comment with ID: {}", response.id);
 /// # Ok::<(), Box<dyn std::error::Error>>(())

@@ -861,22 +861,6 @@ impl FromIterator<(String, FieldValue)> for TableRow {
 ///     })
 ///     .build();
 /// ```
-///
-/// Using direct struct initialization:
-/// ```rust
-/// use kintone::model::{Entity, EntityType};
-/// use kintone::model::record::RecordComment;
-///
-/// let comment = RecordComment {
-///     text: "Please review this record".to_string(),
-///     mentions: vec![
-///         Entity {
-///             entity_type: EntityType::USER,
-///             code: "user1".to_string(),
-///         }
-///     ],
-/// };
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordComment {
@@ -985,8 +969,6 @@ impl From<RecordCommentBuilder> for RecordComment {
 ///     },
 ///     mentions: vec![],
 /// };
-///
-/// let comment: RecordComment = posted_comment.into();
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
