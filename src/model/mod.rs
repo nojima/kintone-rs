@@ -200,14 +200,23 @@ pub struct Organization {
 ///
 /// # Examples
 ///
+/// Using the builder pattern (recommended):
+/// ```rust
+/// use kintone::model::file_body;
+///
+/// let file_key = "abc123def456";
+/// let file = file_body(file_key).build();
+/// ```
+///
+/// Using direct struct initialization:
 /// ```rust
 /// use kintone::model::FileBody;
 ///
 /// let file = FileBody {
 ///     file_key: "abc123def456".to_owned(),
-///     content_type: None,
-///     name: None,
-///     size: None,
+///     content_type: Some("image/jpeg".to_owned()),
+///     name: Some("photo.jpg".to_owned()),
+///     size: Some(1024),
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -218,6 +227,69 @@ pub struct FileBody {
     pub name: Option<String>,
     #[serde(with = "option_stringified")]
     pub size: Option<usize>,
+}
+
+/// Creates a new file body builder.
+///
+/// # Arguments
+/// * `file_key` - The unique identifier for the file in Kintone's storage system
+///
+/// # Examples
+/// ```rust
+/// use kintone::model::file_body;
+///
+/// let file = file_body("abc123def456")
+///     .content_type("image/jpeg")
+///     .name("photo.jpg")
+///     .size(1024)
+///     .build();
+/// ```
+pub fn file_body(file_key: impl Into<String>) -> FileBodyBuilder {
+    FileBodyBuilder {
+        file_body: FileBody {
+            file_key: file_key.into(),
+            content_type: None,
+            name: None,
+            size: None,
+        },
+    }
+}
+
+/// Builder for creating [`FileBody`].
+#[derive(Debug, Clone)]
+pub struct FileBodyBuilder {
+    file_body: FileBody,
+}
+
+impl FileBodyBuilder {
+    /// Sets the MIME type of the file.
+    pub fn content_type(mut self, content_type: impl Into<String>) -> Self {
+        self.file_body.content_type = Some(content_type.into());
+        self
+    }
+
+    /// Sets the original filename.
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.file_body.name = Some(name.into());
+        self
+    }
+
+    /// Sets the file size in bytes.
+    pub fn size(mut self, size: usize) -> Self {
+        self.file_body.size = Some(size);
+        self
+    }
+
+    /// Builds the final [`FileBody`].
+    pub fn build(self) -> FileBody {
+        self.file_body
+    }
+}
+
+impl From<FileBodyBuilder> for FileBody {
+    fn from(builder: FileBodyBuilder) -> Self {
+        builder.build()
+    }
 }
 
 /// Represents the sort order for query results.

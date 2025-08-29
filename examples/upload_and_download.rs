@@ -4,7 +4,7 @@ use std::{error::Error, io::BufReader};
 use kintone::{
     client::{Auth, KintoneClient},
     model::{
-        FileBody,
+        file_body,
         record::{FieldValue, Record},
     },
 };
@@ -24,17 +24,12 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let upload_resp = kintone::v1::file::upload("日本語.txt".to_owned()).send(&client, reader)?;
     println!("File uploaded successfully. File key: {}", upload_resp.file_key);
 
-    // 2. ファイルをレコードに添付
+    // 2. ファイルをレコードに添付（ビルダーパターンを使用）
     let app_id = 96;
     let resp = kintone::v1::record::add_record(app_id)
         .record(Record::from([(
             "Attachment",
-            FieldValue::File(vec![FileBody {
-                file_key: upload_resp.file_key,
-                content_type: None,
-                name: None,
-                size: None,
-            }]),
+            FieldValue::File(vec![file_body(upload_resp.file_key).build()]),
         )]))
         .send(&client)?;
 
