@@ -1339,11 +1339,11 @@ pub fn bulk_request(requests: Vec<BulkRequestItem>) -> BulkRequestRequest {
 pub struct BulkRequestItem {
     /// HTTP method for the request
     #[serde(with = "stringified")]
-    pub method: http::Method,
+    method: http::Method,
     /// API endpoint path
-    pub api: String,
+    api: String,
     /// Request payload
-    pub payload: serde_json::Value,
+    payload: serde_json::Value,
 }
 
 impl TryFrom<AddRecordRequest> for BulkRequestItem {
