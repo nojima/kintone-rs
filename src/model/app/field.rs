@@ -1238,7 +1238,7 @@ pub fn calc_field_property(code: impl Into<String>) -> CalcFieldPropertyBuilder 
 }
 
 /// Builder for creating [`CalcFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CalcFieldPropertyBuilder {
     property: CalcFieldProperty,
 }
@@ -1348,7 +1348,7 @@ pub fn single_line_text_field_property(
 }
 
 /// Builder for creating [`SingleLineTextFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SingleLineTextFieldPropertyBuilder {
     property: SingleLineTextFieldProperty,
 }
@@ -1463,7 +1463,7 @@ pub fn number_field_property(code: impl Into<String>) -> NumberFieldPropertyBuil
 }
 
 /// Builder for creating [`NumberFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NumberFieldPropertyBuilder {
     property: NumberFieldProperty,
 }
@@ -1577,7 +1577,7 @@ pub fn multi_line_text_field_property(
 }
 
 /// Builder for creating [`MultiLineTextFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct MultiLineTextFieldPropertyBuilder {
     property: MultiLineTextFieldProperty,
 }
@@ -1651,7 +1651,7 @@ pub fn date_field_property(code: impl Into<String>) -> DateFieldPropertyBuilder 
 }
 
 /// Builder for creating [`DateFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DateFieldPropertyBuilder {
     property: DateFieldProperty,
 }
@@ -1733,7 +1733,7 @@ pub fn rich_text_field_property(code: impl Into<String>) -> RichTextFieldPropert
 }
 
 /// Builder for creating [`RichTextFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RichTextFieldPropertyBuilder {
     property: RichTextFieldProperty,
 }
@@ -1805,7 +1805,7 @@ pub fn time_field_property(code: impl Into<String>) -> TimeFieldPropertyBuilder 
 }
 
 /// Builder for creating [`TimeFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TimeFieldPropertyBuilder {
     property: TimeFieldProperty,
 }
@@ -1885,7 +1885,7 @@ pub fn date_time_field_property(code: impl Into<String>) -> DateTimeFieldPropert
 }
 
 /// Builder for creating [`DateTimeFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DateTimeFieldPropertyBuilder {
     property: DateTimeFieldProperty,
 }
@@ -1982,7 +1982,7 @@ pub fn radio_button_field_property(code: impl Into<String>) -> RadioButtonFieldP
 }
 
 /// Builder for creating [`RadioButtonFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RadioButtonFieldPropertyBuilder {
     property: RadioButtonFieldProperty,
 }
@@ -2094,7 +2094,7 @@ pub fn checkbox_field_property(code: impl Into<String>) -> CheckBoxFieldProperty
 }
 
 /// Builder for creating [`CheckBoxFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CheckBoxFieldPropertyBuilder {
     property: CheckBoxFieldProperty,
 }
@@ -2204,7 +2204,7 @@ pub fn multi_select_field_property(code: impl Into<String>) -> MultiSelectFieldP
 }
 
 /// Builder for creating [`MultiSelectFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct MultiSelectFieldPropertyBuilder {
     property: MultiSelectFieldProperty,
 }
@@ -2308,7 +2308,7 @@ pub fn dropdown_field_property(code: impl Into<String>) -> DropDownFieldProperty
 }
 
 /// Builder for creating [`DropDownFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DropDownFieldPropertyBuilder {
     property: DropDownFieldProperty,
 }
@@ -2399,7 +2399,7 @@ pub fn file_field_property(code: impl Into<String>) -> FileFieldPropertyBuilder 
 }
 
 /// Builder for creating [`FileFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct FileFieldPropertyBuilder {
     property: FileFieldProperty,
 }
@@ -2477,7 +2477,7 @@ pub fn link_field_property(code: impl Into<String>) -> LinkFieldPropertyBuilder 
 }
 
 /// Builder for creating [`LinkFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct LinkFieldPropertyBuilder {
     property: LinkFieldProperty,
 }
@@ -2579,7 +2579,7 @@ pub fn user_select_field_property(code: impl Into<String>) -> UserSelectFieldPro
 }
 
 /// Builder for creating [`UserSelectFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct UserSelectFieldPropertyBuilder {
     property: UserSelectFieldProperty,
 }
@@ -2679,7 +2679,7 @@ pub fn organization_select_field_property(
 }
 
 /// Builder for creating [`OrganizationSelectFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct OrganizationSelectFieldPropertyBuilder {
     property: OrganizationSelectFieldProperty,
 }
@@ -2777,7 +2777,7 @@ pub fn group_select_field_property(code: impl Into<String>) -> GroupSelectFieldP
 }
 
 /// Builder for creating [`GroupSelectFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GroupSelectFieldPropertyBuilder {
     property: GroupSelectFieldProperty,
 }
@@ -2882,7 +2882,7 @@ pub fn reference_table_field_property(
 }
 
 /// Builder for creating [`ReferenceTableFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ReferenceTableFieldPropertyBuilder {
     property: ReferenceTableFieldProperty,
 }
@@ -2944,7 +2944,7 @@ pub fn group_field_property(code: impl Into<String>) -> GroupFieldPropertyBuilde
 }
 
 /// Builder for creating [`GroupFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GroupFieldPropertyBuilder {
     property: GroupFieldProperty,
 }
@@ -3014,7 +3014,7 @@ pub fn subtable_field_property(code: impl Into<String>) -> SubtableFieldProperty
 }
 
 /// Builder for creating [`SubtableFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SubtableFieldPropertyBuilder {
     property: SubtableFieldProperty,
 }
@@ -3081,7 +3081,7 @@ pub fn record_number_field_property(code: impl Into<String>) -> RecordNumberFiel
 }
 
 /// Builder for creating [`RecordNumberFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RecordNumberFieldPropertyBuilder {
     property: RecordNumberFieldProperty,
 }
@@ -3136,7 +3136,7 @@ pub fn category_field_property(code: impl Into<String>) -> CategoryFieldProperty
 }
 
 /// Builder for creating [`CategoryFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CategoryFieldPropertyBuilder {
     property: CategoryFieldProperty,
 }
@@ -3191,7 +3191,7 @@ pub fn status_field_property(code: impl Into<String>) -> StatusFieldPropertyBuil
 }
 
 /// Builder for creating [`StatusFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StatusFieldPropertyBuilder {
     property: StatusFieldProperty,
 }
@@ -3248,7 +3248,7 @@ pub fn status_assignee_field_property(
 }
 
 /// Builder for creating [`StatusAssigneeFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StatusAssigneeFieldPropertyBuilder {
     property: StatusAssigneeFieldProperty,
 }
@@ -3303,7 +3303,7 @@ pub fn created_time_field_property(code: impl Into<String>) -> CreatedTimeFieldP
 }
 
 /// Builder for creating [`CreatedTimeFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CreatedTimeFieldPropertyBuilder {
     property: CreatedTimeFieldProperty,
 }
@@ -3358,7 +3358,7 @@ pub fn updated_time_field_property(code: impl Into<String>) -> UpdatedTimeFieldP
 }
 
 /// Builder for creating [`UpdatedTimeFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct UpdatedTimeFieldPropertyBuilder {
     property: UpdatedTimeFieldProperty,
 }
@@ -3413,7 +3413,7 @@ pub fn creator_field_property(code: impl Into<String>) -> CreatorFieldPropertyBu
 }
 
 /// Builder for creating [`CreatorFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CreatorFieldPropertyBuilder {
     property: CreatorFieldProperty,
 }
@@ -3468,7 +3468,7 @@ pub fn modifier_field_property(code: impl Into<String>) -> ModifierFieldProperty
 }
 
 /// Builder for creating [`ModifierFieldProperty`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ModifierFieldPropertyBuilder {
     property: ModifierFieldProperty,
 }

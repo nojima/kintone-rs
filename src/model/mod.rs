@@ -256,7 +256,7 @@ pub fn file_body(file_key: impl Into<String>) -> FileBodyBuilder {
 }
 
 /// Builder for creating [`FileBody`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct FileBodyBuilder {
     file_body: FileBody,
 }

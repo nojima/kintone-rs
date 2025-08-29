@@ -78,7 +78,7 @@ pub fn thread_comment(text: impl Into<String>) -> ThreadCommentBuilder {
 }
 
 /// Builder for creating a [`ThreadComment`] with optional mentions and files.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ThreadCommentBuilder {
     text: String,
     mentions: Vec<Entity>,
