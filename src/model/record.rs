@@ -849,6 +849,20 @@ impl FromIterator<(String, FieldValue)> for TableRow {
 ///
 /// # Examples
 ///
+/// Using the builder pattern (recommended):
+/// ```rust
+/// use kintone::model::{Entity, EntityType};
+/// use kintone::model::record::record_comment;
+///
+/// let comment = record_comment("Please review this record")
+///     .mention(Entity {
+///         entity_type: EntityType::USER,
+///         code: "user1".to_string(),
+///     })
+///     .build();
+/// ```
+///
+/// Using direct struct initialization:
 /// ```rust
 /// use kintone::model::{Entity, EntityType};
 /// use kintone::model::record::RecordComment;
@@ -878,6 +892,73 @@ impl From<PostedRecordComment> for RecordComment {
             text: c.text,
             mentions: c.mentions,
         }
+    }
+}
+
+/// Creates a new record comment builder.
+///
+/// # Arguments
+/// * `text` - The text content of the comment
+///
+/// # Examples
+/// ```rust
+/// use kintone::model::{Entity, EntityType};
+/// use kintone::model::record::record_comment;
+///
+/// let comment = record_comment("This needs attention!")
+///     .mention(Entity {
+///         entity_type: EntityType::USER,
+///         code: "manager".to_string(),
+///     })
+///     .mention(Entity {
+///         entity_type: EntityType::GROUP,
+///         code: "dev-team".to_string(),
+///     })
+///     .build();
+/// ```
+pub fn record_comment(text: impl Into<String>) -> RecordCommentBuilder {
+    RecordCommentBuilder {
+        comment: RecordComment {
+            text: text.into(),
+            mentions: Vec::new(),
+        },
+    }
+}
+
+/// Builder for creating [`RecordComment`].
+#[derive(Clone)]
+pub struct RecordCommentBuilder {
+    comment: RecordComment,
+}
+
+impl RecordCommentBuilder {
+    /// Adds a mention to the comment.
+    ///
+    /// # Arguments
+    /// * `entity` - The entity to mention (user, group, or organization)
+    pub fn mention(mut self, entity: Entity) -> Self {
+        self.comment.mentions.push(entity);
+        self
+    }
+
+    /// Adds multiple mentions to the comment.
+    ///
+    /// # Arguments
+    /// * `entities` - The entities to mention
+    pub fn mentions(mut self, entities: impl IntoIterator<Item = Entity>) -> Self {
+        self.comment.mentions.extend(entities);
+        self
+    }
+
+    /// Builds the final [`RecordComment`].
+    pub fn build(self) -> RecordComment {
+        self.comment
+    }
+}
+
+impl From<RecordCommentBuilder> for RecordComment {
+    fn from(builder: RecordCommentBuilder) -> Self {
+        builder.build()
     }
 }
 
