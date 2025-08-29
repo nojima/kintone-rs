@@ -41,12 +41,12 @@
 //! For Kintone's "Secure Access" feature:
 //!
 //! ```no_run
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //!
 //! let cert_pem = std::fs::read("client.crt")?;
 //! let key_pem = std::fs::read("client.key")?;
 //!
-//! let client = KintoneClientBuilder::new(
+//! let client = KintoneClient::builder(
 //!     "https://your-domain.cybozu.com",
 //!     Auth::api_token("your-api-token".to_owned())
 //! )
@@ -60,9 +60,9 @@
 //! For advanced configuration, use the builder pattern:
 //!
 //! ```rust
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //!
-//! let client = KintoneClientBuilder::new(
+//! let client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
@@ -82,10 +82,10 @@
 //!
 //! ```rust
 //! use std::time::Duration;
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //! use kintone::middleware;
 //!
-//! let client = KintoneClientBuilder::new(
+//! let client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
@@ -102,10 +102,10 @@
 //! Logs detailed information about API requests and responses for debugging:
 //!
 //! ```rust
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //! use kintone::middleware;
 //!
-//! let client = KintoneClientBuilder::new(
+//! let client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
@@ -124,10 +124,10 @@
 //!
 //! ```rust
 //! use std::time::Duration;
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //! use kintone::middleware;
 //!
-//! let client = KintoneClientBuilder::new(
+//! let client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::password("username".to_owned(), "password".to_owned())
 //!     )
@@ -163,10 +163,10 @@
 //!
 //! ### Creating a Client for Guest Space
 //! ```rust
-//! use kintone::client::{Auth, KintoneClientBuilder};
+//! use kintone::client::{Auth, KintoneClient};
 //!
 //! // Client for guest space ID 123
-//! let guest_client = KintoneClientBuilder::new(
+//! let guest_client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
@@ -174,7 +174,7 @@
 //!     .build();
 //!
 //! // If you need to access a different guest space (ID 456), create another client
-//! let another_guest_client = KintoneClientBuilder::new(
+//! let another_guest_client = KintoneClient::builder(
 //!         "https://your-domain.cybozu.com",
 //!         Auth::api_token("your-api-token".to_owned())
 //!     )
@@ -228,7 +228,7 @@ impl KintoneClient {
     ///
     /// This is a convenience method that creates a client with default settings.
     /// For advanced configuration (middleware, guest spaces, custom user agent, etc.),
-    /// use [`KintoneClientBuilder`] instead.
+    /// use [`KintoneClient::builder`] instead.
     ///
     /// # Arguments
     ///
@@ -253,7 +253,43 @@ impl KintoneClient {
     /// );
     /// ```
     pub fn new(base_url: &str, auth: Auth) -> Self {
-        KintoneClientBuilder::new(base_url, auth).build()
+        Self::builder(base_url, auth).build()
+    }
+
+    /// Creates a new Kintone client builder with the specified base URL and authentication.
+    ///
+    /// This is the preferred method for creating a customized Kintone client. The builder
+    /// allows you to configure various aspects like middleware, guest spaces, user agent,
+    /// and client certificates before creating the final client.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `auth` - Authentication configuration (API token or username/password)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use kintone::client::{Auth, KintoneClient};
+    ///
+    /// let client = KintoneClient::builder(
+    ///     "https://your-domain.cybozu.com",
+    ///     Auth::api_token("your-api-token".to_owned())
+    /// )
+    ///     .user_agent("MyApp/1.0")
+    ///     .guest_space_id(123)
+    ///     .build();
+    /// ```
+    pub fn builder(base_url: &str, auth: Auth) -> KintoneClientBuilder<middleware::NoLayer> {
+        let base_url = url::Url::parse(base_url).unwrap();
+        KintoneClientBuilder {
+            base_url,
+            auth,
+            user_agent: None,
+            guest_space_id: None,
+            client_cert: None,
+            layer: middleware::NoLayer,
+        }
     }
 
     pub(crate) fn run(
@@ -303,10 +339,10 @@ impl middleware::Handler for RequestHandler {
 ///
 /// ```rust
 /// use std::time::Duration;
-/// use kintone::client::{Auth, KintoneClientBuilder};
+/// use kintone::client::{Auth, KintoneClient};
 /// use kintone::middleware;
 ///
-/// let client = KintoneClientBuilder::new(
+/// let client = KintoneClient::builder(
 ///         "https://your-domain.cybozu.com",
 ///         Auth::api_token("your-api-token".to_owned())
 ///     )
@@ -332,6 +368,8 @@ pub struct KintoneClientBuilder<L> {
 impl KintoneClientBuilder<middleware::NoLayer> {
     /// Creates a new Kintone client builder with the specified base URL and authentication.
     ///
+    /// **Deprecated:** Use [`KintoneClient::builder`] instead.
+    ///
     /// This is the starting point for building a customized Kintone client. The builder
     /// allows you to configure various aspects like middleware, guest spaces, user agent,
     /// and client certificates before creating the final client.
@@ -344,29 +382,20 @@ impl KintoneClientBuilder<middleware::NoLayer> {
     /// # Examples
     ///
     /// ```rust
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     ///
-    /// let builder = KintoneClientBuilder::new(
+    /// // Preferred approach
+    /// let client = KintoneClient::builder(
     ///     "https://your-domain.cybozu.com",
     ///     Auth::api_token("your-api-token".to_owned())
-    /// );
-    ///
-    /// // Configure additional options and build the client
-    /// let client = builder
+    /// )
     ///     .user_agent("MyApp/1.0")
     ///     .guest_space_id(123)
     ///     .build();
     /// ```
+    #[deprecated(since = "0.6.3", note = "Use KintoneClient::builder instead")]
     pub fn new(base_url: &str, auth: Auth) -> Self {
-        let base_url = url::Url::parse(base_url).unwrap();
-        Self {
-            base_url,
-            auth,
-            user_agent: None,
-            guest_space_id: None,
-            client_cert: None,
-            layer: middleware::NoLayer,
-        }
+        KintoneClient::builder(base_url, auth)
     }
 }
 
@@ -393,10 +422,10 @@ impl<L> KintoneClientBuilder<L> {
     ///
     /// ```rust
     /// use std::time::Duration;
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     /// use kintone::middleware;
     ///
-    /// let client = KintoneClientBuilder::new(
+    /// let client = KintoneClient::builder(
     ///         "https://your-domain.cybozu.com",
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
@@ -437,10 +466,10 @@ impl<L> KintoneClientBuilder<L> {
     /// # Examples
     ///
     /// ```rust
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     ///
     /// // Client for guest space ID 123
-    /// let guest_client = KintoneClientBuilder::new(
+    /// let guest_client = KintoneClient::builder(
     ///         "https://your-domain.cybozu.com",
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
@@ -465,9 +494,9 @@ impl<L> KintoneClientBuilder<L> {
     /// # Examples
     ///
     /// ```rust
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     ///
-    /// let client = KintoneClientBuilder::new(
+    /// let client = KintoneClient::builder(
     ///         "https://your-domain.cybozu.com",
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
@@ -518,13 +547,13 @@ impl<L> KintoneClientBuilder<L> {
     /// # Examples
     ///
     /// ```no_run
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     ///
     /// // Load certificate and key from PEM files
     /// let cert_pem = std::fs::read("client-cert.pem")?;
     /// let key_pem = std::fs::read("client-key.pem")?;
     ///
-    /// let client = KintoneClientBuilder::new(
+    /// let client = KintoneClient::builder(
     ///         "https://your-domain.s.cybozu.com", // Don't forget ".s"
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )
@@ -562,10 +591,10 @@ where
     ///
     /// ```rust
     /// use std::time::Duration;
-    /// use kintone::client::{Auth, KintoneClientBuilder};
+    /// use kintone::client::{Auth, KintoneClient};
     /// use kintone::middleware;
     ///
-    /// let client = KintoneClientBuilder::new(
+    /// let client = KintoneClient::builder(
     ///         "https://your-domain.cybozu.com",
     ///         Auth::api_token("your-api-token".to_owned())
     ///     )

@@ -40,7 +40,7 @@
 use std::env;
 
 use kintone::{
-    client::{Auth, KintoneClientBuilder},
+    client::{Auth, KintoneClient},
     v1::record,
 };
 
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key_pem = std::fs::read(&key_path)?;
 
     // Create client with client certificate
-    let client = KintoneClientBuilder::new(&base_url, Auth::api_token(api_token))
+    let client = KintoneClient::builder(&base_url, Auth::api_token(api_token))
         .client_certificate_from_pem(&cert_pem, &key_pem)?
         .build();
 

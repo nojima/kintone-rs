@@ -46,19 +46,14 @@ kintone-rs supports a middleware system for handling cross-cutting concerns like
 
 ```rust
 use std::time::Duration;
-use kintone::client::{Auth, KintoneClientBuilder};
+use kintone::client::{Auth, KintoneClient};
 use kintone::middleware;
 
-let client = KintoneClientBuilder::new(
+let client = KintoneClient::builder(
         "https://your-domain.cybozu.com",
         Auth::api_token("your-api-token")
     )
-    .layer(middleware::RetryLayer::new(
-        5,                              // max_attempts
-        Duration::from_millis(500),     // initial_delay
-        Duration::from_secs(30),        // max_delay
-        None                            // use default retry logic (retries any errors)
-    ))
+    .layer(middleware::RetryLayer::new())
     .build();
 ```
 

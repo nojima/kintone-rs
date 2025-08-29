@@ -21,7 +21,7 @@
 //!
 //! When you stack layers like this:
 //! ```ignore
-//! client_builder
+//! KintoneClient::builder(...)
 //!     .layer(RetryLayer::new().with_max_attempts(5)) // Layer A
 //!     .layer(LoggingLayer::new())                    // Layer B
 //!     .build()
@@ -585,10 +585,10 @@ impl<Inner: Handler> Handler for LoggingHandler<Inner> {
 /// Combined with other middleware:
 /// ```rust
 /// use std::time::Duration;
-/// use kintone::client::{Auth, KintoneClientBuilder};
+/// use kintone::client::{Auth, KintoneClient};
 /// use kintone::middleware;
 ///
-/// let client = KintoneClientBuilder::new(
+/// let client = KintoneClient::builder(
 ///         "https://your-domain.cybozu.com",
 ///         Auth::api_token("your-api-token".to_owned())
 ///     )
@@ -712,9 +712,9 @@ impl<Inner: Handler> Handler for BasicAuthHandler<Inner> {
 ///
 /// This layer is used as the base case in the middleware stack. When applied,
 /// it simply returns the inner handler unchanged. It's primarily used internally
-/// by the [`KintoneClientBuilder`] as the starting point for building middleware stacks.
+/// by the [`KintoneClient`] as the starting point for building middleware stacks.
 ///
-/// [`KintoneClientBuilder`]: crate::client::KintoneClientBuilder
+/// [`KintoneClient`]: crate::client::KintoneClient
 pub struct NoLayer;
 
 impl<Inner: Handler> Layer<Inner> for NoLayer {

@@ -23,7 +23,7 @@
 
 use std::env;
 
-use kintone::client::{Auth, KintoneClientBuilder};
+use kintone::client::{Auth, KintoneClient};
 use kintone::middleware;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Basic Auth User: {basic_username}");
 
     // Create Kintone client with Basic authentication layer
-    let client = KintoneClientBuilder::new(&base_url, Auth::api_token(api_token))
+    let client = KintoneClient::builder(&base_url, Auth::api_token(api_token))
         .layer(middleware::BasicAuthLayer::enabled(&basic_username, &basic_password))
         .build();
 

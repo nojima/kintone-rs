@@ -40,7 +40,7 @@ use std::{
 };
 
 use kintone::{
-    client::{Auth, KintoneClient, KintoneClientBuilder},
+    client::{Auth, KintoneClient},
     middleware,
     model::{
         app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty},
@@ -81,7 +81,7 @@ impl TestConfig {
     }
 
     fn create_client(&self) -> KintoneClient {
-        KintoneClientBuilder::new(
+        KintoneClient::builder(
             &self.base_url,
             Auth::password(self.username.clone(), self.password.clone()),
         )
