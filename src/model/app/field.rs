@@ -195,7 +195,7 @@ use crate::model::record::FieldType;
 /// let text_field: FieldProperty = single_line_text_field_property("name")
 ///     .label("Full Name")
 ///     .required(true)
-///     .max_length(100)
+///     .max_length(50)
 ///     .build()
 ///     .into();
 ///
