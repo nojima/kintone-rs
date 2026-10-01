@@ -2,7 +2,11 @@
 
 `cargo test` runs unit tests, wire format tests and documentation examples without
 connecting to kintone. The wire tests in `src/v1/tests.rs` use mock middleware to
-check each added endpoint, HTTP method, query and JSON body. Response fixtures in
+check each added endpoint, HTTP method, query and JSON body, as well as decoded
+response values. Tests in `src/v1/tests/populated.rs` exercise populated updates,
+nested settings, optional field omission and explicit false values. Preview tests
+check switching back to the live environment in regular and guest spaces.
+Response fixtures in
 `src/testdata/rest-api` follow the examples in the official
 [kintone REST API documentation](https://cybozu.dev/ja/kintone/docs/rest-api/).
 Comments marking omitted parts of API discovery examples are removed to make valid JSON.
