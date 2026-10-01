@@ -339,21 +339,16 @@ pub enum DisplayFormat {
 }
 
 /// Protocol type for link fields.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LinkProtocol {
     /// Web URL (http/https)
+    #[default]
     Web,
     /// Phone call (tel:)
     Call,
     /// Email address (mailto:)
     Mail,
-}
-
-impl Default for LinkProtocol {
-    fn default() -> Self {
-        Self::Web
-    }
 }
 
 /// Represents an option in a choice field (radio button, checkbox, dropdown, multi-select).

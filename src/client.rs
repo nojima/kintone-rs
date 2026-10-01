@@ -232,7 +232,7 @@ impl KintoneClient {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `base_url` - The base URL of your Kintone environment (e.g., `"https://your-domain.cybozu.com"`)
     /// * `auth` - Authentication configuration (API token or username/password)
     ///
     /// # Examples
@@ -264,7 +264,7 @@ impl KintoneClient {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `base_url` - The base URL of your Kintone environment (e.g., `"https://your-domain.cybozu.com"`)
     /// * `auth` - Authentication configuration (API token or username/password)
     ///
     /// # Examples
@@ -376,7 +376,7 @@ impl KintoneClientBuilder<middleware::NoLayer> {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - The base URL of your Kintone environment (e.g., "https://your-domain.cybozu.com")
+    /// * `base_url` - The base URL of your Kintone environment (e.g., `"https://your-domain.cybozu.com"`)
     /// * `auth` - Authentication configuration (API token or username/password)
     ///
     /// # Examples
