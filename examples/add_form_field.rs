@@ -17,14 +17,15 @@
 //! - `KINTONE_PASSWORD`: Your Kintone password
 //! - `KINTONE_APP_ID`: The ID of the app to add fields to
 
+use std::collections::BTreeMap;
+use std::env;
+
 use kintone::client::{Auth, KintoneClient};
 use kintone::model::app::field::{
     Alignment, FieldOption, UnitPosition, date_field_property, multi_line_text_field_property,
     number_field_property, radio_button_field_property, single_line_text_field_property,
 };
 use kintone::v1::app::form;
-use std::collections::BTreeMap;
-use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read configuration from environment variables

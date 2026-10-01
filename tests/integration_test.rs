@@ -33,21 +33,15 @@
 //! - `integration_test_record_operations`: Record CRUD operations (Create, Read, Update)
 //! - `integration_test_space_operations`: Space and thread management operations
 
-use std::{
-    env,
-    thread::{self, sleep},
-    time::Duration,
-};
+use std::env;
+use std::thread::{self, sleep};
+use std::time::Duration;
 
-use kintone::{
-    client::{Auth, KintoneClient},
-    middleware,
-    model::{
-        app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty},
-        record::{FieldValue, Record},
-    },
-    v1::{app, record},
-};
+use kintone::client::{Auth, KintoneClient};
+use kintone::middleware;
+use kintone::model::app::field::{FieldProperty, NumberFieldProperty, SingleLineTextFieldProperty};
+use kintone::model::record::{FieldValue, Record};
+use kintone::v1::{app, record};
 
 fn setup_logger() {
     // https://docs.rs/env_logger/latest/env_logger/#specifying-defaults-for-environment-variables

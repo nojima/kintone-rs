@@ -33,8 +33,9 @@
 //!
 //! **Note**: Form APIs modify the preview environment. Use the deploy API to apply changes to production.
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;

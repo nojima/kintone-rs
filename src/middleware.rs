@@ -41,11 +41,9 @@
 //! - [`LoggingLayer`] - Logs request and response information for debugging
 //! - [`BasicAuthLayer`] - Adds HTTP Basic authentication headers to requests
 
-use std::{
-    borrow::Borrow,
-    io::{Cursor, Read},
-    sync::Arc,
-};
+use std::borrow::Borrow;
+use std::io::{Cursor, Read};
+use std::sync::Arc;
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;

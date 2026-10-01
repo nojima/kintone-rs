@@ -1,13 +1,10 @@
+use std::error::Error;
 use std::fs::File;
-use std::{error::Error, io::BufReader};
+use std::io::BufReader;
 
-use kintone::{
-    client::{Auth, KintoneClient},
-    model::{
-        file_body,
-        record::{FieldValue, Record},
-    },
-};
+use kintone::client::{Auth, KintoneClient};
+use kintone::model::file_body;
+use kintone::model::record::{FieldValue, Record};
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let base_url = std::env::var("KINTONE_BASE_URL").expect("KINTONE_BASE_URL is not set");

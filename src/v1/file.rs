@@ -4,8 +4,9 @@
 //! It includes operations for uploading and downloading files that can be used in file fields
 //! or as attachments in Kintone records.
 
-use serde::Deserialize;
 use std::io::Read;
+
+use serde::Deserialize;
 
 use crate::client::{DownloadRequest, KintoneClient, UploadRequest};
 use crate::error::ApiError;

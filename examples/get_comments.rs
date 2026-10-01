@@ -1,9 +1,7 @@
 use std::error::Error;
 
-use kintone::{
-    client::{Auth, KintoneClient},
-    model::Order,
-};
+use kintone::client::{Auth, KintoneClient};
+use kintone::model::Order;
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let base_url = std::env::var("KINTONE_BASE_URL").expect("KINTONE_BASE_URL is not set");

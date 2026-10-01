@@ -39,10 +39,8 @@
 
 use std::env;
 
-use kintone::{
-    client::{Auth, KintoneClient},
-    v1::record,
-};
+use kintone::client::{Auth, KintoneClient};
+use kintone::v1::record;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load configuration from environment variables

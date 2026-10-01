@@ -168,11 +168,12 @@
 //! println!("Field type: {:?}", field.field_type());
 //! ```
 
+use std::collections::BTreeMap;
+
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::model::Entity;

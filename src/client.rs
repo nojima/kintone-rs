@@ -183,8 +183,7 @@
 //! ```
 
 use std::fmt::Debug;
-use std::io::Cursor;
-use std::io::Read;
+use std::io::{Cursor, Read};
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;

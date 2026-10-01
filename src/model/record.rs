@@ -84,17 +84,16 @@
 //! Kintone's dynamic field system. Each variant corresponds to a specific field type
 //! and ensures proper serialization/deserialization with the Kintone API.
 
-use std::{borrow::Borrow, collections::BTreeMap};
+use std::borrow::Borrow;
+use std::collections::BTreeMap;
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveTime};
 use enum_assoc::Assoc;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    internal::serde_helper::{stringified, stringified_or_empty},
-    model::{Entity, FileBody, Group, Organization, User},
-};
+use crate::internal::serde_helper::{stringified, stringified_or_empty};
+use crate::model::{Entity, FileBody, Group, Organization, User};
 
 /// Represents a record in a Kintone application.
 ///

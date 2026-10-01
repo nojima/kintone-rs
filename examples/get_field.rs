@@ -15,10 +15,8 @@
 use std::env;
 use std::error::Error;
 
-use kintone::{
-    client::{Auth, KintoneClient},
-    model::record::FieldValue,
-};
+use kintone::client::{Auth, KintoneClient};
+use kintone::model::record::FieldValue;
 use serde_json::{Map, Value};
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {

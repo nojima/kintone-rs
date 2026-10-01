@@ -21,9 +21,10 @@
 //! Note: This example requires username/password authentication as app management APIs
 //! cannot use API tokens.
 
+use std::env;
+
 use kintone::client::{Auth, KintoneClient};
 use kintone::v1::app::settings;
-use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read configuration from environment variables
