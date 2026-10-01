@@ -297,6 +297,15 @@ impl KintoneClient {
     ) -> Result<http::Response<middleware::ResponseBody>, ApiError> {
         self.handler.handle(req)
     }
+
+    /// Returns the full URL path for the given API path (e.g. "/v1/record.json"),
+    /// taking the guest space into account.
+    pub(crate) fn full_api_path(&self, api_path: &str) -> String {
+        match self.guest_space_id {
+            Some(guest_space_id) => format!("/k/guest/{guest_space_id}{api_path}"),
+            None => format!("/k{api_path}"),
+        }
+    }
 }
 
 /// Internal HTTP request handler that implements the actual HTTP communication.
@@ -965,13 +974,7 @@ fn make_request(
 
     // Construct URL
     let mut u = client.base_url.clone();
-    let mut path = if let Some(guest_space_id) = client.guest_space_id {
-        format!("/k/guest/{guest_space_id}")
-    } else {
-        "/k".to_owned()
-    };
-    path += api_path;
-    u.set_path(&path);
+    u.set_path(&client.full_api_path(api_path));
     for (key, value) in query {
         u.query_pairs_mut().append_pair(&key, &value);
     }

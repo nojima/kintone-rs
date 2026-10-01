@@ -73,9 +73,9 @@ cargo run --example get_record
 
 Implementation status of the [kintone REST APIs](https://cybozu.dev/ja/kintone/docs/rest-api/). Function paths are relative to `kintone::v1`.
 
-- ✅ Implemented: 24
-- ⚠️ Partially implemented: 2
-- ❌ Not implemented: 58
+- ✅ Implemented: 26
+- ⚠️ Partially implemented: 1
+- ❌ Not implemented: 57
 
 APIs that exist for both the live and the preview environment are listed by their live endpoint.
 Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::guest_space_id`.
@@ -99,8 +99,8 @@ Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::g
 | ✅ | [Delete Comment](https://cybozu.dev/ja/id/bd7c8ed72e071bc0ed6731cd/) | DELETE | `/k/v1/record/comment.json` | `record::delete_comment` |  |
 | ✅ | [Update Assignees](https://cybozu.dev/ja/id/709d819774fd8c4e0960c1a7/) | PUT | `/k/v1/record/assignees.json` | `record::update_assignees` |  |
 | ✅ | [Update Status](https://cybozu.dev/ja/id/ff1f30dda4461d5bb807af27/) | PUT | `/k/v1/record/status.json` | `record::update_status` |  |
-| ❌ | [Update Statuses](https://cybozu.dev/ja/id/044d255131483eaf4fe66756/) | PUT | `/k/v1/records/status.json` |  |  |
-| ⚠️ | [Bulk Request](https://cybozu.dev/ja/id/bc41b4cb11864e868abd2eb2/) | POST | `/k/v1/bulkRequest.json` | `record::bulk_request` | Update Statuses cannot be included; results are untyped `serde_json::Value` |
+| ✅ | [Update Statuses](https://cybozu.dev/ja/id/044d255131483eaf4fe66756/) | PUT | `/k/v1/records/status.json` | `record::update_statuses` |  |
+| ✅ | [Bulk Request](https://cybozu.dev/ja/id/bc41b4cb11864e868abd2eb2/) | POST | `/k/v1/bulkRequest.json` | `record::bulk_request` |  |
 | ❌ | [Evaluate Record Permissions](https://cybozu.dev/ja/id/e5b4dc5768ba266a21dd2964/) | GET | `/k/v1/records/acl/evaluate.json` |  |  |
 
 ### File

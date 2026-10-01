@@ -23,6 +23,7 @@
 //! ### Workflow Operations
 //! - [`update_assignees`] - Update the assignees of a record
 //! - [`update_status`] - Update the workflow status of a record
+//! - [`update_statuses`] - Update the workflow statuses of multiple records
 //!
 //! ### Cursor-based Pagination
 //! - [`create_cursor`] - Create a cursor for efficient pagination through large datasets
@@ -33,7 +34,7 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
-use crate::error::ApiError;
+use crate::error::{ApiError, BulkRequestError};
 use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::model::Order;
 use crate::model::record::{PostedRecordComment, Record, RecordComment};
@@ -608,7 +609,9 @@ pub struct UpdateRecordsResponse {
 pub struct UpdatedRecordInfo {
     pub id: String,
     pub revision: String,
-    pub operation: String,
+    /// The operation performed on the record (`INSERT` or `UPDATE`).
+    /// Only returned in UPSERT mode.
+    pub operation: Option<String>,
 }
 
 impl UpdateRecordsRequest {
@@ -1065,6 +1068,122 @@ impl UpdateStatusRequest {
 
 //-----------------------------------------------------------------------------
 
+/// Updates the statuses of multiple records in a Kintone app workflow.
+///
+/// This function creates a request to execute workflow actions on multiple records at once.
+///
+/// # Arguments
+/// * `app` - The ID of the Kintone app
+/// * `records` - The records to update the status for
+///
+/// # Limits
+/// - Maximum 100 records can be updated in a single request
+///
+/// # Example
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// use kintone::v1::record::UpdateStatusData;
+///
+/// let records = vec![
+///     UpdateStatusData::new(123, "Submit for Review".to_owned())
+///         .assignee("reviewer1".to_owned())
+///         .revision(5),
+///     UpdateStatusData::new(124, "Approve".to_owned()),
+/// ];
+/// let response = kintone::v1::record::update_statuses(456, records).send(&client)?;
+/// for record in response.records {
+///     println!("Record {} updated, new revision: {}", record.id, record.revision);
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/update-statuses/>
+pub fn update_statuses(app: u64, records: Vec<UpdateStatusData>) -> UpdateStatusesRequest {
+    let builder = RequestBuilder::new(http::Method::PUT, "/v1/records/status.json");
+    UpdateStatusesRequest {
+        builder,
+        body: UpdateStatusesRequestBody { app, records },
+    }
+}
+
+/// Data for updating the status of a single record in [`update_statuses`].
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatusData {
+    pub id: u64,
+    pub action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assignee: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub revision: Option<u64>,
+}
+
+impl UpdateStatusData {
+    /// Creates a new UpdateStatusData instance.
+    ///
+    /// # Arguments
+    /// * `id` - The ID of the record to update the status for
+    /// * `action` - The name of the workflow action to execute
+    pub fn new(id: u64, action: String) -> Self {
+        Self {
+            id,
+            action,
+            assignee: None,
+            revision: None,
+        }
+    }
+
+    /// Sets the login name of the user to assign the record to.
+    pub fn assignee(mut self, assignee: String) -> Self {
+        self.assignee = Some(assignee);
+        self
+    }
+
+    /// Sets the expected revision number for optimistic locking.
+    pub fn revision(mut self, revision: u64) -> Self {
+        self.revision = Some(revision);
+        self
+    }
+}
+
+#[must_use]
+pub struct UpdateStatusesRequest {
+    builder: RequestBuilder,
+    pub(crate) body: UpdateStatusesRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatusesRequestBody {
+    app: u64,
+    records: Vec<UpdateStatusData>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatusesResponse {
+    pub records: Vec<UpdatedStatusInfo>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdatedStatusInfo {
+    #[serde(with = "stringified")]
+    pub id: u64,
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+impl UpdateStatusesRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateStatusesResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+//-----------------------------------------------------------------------------
+
 /// Creates a cursor for paginating through large result sets efficiently.
 ///
 /// This function creates a request to generate a cursor that can be used to retrieve
@@ -1288,12 +1407,16 @@ impl DeleteCursorRequest {
 /// - All operations are executed atomically (all succeed or all fail)
 /// - Supports record operations, status updates, and assignee updates
 ///
+/// # Errors
+/// If one of the requests fails, [`ApiError::BulkRequest`] is returned. It contains
+/// the index of the failed request and the error returned by Kintone.
+///
 /// # Example
 /// ```no_run
 /// # use kintone::client::{Auth, KintoneClient};
 /// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
 /// use kintone::model::record::{Record, FieldValue};
-/// use kintone::v1::record::{BulkRequestItem, bulk_request};
+/// use kintone::v1::record::{BulkRequestItem, BulkRequestResult, bulk_request};
 ///
 /// let requests = vec![
 ///     // Add a record
@@ -1315,7 +1438,14 @@ impl DeleteCursorRequest {
 /// ];
 ///
 /// let response = bulk_request(requests).send(&client)?;
-/// println!("Executed {} operations", response.results.len());
+/// for result in response.results {
+///     match result {
+///         BulkRequestResult::AddRecord(r) => println!("Added record {}", r.id),
+///         BulkRequestResult::UpdateRecord(r) => println!("Updated to revision {}", r.revision),
+///         BulkRequestResult::DeleteRecords(_) => println!("Deleted records"),
+///         _ => {}
+///     }
+/// }
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
@@ -1330,100 +1460,77 @@ pub fn bulk_request(requests: Vec<BulkRequestItem>) -> BulkRequestRequest {
 }
 
 /// Represents a single request item in a bulk operation.
-#[derive(Debug, Clone, Serialize)]
+///
+/// A `BulkRequestItem` is created from a request of a supported API with `try_into()`.
+#[derive(Debug, Clone)]
 pub struct BulkRequestItem {
     /// HTTP method for the request
-    #[serde(with = "stringified")]
     method: http::Method,
-    /// API endpoint path
-    api: String,
+    /// API endpoint path without the "/k" prefix
+    api_path: &'static str,
     /// Request payload
     payload: serde_json::Value,
+    /// Which API this request calls
+    kind: BulkRequestKind,
 }
 
-impl TryFrom<AddRecordRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: AddRecordRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::POST,
-            api: "/k/v1/record.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
+#[derive(Debug, Clone, Copy)]
+enum BulkRequestKind {
+    AddRecord,
+    AddRecords,
+    UpdateRecord,
+    UpdateRecords,
+    DeleteRecords,
+    UpdateAssignees,
+    UpdateStatus,
+    UpdateStatuses,
 }
 
-impl TryFrom<AddRecordsRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
+macro_rules! impl_try_from_for_bulk_request_item {
+    ($request:ty, $method:ident, $api_path:literal, $kind:ident) => {
+        impl TryFrom<$request> for BulkRequestItem {
+            type Error = serde_json::Error;
 
-    fn try_from(request: AddRecordsRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::POST,
-            api: "/k/v1/records.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
+            fn try_from(request: $request) -> Result<Self, Self::Error> {
+                Ok(Self {
+                    method: http::Method::$method,
+                    api_path: $api_path,
+                    payload: serde_json::to_value(request.body)?,
+                    kind: BulkRequestKind::$kind,
+                })
+            }
+        }
+    };
 }
 
-impl TryFrom<UpdateRecordRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: UpdateRecordRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::PUT,
-            api: "/k/v1/record.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
-}
-
-impl TryFrom<UpdateRecordsRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: UpdateRecordsRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::PUT,
-            api: "/k/v1/records.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
-}
-
-impl TryFrom<DeleteRecordsRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: DeleteRecordsRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::DELETE,
-            api: "/k/v1/records.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
-}
-
-impl TryFrom<UpdateAssigneesRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: UpdateAssigneesRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::PUT,
-            api: "/k/v1/record/assignees.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
-}
-
-impl TryFrom<UpdateStatusRequest> for BulkRequestItem {
-    type Error = serde_json::Error;
-
-    fn try_from(request: UpdateStatusRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            method: http::Method::PUT,
-            api: "/k/v1/record/status.json".to_string(),
-            payload: serde_json::to_value(request.body)?,
-        })
-    }
-}
+impl_try_from_for_bulk_request_item!(AddRecordRequest, POST, "/v1/record.json", AddRecord);
+impl_try_from_for_bulk_request_item!(AddRecordsRequest, POST, "/v1/records.json", AddRecords);
+impl_try_from_for_bulk_request_item!(UpdateRecordRequest, PUT, "/v1/record.json", UpdateRecord);
+impl_try_from_for_bulk_request_item!(UpdateRecordsRequest, PUT, "/v1/records.json", UpdateRecords);
+impl_try_from_for_bulk_request_item!(
+    DeleteRecordsRequest,
+    DELETE,
+    "/v1/records.json",
+    DeleteRecords
+);
+impl_try_from_for_bulk_request_item!(
+    UpdateAssigneesRequest,
+    PUT,
+    "/v1/record/assignees.json",
+    UpdateAssignees
+);
+impl_try_from_for_bulk_request_item!(
+    UpdateStatusRequest,
+    PUT,
+    "/v1/record/status.json",
+    UpdateStatus
+);
+impl_try_from_for_bulk_request_item!(
+    UpdateStatusesRequest,
+    PUT,
+    "/v1/records/status.json",
+    UpdateStatuses
+);
 
 #[must_use]
 pub struct BulkRequestRequest {
@@ -1431,20 +1538,226 @@ pub struct BulkRequestRequest {
     body: BulkRequestRequestBody,
 }
 
-#[derive(Serialize)]
 struct BulkRequestRequestBody {
     requests: Vec<BulkRequestItem>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl BulkRequestRequestBody {
+    fn to_json<'a>(&'a self, client: &KintoneClient) -> BulkRequestRequestBodyJson<'a> {
+        BulkRequestRequestBodyJson {
+            requests: self
+                .requests
+                .iter()
+                .map(|r| BulkRequestItemJson {
+                    method: &r.method,
+                    api: client.full_api_path(r.api_path),
+                    payload: &r.payload,
+                })
+                .collect(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct BulkRequestRequestBodyJson<'a> {
+    requests: Vec<BulkRequestItemJson<'a>>,
+}
+
+#[derive(Serialize)]
+struct BulkRequestItemJson<'a> {
+    #[serde(with = "stringified")]
+    method: &'a http::Method,
+    api: String,
+    payload: &'a serde_json::Value,
+}
+
+#[derive(Debug, Clone)]
 pub struct BulkRequestResponse {
-    pub results: Vec<serde_json::Value>,
+    /// The results of the requests, in the same order as the requests.
+    pub results: Vec<BulkRequestResult>,
+}
+
+/// The result of a single request in a bulk request.
+///
+/// Each variant corresponds to the API of the request at the same position.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum BulkRequestResult {
+    AddRecord(AddRecordResponse),
+    AddRecords(AddRecordsResponse),
+    UpdateRecord(UpdateRecordResponse),
+    UpdateRecords(UpdateRecordsResponse),
+    DeleteRecords(DeleteRecordsResponse),
+    UpdateAssignees(UpdateAssigneesResponse),
+    UpdateStatus(UpdateStatusResponse),
+    UpdateStatuses(UpdateStatusesResponse),
+}
+
+impl BulkRequestResult {
+    fn from_value(kind: BulkRequestKind, value: serde_json::Value) -> serde_json::Result<Self> {
+        use serde_json::from_value;
+        Ok(match kind {
+            BulkRequestKind::AddRecord => Self::AddRecord(from_value(value)?),
+            BulkRequestKind::AddRecords => Self::AddRecords(from_value(value)?),
+            BulkRequestKind::UpdateRecord => Self::UpdateRecord(from_value(value)?),
+            BulkRequestKind::UpdateRecords => Self::UpdateRecords(from_value(value)?),
+            BulkRequestKind::DeleteRecords => Self::DeleteRecords(from_value(value)?),
+            BulkRequestKind::UpdateAssignees => Self::UpdateAssignees(from_value(value)?),
+            BulkRequestKind::UpdateStatus => Self::UpdateStatus(from_value(value)?),
+            BulkRequestKind::UpdateStatuses => Self::UpdateStatuses(from_value(value)?),
+        })
+    }
+}
+
+#[derive(Deserialize)]
+struct BulkRequestResponseJson {
+    results: Vec<serde_json::Value>,
 }
 
 impl BulkRequestRequest {
     pub fn send(self, client: &KintoneClient) -> Result<BulkRequestResponse, ApiError> {
-        self.builder.send(client, self.body)
+        let requests = &self.body.requests;
+        let body = self.body.to_json(client);
+        let resp: BulkRequestResponseJson = match self.builder.send(client, body) {
+            Ok(resp) => resp,
+            Err(ApiError::Http(err)) => {
+                return Err(match BulkRequestError::from_http_error(&err) {
+                    Some(bulk_err) => bulk_err.into(),
+                    None => err.into(),
+                });
+            }
+            Err(err) => return Err(err),
+        };
+        // Results are matched with requests by position, so the numbers must be the same.
+        if resp.results.len() != requests.len() {
+            return Err(<serde_json::Error as serde::de::Error>::custom(format!(
+                "the number of results ({}) does not match the number of requests ({})",
+                resp.results.len(),
+                requests.len()
+            ))
+            .into());
+        }
+        let results = requests
+            .iter()
+            .zip(resp.results)
+            .map(|(r, value)| BulkRequestResult::from_value(r.kind, value))
+            .collect::<Result<_, _>>()?;
+        Ok(BulkRequestResponse { results })
     }
 }
 
 //-----------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::Auth;
+
+    fn client(guest_space_id: Option<u64>) -> KintoneClient {
+        let builder =
+            KintoneClient::builder("https://example.cybozu.com", Auth::api_token("t".to_owned()));
+        match guest_space_id {
+            Some(id) => builder.guest_space_id(id).build(),
+            None => builder.build(),
+        }
+    }
+
+    #[test]
+    fn serialize_update_statuses_request() {
+        let req = update_statuses(
+            4,
+            vec![
+                UpdateStatusData::new(1, "申請する".to_owned())
+                    .assignee("user2".to_owned())
+                    .revision(1),
+                UpdateStatusData::new(2, "承認".to_owned()),
+            ],
+        );
+        let actual = serde_json::to_value(&req.body).unwrap();
+        // Taken from https://cybozu.dev/ja/kintone/docs/rest-api/records/update-statuses/
+        let expected = serde_json::json!({
+            "app": 4,
+            "records": [
+                { "id": 1, "action": "申請する", "assignee": "user2", "revision": 1 },
+                { "id": 2, "action": "承認" }
+            ]
+        });
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn deserialize_update_statuses_response() {
+        let json =
+            r#"{ "records": [ { "id": "1", "revision": "3" }, { "id": "2", "revision": "9" } ] }"#;
+        let resp: UpdateStatusesResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.records.len(), 2);
+        assert_eq!((resp.records[0].id, resp.records[0].revision), (1, 3));
+        assert_eq!((resp.records[1].id, resp.records[1].revision), (2, 9));
+    }
+
+    fn bulk_body() -> BulkRequestRequestBody {
+        BulkRequestRequestBody {
+            requests: vec![
+                add_record(1).try_into().unwrap(),
+                update_statuses(2, vec![UpdateStatusData::new(3, "承認".to_owned())])
+                    .try_into()
+                    .unwrap(),
+            ],
+        }
+    }
+
+    #[test]
+    fn serialize_bulk_request() {
+        let actual = serde_json::to_value(bulk_body().to_json(&client(None))).unwrap();
+        let expected = serde_json::json!({
+            "requests": [
+                { "method": "POST", "api": "/k/v1/record.json", "payload": { "app": 1, "record": null } },
+                {
+                    "method": "PUT",
+                    "api": "/k/v1/records/status.json",
+                    "payload": { "app": 2, "records": [ { "id": 3, "action": "承認" } ] }
+                }
+            ]
+        });
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn serialize_bulk_request_in_guest_space() {
+        let body = bulk_body();
+        let json = serde_json::to_value(body.to_json(&client(Some(3)))).unwrap();
+        assert_eq!(json["requests"][0]["api"], "/k/guest/3/v1/record.json");
+        assert_eq!(json["requests"][1]["api"], "/k/guest/3/v1/records/status.json");
+    }
+
+    #[test]
+    fn deserialize_update_records_response() {
+        // Without upsert, kintone does not return `operation`.
+        let json = r#"{ "records": [ { "id": "1", "revision": "5" } ] }"#;
+        let resp: UpdateRecordsResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.records[0].operation, None);
+
+        let json = r#"{ "records": [ { "id": "1", "revision": "6", "operation": "UPDATE" } ] }"#;
+        let resp: UpdateRecordsResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.records[0].operation.as_deref(), Some("UPDATE"));
+    }
+
+    #[test]
+    fn deserialize_bulk_request_results() {
+        let kinds = [BulkRequestKind::AddRecord, BulkRequestKind::UpdateRecord];
+        // Taken from https://cybozu.dev/ja/kintone/docs/rest-api/records/bulk-request/
+        let values = [
+            serde_json::json!({ "id": "39", "revision": "1" }),
+            serde_json::json!({ "revision": "3" }),
+        ];
+        let results: Vec<_> = kinds
+            .into_iter()
+            .zip(values)
+            .map(|(kind, value)| BulkRequestResult::from_value(kind, value).unwrap())
+            .collect();
+        assert!(
+            matches!(&results[0], BulkRequestResult::AddRecord(r) if r.id == 39 && r.revision == 1)
+        );
+        assert!(matches!(&results[1], BulkRequestResult::UpdateRecord(r) if r.revision == 3));
+    }
+}
