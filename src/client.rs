@@ -188,7 +188,7 @@ use std::io::Read;
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use rand::RngCore as _;
+use rand::Rng as _;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use ureq::tls::{Certificate, ClientCert, PrivateKey, TlsConfig};

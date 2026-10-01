@@ -12,7 +12,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-base64 = "0.21"
+base64 = "0.23"
 bigdecimal = { version = "0.4", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 enum-assoc = "1"
@@ -20,10 +20,10 @@ http = "1"
 log = "0.4"
 mime = "0.3"
 percent-encoding = "2.3.2"
-rand = "0.9"
+rand = "0.10"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-thiserror = "1"
+thiserror = "2"
 ureq = { version = "3", features = ["json"] }
 url = "2"
 
