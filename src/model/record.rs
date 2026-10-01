@@ -973,12 +973,14 @@ impl From<RecordCommentBuilder> for RecordComment {
 #[serde(rename_all = "camelCase")]
 pub struct PostedRecordComment {
     /// Unique identifier of the comment
+    #[serde(with = "stringified")]
     pub id: u64,
     /// The text content of the comment
     pub text: String,
     /// When the comment was created
     pub created_at: DateTime<FixedOffset>,
     /// User who created the comment
+    #[serde(rename = "creator")]
     pub user: User,
     /// List of entities mentioned in the comment
     pub mentions: Vec<Entity>,
@@ -1001,5 +1003,26 @@ mod tests {
         let record: Record = serde_json::from_str(RECORD_JSON1).unwrap();
         let serialized = serde_json::to_string_pretty(&record).unwrap();
         assert_json_eq(RECORD_JSON1, &serialized);
+    }
+
+    #[test]
+    fn deserialize_and_serialize_posted_record_comment() {
+        // Taken from https://cybozu.dev/ja/kintone/docs/rest-api/records/get-comments/
+        let json = r#"{
+            "id": "2",
+            "text": "佐藤 昇 \nありがとうございます。",
+            "createdAt": "2016-04-12T23:49:00Z",
+            "creator": { "code": "kato", "name": "加藤 美咲" },
+            "mentions": [ { "code": "sato", "type": "USER" } ]
+        }"#;
+        let comment: PostedRecordComment = serde_json::from_str(json).unwrap();
+        assert_eq!(comment.id, 2);
+        assert_eq!(comment.user.code, "kato");
+        assert_eq!(comment.user.name, "加藤 美咲");
+        assert_eq!(comment.mentions.len(), 1);
+        assert_eq!(comment.mentions[0].code, "sato");
+
+        let serialized = serde_json::to_string(&comment).unwrap();
+        assert_json_eq(json, &serialized);
     }
 }

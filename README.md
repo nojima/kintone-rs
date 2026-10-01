@@ -73,8 +73,8 @@ cargo run --example get_record
 
 Implementation status of the [kintone REST APIs](https://cybozu.dev/ja/kintone/docs/rest-api/). Function paths are relative to `kintone::v1`.
 
-- ✅ Implemented: 22
-- ⚠️ Partially implemented: 4
+- ✅ Implemented: 24
+- ⚠️ Partially implemented: 2
 - ❌ Not implemented: 58
 
 APIs that exist for both the live and the preview environment are listed by their live endpoint.
@@ -94,7 +94,7 @@ Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::g
 | ✅ | [Create Cursor](https://cybozu.dev/ja/id/4e59634133e0f320b35f8711/) | POST | `/k/v1/records/cursor.json` | `record::create_cursor` |  |
 | ✅ | [Get Records by Cursor](https://cybozu.dev/ja/id/22f3376b9638cc7d94b8ad57/) | GET | `/k/v1/records/cursor.json` | `record::get_records_by_cursor` |  |
 | ✅ | [Delete Cursor](https://cybozu.dev/ja/id/f2b87ac0eafb5c6fad2fdbfb/) | DELETE | `/k/v1/records/cursor.json` | `record::delete_cursor` |  |
-| ⚠️ | [Get Comments](https://cybozu.dev/ja/id/b74703885198a01fe8a948ba/) | GET | `/k/v1/record/comments.json` | `record::get_comments` | Response model does not match the docs (`creator` is mapped as `user`; string `id` is parsed as a number) |
+| ✅ | [Get Comments](https://cybozu.dev/ja/id/b74703885198a01fe8a948ba/) | GET | `/k/v1/record/comments.json` | `record::get_comments` |  |
 | ✅ | [Add Comment](https://cybozu.dev/ja/id/45dbf35056918f6a13549f70/) | POST | `/k/v1/record/comment.json` | `record::add_comment` |  |
 | ✅ | [Delete Comment](https://cybozu.dev/ja/id/bd7c8ed72e071bc0ed6731cd/) | DELETE | `/k/v1/record/comment.json` | `record::delete_comment` |  |
 | ✅ | [Update Assignees](https://cybozu.dev/ja/id/709d819774fd8c4e0960c1a7/) | PUT | `/k/v1/record/assignees.json` | `record::update_assignees` |  |
@@ -171,7 +171,7 @@ Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::g
 | ❌ | [Get Space Statistics](https://cybozu.dev/ja/id/8d2d6e955eea07f32b8af62d/) | GET | `/k/v1/space/statistics.json` |  |  |
 | ✅ | [Add Thread](https://cybozu.dev/ja/id/24a2ad8d0fb574f3617e1b92/) | POST | `/k/v1/space/thread.json` | `space::add_thread` |  |
 | ❌ | [Update Thread](https://cybozu.dev/ja/id/030c46e9b685a5eee19637f0/) | PUT | `/k/v1/space/thread.json` |  |  |
-| ⚠️ | [Add Thread Comment](https://cybozu.dev/ja/id/bcacb3ceff7039b39222ebb4/) | POST | `/k/v1/space/thread/comment.json` | `space::add_thread_comment` | File attachments do not work (`fileKey` is serialized as `file_key`) |
+| ✅ | [Add Thread Comment](https://cybozu.dev/ja/id/bcacb3ceff7039b39222ebb4/) | POST | `/k/v1/space/thread/comment.json` | `space::add_thread_comment` |  |
 | ❌ | [Add Guest Users](https://cybozu.dev/ja/id/29318cb3da48dfeb065b884d/) | POST | `/k/v1/guests.json` |  |  |
 | ❌ | [Delete Guest Users](https://cybozu.dev/ja/id/943e420d94eb3d018df68d28/) | DELETE | `/k/v1/guests.json` |  |  |
 | ❌ | [Update Guest Members](https://cybozu.dev/ja/id/712234897391d75133c3d464/) | PUT | `/k/guest/{GUEST_SPACE_ID}/v1/space/guests.json` |  |  |

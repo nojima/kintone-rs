@@ -25,7 +25,7 @@ use crate::model::Entity;
 ///     .build();
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct ThreadComment {
     /// The text content of the comment
     pub text: String,
@@ -36,7 +36,7 @@ pub struct ThreadComment {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct ThreadCommentFile {
     /// The fileKey of the attachment file.
     pub file_key: String,
@@ -135,5 +135,32 @@ impl ThreadCommentBuilder {
 impl From<ThreadCommentBuilder> for ThreadComment {
     fn from(builder: ThreadCommentBuilder) -> Self {
         builder.build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::EntityType;
+
+    #[test]
+    fn serialize_thread_comment() {
+        let comment = thread_comment("hello")
+            .mention(Entity {
+                entity_type: EntityType::USER,
+                code: "takahashi".to_owned(),
+            })
+            .file(ThreadCommentFile {
+                file_key: "c15b3870-7505-4ab6-9d8d-b9bdbc74f5d6".to_owned(),
+                width: Some(500),
+            })
+            .build();
+        let actual = serde_json::to_value(&comment).unwrap();
+        let expected = serde_json::json!({
+            "text": "hello",
+            "mentions": [ { "code": "takahashi", "type": "USER" } ],
+            "files": [ { "fileKey": "c15b3870-7505-4ab6-9d8d-b9bdbc74f5d6", "width": 500 } ]
+        });
+        assert_eq!(actual, expected);
     }
 }
