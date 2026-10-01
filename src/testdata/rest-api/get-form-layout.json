@@ -1,0 +1,79 @@
+{
+  "revision": "2",
+  "layout": [
+    {
+      "type": "ROW",
+      "fields": [
+        {
+          "type": "SINGLE_LINE_TEXT",
+          "code": "文字列1行_0",
+          "size": {
+            "width": "200"
+          }
+        },
+        {
+          "type": "MULTI_LINE_TEXT",
+          "code": "文字列複数行_0",
+          "size": {
+            "width": "200",
+            "innerHeight": "100"
+          }
+        },
+        {
+          "type": "LABEL",
+          "label": "label",
+          "elementId": "label",
+          "size": {
+            "width": "200"
+          }
+        },
+        {
+          "type": "SPACER",
+          "elementId": "spacer",
+          "size": {
+            "width": "200",
+            "height": "100"
+          }
+        },
+        {
+          "type": "HR",
+          "elementId": "hr",
+          "size": {
+            "width": "200"
+          }
+        }
+      ]
+    },
+    {
+      "type": "SUBTABLE",
+      "code": "テーブル_0",
+      "fields": [
+        {
+          "type": "NUMBER",
+          "code": "数値_0",
+          "size": {
+            "width": "200"
+          }
+        }
+      ]
+    },
+    {
+      "type": "GROUP",
+      "code": "グループ_0",
+      "layout": [
+        {
+          "type": "ROW",
+          "fields": [
+            {
+              "type": "NUMBER",
+              "code": "数値_1",
+              "size": {
+                "width": "200"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

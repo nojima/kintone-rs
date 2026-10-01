@@ -1,0 +1,92 @@
+{
+  "id": "records/get",
+  "baseUrl": "https://sample.cybozu.com/k/v1/",
+  "path": "records.json",
+  "httpMethod": "GET",
+  "request": {
+    "type": "object",
+    "required": [
+      "app"
+    ],
+    "properties": {
+      "app": {
+        "type": "string",
+        "format": "long"
+      },
+      "fields": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "query": {
+        "type": "string",
+        "format": "query"
+      },
+      "totalCount": {
+        "format": "boolean",
+        "type": "string"
+      }
+    }
+  },
+  "response": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "patternProperties": {
+            "*": {
+              "anyOf": [
+                {
+                  "$ref": "CalcSimpleValue"
+                },
+                {
+                  "$ref": "CategorySimpleValue"
+                }
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      "totalCount": {
+        "format": "long",
+        "type": "string"
+      }
+    }
+  },
+  "schemas": {
+    "SingleLineTextSimpleValue": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "CATEGORY",
+            "CREATED_TIME"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "MultipleLineTextSimpleValue": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "CATEGORY",
+            "CREATED_TIME"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

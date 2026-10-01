@@ -1,4 +1,11 @@
-# Integration Tests
+# Tests
+
+`cargo test` runs unit tests, wire format tests and documentation examples without
+connecting to kintone. The wire tests in `src/v1/tests.rs` use mock middleware to
+check each added endpoint, HTTP method, query and JSON body. Response fixtures in
+`src/testdata/rest-api` follow the examples in the official
+[kintone REST API documentation](https://cybozu.dev/ja/kintone/docs/rest-api/).
+Comments marking omitted parts of API discovery examples are removed to make valid JSON.
 
 This directory contains integration tests for the kintone-rs library that test real API interactions with a Kintone environment.
 

@@ -1,0 +1,8 @@
+{
+  "baseUrl": "https://sample.cybozu.com/k/v1/",
+  "apis": {
+    "records/get": {
+      "link": "apis/records/get.json"
+    }
+  }
+}

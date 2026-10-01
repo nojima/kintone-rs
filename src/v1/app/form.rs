@@ -7,6 +7,9 @@
 //!
 //! ### Form Field Management
 //! - [`add_form_field`] - Add a new field to an app's form in the preview environment
+//! - [`get_form_fields`], [`update_form_fields`], [`delete_form_fields`] - Read, update and remove fields
+//! - [`get_form_layout`], [`update_form_layout`] - Read and update form layout
+//! - [`get_form`] - Read legacy form design information
 //!
 //! ## Usage Pattern
 //!
@@ -37,10 +40,12 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::settings::RevisionResponse;
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
 use crate::internal::serde_helper::{option_stringified, stringified};
-use crate::model::app::field::FieldProperty;
+use crate::model::app::field::{FieldProperty, FieldPropertyUpdate};
+use crate::model::app::layout::Layout;
 
 /// Adds new fields to an app's form in the preview environment.
 ///
@@ -140,4 +145,283 @@ impl AddFormFieldRequest {
     pub fn send(self, client: &KintoneClient) -> Result<AddFormFieldResponse, ApiError> {
         self.builder.send(client, self.body)
     }
+}
+
+/// Get form fields.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/get-form-fields/>
+pub fn get_form_fields(app_id: u64) -> GetFormFieldsRequest {
+    GetFormFieldsRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/app/form/fields.json")
+            .query("app", app_id),
+    }
+}
+
+#[must_use]
+pub struct GetFormFieldsRequest {
+    builder: RequestBuilder,
+}
+
+impl GetFormFieldsRequest {
+    /// Selects the preview environment when true (live by default).
+    pub fn preview(mut self, preview: bool) -> Self {
+        self.builder = self.builder.preview(preview);
+        self
+    }
+
+    pub fn lang(mut self, lang: impl Into<String>) -> Self {
+        self.builder = self.builder.query("lang", lang.into());
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<GetFormFieldsResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFormFieldsResponse {
+    pub properties: HashMap<String, FieldProperty>,
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+pub type UpdateFormFieldsResponse = RevisionResponse;
+
+/// Update form fields.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/update-form-fields/>
+pub fn update_form_fields(app_id: u64) -> UpdateFormFieldsRequest {
+    UpdateFormFieldsRequest {
+        builder: RequestBuilder::new(http::Method::PUT, "/v1/preview/app/form/fields.json"),
+        body: UpdateFormFieldsRequestBody {
+            app: app_id,
+            properties: HashMap::new(),
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct UpdateFormFieldsRequest {
+    builder: RequestBuilder,
+    body: UpdateFormFieldsRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateFormFieldsRequestBody {
+    app: u64,
+    properties: HashMap<String, FormFieldUpdate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    revision: Option<u64>,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+enum FormFieldUpdate {
+    Typed(Box<FieldPropertyUpdate>),
+    Json(serde_json::Value),
+}
+
+impl UpdateFormFieldsRequest {
+    pub fn properties(
+        mut self,
+        values: impl IntoIterator<Item = (String, FieldPropertyUpdate)>,
+    ) -> Self {
+        self.body.properties = values
+            .into_iter()
+            .map(|(code, value)| (code, FormFieldUpdate::Typed(Box::new(value))))
+            .collect();
+        self
+    }
+
+    pub fn field(mut self, name: impl Into<String>, value: FieldPropertyUpdate) -> Self {
+        self.body
+            .properties
+            .insert(name.into(), FormFieldUpdate::Typed(Box::new(value)));
+        self
+    }
+
+    /// Sets a field update using its API JSON representation.
+    /// Use this for empty string values that clear numeric limits or precision,
+    /// and for field specific settings that the typed update cannot express.
+    pub fn raw_field(mut self, code: impl Into<String>, value: serde_json::Value) -> Self {
+        self.body.properties.insert(code.into(), FormFieldUpdate::Json(value));
+        self
+    }
+
+    /// Sets the expected revision; None disables the revision check.
+    pub fn revision(mut self, revision: Option<u64>) -> Self {
+        self.body.revision = revision;
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateFormFieldsResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+pub type DeleteFormFieldsResponse = RevisionResponse;
+
+/// Delete form fields.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/delete-form-fields/>
+pub fn delete_form_fields(app_id: u64) -> DeleteFormFieldsRequest {
+    DeleteFormFieldsRequest {
+        builder: RequestBuilder::new(http::Method::DELETE, "/v1/preview/app/form/fields.json"),
+        body: DeleteFormFieldsRequestBody {
+            app: app_id,
+            fields: Vec::new(),
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct DeleteFormFieldsRequest {
+    builder: RequestBuilder,
+    body: DeleteFormFieldsRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DeleteFormFieldsRequestBody {
+    app: u64,
+    fields: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    revision: Option<u64>,
+}
+
+impl DeleteFormFieldsRequest {
+    pub fn fields(mut self, values: impl IntoIterator<Item = String>) -> Self {
+        self.body.fields = values.into_iter().collect();
+        self
+    }
+
+    /// Sets the expected revision; None disables the revision check.
+    pub fn revision(mut self, revision: Option<u64>) -> Self {
+        self.body.revision = revision;
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<DeleteFormFieldsResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+/// Get form layout.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/get-form-layout/>
+pub fn get_form_layout(app_id: u64) -> GetFormLayoutRequest {
+    GetFormLayoutRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/app/form/layout.json")
+            .query("app", app_id),
+    }
+}
+
+#[must_use]
+pub struct GetFormLayoutRequest {
+    builder: RequestBuilder,
+}
+
+impl GetFormLayoutRequest {
+    /// Selects the preview environment when true (live by default).
+    pub fn preview(mut self, preview: bool) -> Self {
+        self.builder = self.builder.preview(preview);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<GetFormLayoutResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFormLayoutResponse {
+    pub layout: Vec<Layout>,
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+pub type UpdateFormLayoutResponse = RevisionResponse;
+
+/// Update form layout.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/update-form-layout/>
+pub fn update_form_layout(app_id: u64) -> UpdateFormLayoutRequest {
+    UpdateFormLayoutRequest {
+        builder: RequestBuilder::new(http::Method::PUT, "/v1/preview/app/form/layout.json"),
+        body: UpdateFormLayoutRequestBody {
+            app: app_id,
+            layout: Vec::new(),
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct UpdateFormLayoutRequest {
+    builder: RequestBuilder,
+    body: UpdateFormLayoutRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateFormLayoutRequestBody {
+    app: u64,
+    layout: Vec<Layout>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    revision: Option<u64>,
+}
+
+impl UpdateFormLayoutRequest {
+    pub fn layout(mut self, values: impl IntoIterator<Item = Layout>) -> Self {
+        self.body.layout = values.into_iter().collect();
+        self
+    }
+
+    /// Sets the expected revision; None disables the revision check.
+    pub fn revision(mut self, revision: Option<u64>) -> Self {
+        self.body.revision = revision;
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateFormLayoutResponse, ApiError> {
+        self.builder.send(client, self.body)
+    }
+}
+
+/// Get form.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/form/get-form/>
+pub fn get_form(app_id: u64) -> GetFormRequest {
+    GetFormRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/form.json").query("app", app_id),
+    }
+}
+
+#[must_use]
+pub struct GetFormRequest {
+    builder: RequestBuilder,
+}
+
+impl GetFormRequest {
+    /// Selects the preview environment when true (live by default).
+    pub fn preview(mut self, preview: bool) -> Self {
+        self.builder = self.builder.preview(preview);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<GetFormResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFormResponse {
+    pub properties: Vec<serde_json::Value>,
 }

@@ -1,0 +1,61 @@
+{
+  "rights": [
+    {
+      "entity": {
+        "type": "USER",
+        "code": "user1"
+      },
+      "includeSubs": false,
+      "appEditable": true,
+      "recordViewable": true,
+      "recordAddable": true,
+      "recordEditable": true,
+      "recordDeletable": true,
+      "recordImportable": true,
+      "recordExportable": true
+    },
+    {
+      "entity": {
+        "type": "GROUP",
+        "code": "group1"
+      },
+      "includeSubs": false,
+      "appEditable": false,
+      "recordViewable": false,
+      "recordAddable": false,
+      "recordEditable": false,
+      "recordDeletable": false,
+      "recordImportable": false,
+      "recordExportable": false
+    },
+    {
+      "entity": {
+        "type": "ORGANIZATION",
+        "code": "org1"
+      },
+      "includeSubs": true,
+      "appEditable": false,
+      "recordViewable": true,
+      "recordAddable": true,
+      "recordEditable": true,
+      "recordDeletable": true,
+      "recordImportable": true,
+      "recordExportable": true
+    },
+    {
+      "entity": {
+        "type": "CREATOR",
+        "code": null
+      },
+      "includeSubs": false,
+      "appEditable": true,
+      "recordViewable": true,
+      "recordAddable": true,
+      "recordEditable": true,
+      "recordDeletable": true,
+      "recordImportable": true,
+      "recordExportable": true
+    }
+  ],
+  "revision": "2"
+}

@@ -1,0 +1,18 @@
+{
+  "notifications": [
+    {
+      "entity": {
+        "type": "USER",
+        "code": "user1"
+      },
+      "includeSubs": false,
+      "recordAdded": true,
+      "recordEdited": true,
+      "commentAdded": false,
+      "statusChanged": false,
+      "fileImported": true
+    }
+  ],
+  "notifyToCommenter": true,
+  "revision": "2"
+}

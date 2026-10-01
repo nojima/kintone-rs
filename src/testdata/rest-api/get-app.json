@@ -1,0 +1,18 @@
+{
+  "appId": "1",
+  "code": "",
+  "name": "案件管理",
+  "description": "案件ごとに、受注の確度や金額はもちろん、活動の履歴も記録できるアプリです。",
+  "spaceId": "2",
+  "threadId": "3",
+  "createdAt": "2021-10-01T05:14:05.000Z",
+  "creator": {
+    "code": "tanaka",
+    "name": "田中太郎"
+  },
+  "modifiedAt": "2021-10-02T05:22:05.000Z",
+  "modifier": {
+    "code": "tanaka",
+    "name": "田中太郎"
+  }
+}

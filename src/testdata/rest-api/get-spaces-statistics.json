@@ -1,0 +1,22 @@
+{
+  "spaces": [
+    {
+      "id": "1",
+      "name": "第1営業部",
+      "administratorCount": "2",
+      "memberCount": "10",
+      "isPrivate": true,
+      "isGuest": false,
+      "creator": {
+        "code": "sato-noboru",
+        "name": "Sato Noboru"
+      },
+      "createdAt": "2023-12-04T05:45:36.000Z",
+      "modifier": {
+        "code": "sato-noboru",
+        "name": "Sato Noboru"
+      },
+      "modifiedAt": "2023-12-04T05:45:36.000Z"
+    }
+  ]
+}

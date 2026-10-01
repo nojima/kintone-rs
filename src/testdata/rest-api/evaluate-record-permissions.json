@@ -1,0 +1,40 @@
+{
+  "rights": [
+    {
+      "id": "1",
+      "record": {
+        "viewable": true,
+        "editable": false,
+        "deletable": false
+      },
+      "fields": {
+        "文字列1行_0": {
+          "viewable": true,
+          "editable": false
+        },
+        "文字列複数行_0": {
+          "viewable": false,
+          "editable": false
+        }
+      }
+    },
+    {
+      "id": "2",
+      "record": {
+        "viewable": true,
+        "editable": true,
+        "deletable": true
+      },
+      "fields": {
+        "文字列1行_0": {
+          "viewable": true,
+          "editable": true
+        },
+        "文字列複数行_0": {
+          "viewable": true,
+          "editable": true
+        }
+      }
+    }
+  ]
+}

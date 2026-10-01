@@ -1,0 +1,32 @@
+{
+  "actions": {
+    "アクションA": {
+      "name": "アクションA",
+      "id": "1",
+      "index": "0",
+      "destApp": {
+        "app": "2",
+        "code": "APPB"
+      },
+      "mappings": [
+        {
+          "srcType": "FIELD",
+          "srcField": "数値_0",
+          "destField": "数値_0"
+        },
+        {
+          "srcType": "RECORD_URL",
+          "destField": "リンク_0"
+        }
+      ],
+      "entities": [
+        {
+          "type": "USER",
+          "code": "userA"
+        }
+      ],
+      "filterCond": "ユーザー選択フィールド in (\"user1\")"
+    }
+  },
+  "revision": "2"
+}

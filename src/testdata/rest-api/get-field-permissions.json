@@ -1,0 +1,39 @@
+{
+  "rights": [
+    {
+      "code": "文字列1行_0",
+      "entities": [
+        {
+          "accessibility": "WRITE",
+          "entity": {
+            "type": "USER",
+            "code": "user1"
+          },
+          "includeSubs": false
+        },
+        {
+          "accessibility": "READ",
+          "entity": {
+            "type": "GROUP",
+            "code": "group1"
+          },
+          "includeSubs": false
+        }
+      ]
+    },
+    {
+      "code": "数値_0",
+      "entities": [
+        {
+          "accessibility": "NONE",
+          "entity": {
+            "type": "ORGANIZATION",
+            "code": "org1"
+          },
+          "includeSubs": true
+        }
+      ]
+    }
+  ],
+  "revision": "2"
+}

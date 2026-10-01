@@ -27,3 +27,8 @@
 //! ```
 
 pub mod field;
+pub mod layout;
+pub mod report;
+pub mod settings;
+pub mod statistics;
+pub mod view;

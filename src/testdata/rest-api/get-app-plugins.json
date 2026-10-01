@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "id": "djmhffjhfgmebgnmcggopedaofckljlj",
+      "name": "プラグイン名",
+      "enabled": true
+    }
+  ],
+  "revision": "2"
+}

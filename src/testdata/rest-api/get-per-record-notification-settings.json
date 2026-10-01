@@ -1,0 +1,18 @@
+{
+  "notifications": [
+    {
+      "filterCond": "ユーザー選択_0 in (\"user1\")",
+      "title": "user1が選択されました",
+      "targets": [
+        {
+          "entity": {
+            "type": "USER",
+            "code": "user1"
+          },
+          "includeSubs": false
+        }
+      ]
+    }
+  ],
+  "revision": "2"
+}

@@ -1,0 +1,32 @@
+{
+  "apps": [
+    {
+      "id": "1",
+      "name": "案件管理",
+      "space": {
+        "id": "1",
+        "name": "営業管理"
+      },
+      "appGroup": "Public",
+      "status": "ACTIVATED",
+      "recordUpdatedAt": "2023-12-04T05:45:36.000Z",
+      "recordCount": "100",
+      "fieldCount": "10",
+      "dailyRequestCount": "1",
+      "apiTokenCount": "1",
+      "webhookCount": "1",
+      "storageUsage": "47000000",
+      "customized": true,
+      "creator": {
+        "code": "tanaka",
+        "name": "tanaka"
+      },
+      "createdAt": "2023-12-04T05:45:36.000Z",
+      "modifier": {
+        "code": "tanaka",
+        "name": "tanaka"
+      },
+      "modifiedAt": "2023-12-04T05:45:36.000Z"
+    }
+  ]
+}

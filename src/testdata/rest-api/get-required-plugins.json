@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "id": "djmhffjhfgmebgnmcggopedaofckljlj",
+      "name": "サンプルプラグイン",
+      "isMarketPlugin": false
+    }
+  ]
+}

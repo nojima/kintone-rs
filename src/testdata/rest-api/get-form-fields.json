@@ -1,0 +1,252 @@
+{
+  "properties": {
+    "文字列1行_0": {
+      "type": "SINGLE_LINE_TEXT",
+      "code": "文字列1行_0",
+      "label": "文字列 (1行)",
+      "noLabel": false,
+      "required": true,
+      "unique": true,
+      "maxLength": "64",
+      "minLength": "0",
+      "defaultValue": "",
+      "expression": "",
+      "hideExpression": false
+    },
+    "数値_0": {
+      "type": "NUMBER",
+      "code": "数値_0",
+      "label": "数値",
+      "noLabel": true,
+      "required": false,
+      "unique": false,
+      "maxValue": "64",
+      "minValue": "0",
+      "defaultValue": "12345",
+      "expression": "",
+      "digit": true,
+      "displayScale": "",
+      "unit": "$",
+      "unitPosition": "BEFORE"
+    },
+    "ラジオボタン_0": {
+      "type": "RADIO_BUTTON",
+      "code": "ラジオボタン_0",
+      "label": "ラジオボタン",
+      "noLabel": false,
+      "required": true,
+      "defaultValue": "sample2",
+      "options": {
+        "sample1": {
+          "label": "sample1",
+          "index": "0"
+        },
+        "sample2": {
+          "label": "sample2",
+          "index": "1"
+        },
+        "sample3": {
+          "label": "sample3",
+          "index": "2"
+        }
+      },
+      "align": "horizontal"
+    },
+    "チェックボックス_0": {
+      "type": "CHECK_BOX",
+      "code": "チェックボックス_0",
+      "label": "チェックボックス",
+      "noLabel": false,
+      "required": false,
+      "defaultValue": [
+        "sample1",
+        "sample3"
+      ],
+      "options": {
+        "sample1": {
+          "label": "sample1",
+          "index": "0"
+        },
+        "sample2": {
+          "label": "sample2",
+          "index": "2"
+        },
+        "sample3": {
+          "label": "sample3",
+          "index": "1"
+        }
+      },
+      "align": "horizontal"
+    },
+    "日付_0": {
+      "type": "DATE",
+      "code": "日付_0",
+      "label": "日付",
+      "noLabel": false,
+      "required": false,
+      "unique": true,
+      "defaultValue": "",
+      "defaultNowValue": true
+    },
+    "日時_0": {
+      "type": "DATETIME",
+      "code": "日時_0",
+      "label": "日時",
+      "noLabel": false,
+      "required": false,
+      "unique": false,
+      "defaultValue": "2012-07-19T00:00Z",
+      "defaultNowValue": false
+    },
+    "添付ファイル_0": {
+      "type": "FILE",
+      "code": "添付ファイル_0",
+      "label": "添付ファイル",
+      "noLabel": true,
+      "required": false,
+      "thumbnailSize": "150"
+    },
+    "リンク_0": {
+      "type": "LINK",
+      "code": "リンク_0",
+      "label": "リンク",
+      "noLabel": true,
+      "required": false,
+      "unique": false,
+      "defaultValue": "https://example.com",
+      "maxLength": "64",
+      "minLength": "0",
+      "protocol": "WEB"
+    },
+    "ユーザー選択_0": {
+      "type": "USER_SELECT",
+      "code": "ユーザー選択_0",
+      "label": "ユーザー選択",
+      "noLabel": true,
+      "required": false,
+      "defaultValue": [
+        {
+          "code": "user1",
+          "type": "USER"
+        },
+        {
+          "code": "group1",
+          "type": "GROUP"
+        },
+        {
+          "code": "org1",
+          "type": "ORGANIZATION"
+        },
+        {
+          "code": "LOGINUSER()",
+          "type": "FUNCTION"
+        }
+      ],
+      "entities": [
+        {
+          "code": "user1",
+          "type": "USER"
+        },
+        {
+          "code": "group1",
+          "type": "GROUP"
+        }
+      ]
+    },
+    "関連レコード一覧_0": {
+      "type": "REFERENCE_TABLE",
+      "code": "関連レコード一覧_0",
+      "label": "関連レコード一覧",
+      "noLabel": true,
+      "referenceTable": {
+        "relatedApp": {
+          "app": "3",
+          "code": "参照先アプリ"
+        },
+        "condition": {
+          "field": "このアプリのフィールド",
+          "relatedField": "参照するアプリのフィールド"
+        },
+        "filterCond": "数値_0 > 10 and 数値_1 > 20",
+        "displayFields": [
+          "表示するフィールド_0",
+          "表示するフィールド_1"
+        ],
+        "sort": "數值_0 desc, 數值_1 asc",
+        "size": "5"
+      }
+    },
+    "ルックアップ_0": {
+      "type": "SINGLE_LINE_TEXT",
+      "code": "ルックアップ_0",
+      "label": "ルックアップ",
+      "noLabel": true,
+      "required": false,
+      "lookup": {
+        "relatedApp": {
+          "app": "100",
+          "code": "コピー元アプリのアプリコード"
+        },
+        "relatedKeyField": "コピー元のフィールド",
+        "fieldMappings": [
+          {
+            "field": "コピー先のフィールド",
+            "relatedField": "コピー元のフィールド"
+          }
+        ],
+        "lookupPickerFields": [
+          "ルックアップ選択時に表示されるフィールド1"
+        ],
+        "filterCond": "数値_0 > 10 and 数値_1 > 20",
+        "sort": "數值_0 desc, 數值_1 asc"
+      }
+    },
+    "グループ_0": {
+      "type": "GROUP",
+      "code": "グループ_0",
+      "label": "グループ",
+      "noLabel": true,
+      "openGroup": true
+    },
+    "テーブル_0": {
+      "type": "SUBTABLE",
+      "code": "テーブル_0",
+      "label": "テーブル",
+      "noLabel": false,
+      "fields": {
+        "文字列__1行_テーブル": {
+          "type": "SINGLE_LINE_TEXT",
+          "code": "文字列__1行_テーブル",
+          "label": "文字列 (1行)テーブル",
+          "noLabel": false,
+          "required": true,
+          "unique": false,
+          "maxLength": "64",
+          "minLength": "0",
+          "defaultValue": "",
+          "expression": "",
+          "hideExpression": false
+        }
+      }
+    },
+    "ステータス": {
+      "type": "STATUS",
+      "code": "ステータス",
+      "label": "ステータス",
+      "enabled": "true"
+    },
+    "作業者": {
+      "type": "STATUS_ASSIGNEE",
+      "code": "作業者",
+      "label": "作業者",
+      "enabled": "true"
+    },
+    "カテゴリー": {
+      "type": "CATEGORY",
+      "code": "カテゴリー",
+      "label": "カテゴリー",
+      "enabled": "true"
+    }
+  },
+  "revision": "2"
+}

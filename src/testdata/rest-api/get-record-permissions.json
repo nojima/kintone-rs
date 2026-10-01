@@ -1,0 +1,30 @@
+{
+  "rights": [
+    {
+      "filterCond": "更新日時 > \"2012-02-03T09:00:00Z\" and 更新日時 < \"2012-02-03T10:00:00Z\"",
+      "entities": [
+        {
+          "entity": {
+            "type": "ORGANIZATION",
+            "code": "org1"
+          },
+          "viewable": false,
+          "editable": false,
+          "deletable": false,
+          "includeSubs": true
+        },
+        {
+          "entity": {
+            "type": "FIELD_ENTITY",
+            "code": "更新者"
+          },
+          "viewable": true,
+          "editable": true,
+          "deletable": true,
+          "includeSubs": false
+        }
+      ]
+    }
+  ],
+  "revision": "2"
+}

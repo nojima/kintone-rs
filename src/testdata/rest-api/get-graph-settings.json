@@ -1,0 +1,119 @@
+{
+  "reports": {
+    "初期設定": {
+      "id": "7319",
+      "chartType": "BAR",
+      "chartMode": "NORMAL",
+      "name": "初期設定",
+      "index": "0",
+      "groups": [
+        {
+          "code": "ラジオボタン_0"
+        }
+      ],
+      "aggregations": [
+        {
+          "type": "COUNT"
+        }
+      ],
+      "filterCond": "",
+      "sorts": [
+        {
+          "by": "TOTAL",
+          "order": "DESC"
+        }
+      ],
+      "periodicReport": null
+    },
+    "様々なグラフの設定": {
+      "id": "7321",
+      "chartType": "TABLE",
+      "name": "様々なグラフの設定",
+      "index": "1",
+      "groups": [
+        {
+          "code": "ラジオボタン_0"
+        },
+        {
+          "code": "作成日時_0",
+          "per": "YEAR"
+        },
+        {
+          "code": "時刻_0",
+          "per": "MINUTE"
+        }
+      ],
+      "aggregations": [
+        {
+          "type": "COUNT"
+        },
+        {
+          "type": "SUM",
+          "code": "数値_0"
+        },
+        {
+          "type": "AVERAGE",
+          "code": "計算_0"
+        },
+        {
+          "type": "MAX",
+          "code": "作成日時_0"
+        },
+        {
+          "type": "MIN",
+          "code": "時刻_0"
+        }
+      ],
+      "filterCond": "レコード番号 = \"1\" and リッチエディター_0 like \"aaa\"",
+      "sorts": [
+        {
+          "by": "TOTAL",
+          "order": "DESC"
+        },
+        {
+          "by": "GROUP1",
+          "order": "ASC"
+        },
+        {
+          "by": "GROUP2",
+          "order": "DESC"
+        }
+      ],
+      "periodicReport": null
+    },
+    "定期レポートON": {
+      "id": "7323",
+      "chartType": "BAR",
+      "chartMode": "NORMAL",
+      "name": "定期レポートON",
+      "index": "2",
+      "groups": [
+        {
+          "code": "ラジオボタン_0"
+        }
+      ],
+      "aggregations": [
+        {
+          "type": "COUNT"
+        }
+      ],
+      "filterCond": "",
+      "sorts": [
+        {
+          "by": "TOTAL",
+          "order": "DESC"
+        }
+      ],
+      "periodicReport": {
+        "active": true,
+        "period": {
+          "every": "QUARTER",
+          "pattern": "JAN_APR_JUL_OCT",
+          "dayOfMonth": "END_OF_MONTH",
+          "time": "23:30"
+        }
+      }
+    }
+  },
+  "revision": "77"
+}

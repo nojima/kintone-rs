@@ -203,8 +203,7 @@ use crate::model::record::FieldType;
 /// // Get the field code
 /// assert_eq!(text_field.field_code(), "name");
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Assoc)]
-#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, PartialEq, Eq, Assoc)]
 #[func(pub const fn field_type(&self) -> FieldType)]
 #[func(pub fn field_code(&self) -> &str)]
 #[non_exhaustive]
@@ -293,8 +292,151 @@ pub enum FieldProperty {
     #[assoc(field_type = FieldType::Modifier)]
     #[assoc(field_code = &_0.code)]
     Modifier(ModifierFieldProperty),
-    // Note: Lookup is handled separately in deserialization as it can be applied to various field types
-    // and is identified by the presence of a "lookup" property in the JSON
+    #[assoc(field_type = _0.field_type)]
+    #[assoc(field_code = &_0.code)]
+    Lookup(LookupFieldProperty),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+#[non_exhaustive]
+enum TaggedFieldProperty {
+    Calc(CalcFieldProperty),
+    SingleLineText(SingleLineTextFieldProperty),
+    MultiLineText(MultiLineTextFieldProperty),
+    RichText(RichTextFieldProperty),
+    Number(NumberFieldProperty),
+    Date(DateFieldProperty),
+    Time(TimeFieldProperty),
+    #[serde(rename = "DATETIME")]
+    DateTime(DateTimeFieldProperty),
+    RadioButton(RadioButtonFieldProperty),
+    CheckBox(CheckBoxFieldProperty),
+    MultiSelect(MultiSelectFieldProperty),
+    DropDown(DropDownFieldProperty),
+    File(FileFieldProperty),
+    Link(LinkFieldProperty),
+    UserSelect(UserSelectFieldProperty),
+    OrganizationSelect(OrganizationSelectFieldProperty),
+    GroupSelect(GroupSelectFieldProperty),
+    ReferenceTable(ReferenceTableFieldProperty),
+    Group(GroupFieldProperty),
+    Subtable(SubtableFieldProperty),
+    RecordNumber(RecordNumberFieldProperty),
+    Category(CategoryFieldProperty),
+    Status(StatusFieldProperty),
+    StatusAssignee(StatusAssigneeFieldProperty),
+    CreatedTime(CreatedTimeFieldProperty),
+    UpdatedTime(UpdatedTimeFieldProperty),
+    Creator(CreatorFieldProperty),
+    Modifier(ModifierFieldProperty),
+}
+
+impl Serialize for FieldProperty {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::Calc(p) => TaggedFieldProperty::Calc(p.clone()).serialize(serializer),
+            Self::SingleLineText(p) => {
+                TaggedFieldProperty::SingleLineText(p.clone()).serialize(serializer)
+            }
+            Self::MultiLineText(p) => {
+                TaggedFieldProperty::MultiLineText(p.clone()).serialize(serializer)
+            }
+            Self::RichText(p) => TaggedFieldProperty::RichText(p.clone()).serialize(serializer),
+            Self::Number(p) => TaggedFieldProperty::Number(p.clone()).serialize(serializer),
+            Self::Date(p) => TaggedFieldProperty::Date(p.clone()).serialize(serializer),
+            Self::Time(p) => TaggedFieldProperty::Time(p.clone()).serialize(serializer),
+            Self::DateTime(p) => TaggedFieldProperty::DateTime(p.clone()).serialize(serializer),
+            Self::RadioButton(p) => {
+                TaggedFieldProperty::RadioButton(p.clone()).serialize(serializer)
+            }
+            Self::CheckBox(p) => TaggedFieldProperty::CheckBox(p.clone()).serialize(serializer),
+            Self::MultiSelect(p) => {
+                TaggedFieldProperty::MultiSelect(p.clone()).serialize(serializer)
+            }
+            Self::DropDown(p) => TaggedFieldProperty::DropDown(p.clone()).serialize(serializer),
+            Self::File(p) => TaggedFieldProperty::File(p.clone()).serialize(serializer),
+            Self::Link(p) => TaggedFieldProperty::Link(p.clone()).serialize(serializer),
+            Self::UserSelect(p) => TaggedFieldProperty::UserSelect(p.clone()).serialize(serializer),
+            Self::OrganizationSelect(p) => {
+                TaggedFieldProperty::OrganizationSelect(p.clone()).serialize(serializer)
+            }
+            Self::GroupSelect(p) => {
+                TaggedFieldProperty::GroupSelect(p.clone()).serialize(serializer)
+            }
+            Self::ReferenceTable(p) => {
+                TaggedFieldProperty::ReferenceTable(p.clone()).serialize(serializer)
+            }
+            Self::Group(p) => TaggedFieldProperty::Group(p.clone()).serialize(serializer),
+            Self::Subtable(p) => TaggedFieldProperty::Subtable(p.clone()).serialize(serializer),
+            Self::RecordNumber(p) => {
+                TaggedFieldProperty::RecordNumber(p.clone()).serialize(serializer)
+            }
+            Self::Category(p) => TaggedFieldProperty::Category(p.clone()).serialize(serializer),
+            Self::Status(p) => TaggedFieldProperty::Status(p.clone()).serialize(serializer),
+            Self::StatusAssignee(p) => {
+                TaggedFieldProperty::StatusAssignee(p.clone()).serialize(serializer)
+            }
+            Self::CreatedTime(p) => {
+                TaggedFieldProperty::CreatedTime(p.clone()).serialize(serializer)
+            }
+            Self::UpdatedTime(p) => {
+                TaggedFieldProperty::UpdatedTime(p.clone()).serialize(serializer)
+            }
+            Self::Creator(p) => TaggedFieldProperty::Creator(p.clone()).serialize(serializer),
+            Self::Modifier(p) => TaggedFieldProperty::Modifier(p.clone()).serialize(serializer),
+            Self::Lookup(p) => p.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for FieldProperty {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        if value.get("lookup").is_some() {
+            return serde_json::from_value(value)
+                .map(Self::Lookup)
+                .map_err(serde::de::Error::custom);
+        }
+        let field = serde_json::from_value::<TaggedFieldProperty>(value)
+            .map_err(serde::de::Error::custom)?;
+        Ok(match field {
+            TaggedFieldProperty::Calc(p) => Self::Calc(p),
+            TaggedFieldProperty::SingleLineText(p) => Self::SingleLineText(p),
+            TaggedFieldProperty::MultiLineText(p) => Self::MultiLineText(p),
+            TaggedFieldProperty::RichText(p) => Self::RichText(p),
+            TaggedFieldProperty::Number(p) => Self::Number(p),
+            TaggedFieldProperty::Date(p) => Self::Date(p),
+            TaggedFieldProperty::Time(p) => Self::Time(p),
+            TaggedFieldProperty::DateTime(p) => Self::DateTime(p),
+            TaggedFieldProperty::RadioButton(p) => Self::RadioButton(p),
+            TaggedFieldProperty::CheckBox(p) => Self::CheckBox(p),
+            TaggedFieldProperty::MultiSelect(p) => Self::MultiSelect(p),
+            TaggedFieldProperty::DropDown(p) => Self::DropDown(p),
+            TaggedFieldProperty::File(p) => Self::File(p),
+            TaggedFieldProperty::Link(p) => Self::Link(p),
+            TaggedFieldProperty::UserSelect(p) => Self::UserSelect(p),
+            TaggedFieldProperty::OrganizationSelect(p) => Self::OrganizationSelect(p),
+            TaggedFieldProperty::GroupSelect(p) => Self::GroupSelect(p),
+            TaggedFieldProperty::ReferenceTable(p) => Self::ReferenceTable(p),
+            TaggedFieldProperty::Group(p) => Self::Group(p),
+            TaggedFieldProperty::Subtable(p) => Self::Subtable(p),
+            TaggedFieldProperty::RecordNumber(p) => Self::RecordNumber(p),
+            TaggedFieldProperty::Category(p) => Self::Category(p),
+            TaggedFieldProperty::Status(p) => Self::Status(p),
+            TaggedFieldProperty::StatusAssignee(p) => Self::StatusAssignee(p),
+            TaggedFieldProperty::CreatedTime(p) => Self::CreatedTime(p),
+            TaggedFieldProperty::UpdatedTime(p) => Self::UpdatedTime(p),
+            TaggedFieldProperty::Creator(p) => Self::Creator(p),
+            TaggedFieldProperty::Modifier(p) => Self::Modifier(p),
+        })
+    }
+}
+
+impl From<LookupFieldProperty> for FieldProperty {
+    fn from(property: LookupFieldProperty) -> Self {
+        Self::Lookup(property)
+    }
 }
 
 // Common types used across field properties
@@ -304,8 +446,10 @@ pub enum FieldProperty {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Alignment {
     /// Horizontal alignment
+    #[serde(alias = "horizontal")]
     Horizontal,
     /// Vertical alignment
+    #[serde(alias = "vertical")]
     Vertical,
 }
 
@@ -328,6 +472,7 @@ pub enum DisplayFormat {
     /// Display as a number with digit grouping
     NumberDigit,
     /// Display as date and time
+    #[serde(rename = "DATETIME")]
     DateTime,
     /// Display as date only
     Date,
@@ -388,6 +533,7 @@ pub struct CalcFieldProperty {
     /// Display format for the calculated result
     pub format: Option<DisplayFormat>,
     /// Number of decimal places to display
+    #[serde(default, with = "option_stringified")]
     pub display_scale: Option<i64>,
     /// Whether to hide the expression from users
     pub hide_expression: bool,
@@ -412,10 +558,10 @@ pub struct SingleLineTextFieldProperty {
     /// Whether values must be unique across records
     pub unique: bool,
     /// Maximum allowed length
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub max_length: Option<u64>,
     /// Minimum required length
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub min_length: Option<u64>,
     /// Default value when creating new records
     pub default_value: Option<String>,
@@ -480,15 +626,18 @@ pub struct NumberFieldProperty {
     /// Whether values must be unique across records
     pub unique: bool,
     /// Maximum allowed value
+    #[serde(default, with = "crate::internal::serde_helper::stringified_or_empty")]
     pub max_value: Option<BigDecimal>,
     /// Minimum allowed value
+    #[serde(default, with = "crate::internal::serde_helper::stringified_or_empty")]
     pub min_value: Option<BigDecimal>,
     /// Default value when creating new records
+    #[serde(default, with = "crate::internal::serde_helper::stringified_or_empty")]
     pub default_value: Option<BigDecimal>,
     /// Whether to display numbers with digit grouping (e.g., 1,000)
     pub digit: bool,
     /// Number of decimal places to display
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub display_scale: Option<u64>,
     /// Unit text to display with the value
     pub unit: Option<String>,
@@ -513,6 +662,10 @@ pub struct DateFieldProperty {
     /// Whether values must be unique across records
     pub unique: bool,
     /// Default date value when creating new records
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_none"
+    )]
     pub default_value: Option<NaiveDate>,
     /// Whether to use the current date as default
     pub default_now_value: bool,
@@ -533,6 +686,7 @@ pub struct TimeFieldProperty {
     /// Whether the field is required
     pub required: bool,
     /// Default time value when creating new records
+    #[serde(default, with = "crate::internal::serde_helper::optional_field_time")]
     pub default_value: Option<NaiveTime>,
     /// Whether to use the current time as default
     pub default_now_value: bool,
@@ -555,6 +709,10 @@ pub struct DateTimeFieldProperty {
     /// Whether values must be unique across records
     pub unique: bool,
     /// Default date-time value when creating new records
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::optional_field_datetime"
+    )]
     pub default_value: Option<DateTime<FixedOffset>>,
     /// Whether to use the current date-time as default
     pub default_now_value: bool,
@@ -659,7 +817,7 @@ pub struct FileFieldProperty {
     /// Whether the field is required
     pub required: bool,
     /// Size of thumbnail images in pixels
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub thumbnail_size: Option<u64>,
 }
 
@@ -682,10 +840,10 @@ pub struct LinkFieldProperty {
     /// Default link value when creating new records
     pub default_value: Option<String>,
     /// Maximum allowed length
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub max_length: Option<u64>,
     /// Minimum required length
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub min_length: Option<u64>,
     /// Protocol type for the link
     pub protocol: LinkProtocol,
@@ -706,8 +864,16 @@ pub struct UserSelectFieldProperty {
     /// Whether the field is required
     pub required: bool,
     /// Default selected users
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub default_value: Vec<Entity>,
     /// Available users that can be selected
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub entities: Vec<Entity>,
 }
 
@@ -726,8 +892,16 @@ pub struct OrganizationSelectFieldProperty {
     /// Whether the field is required
     pub required: bool,
     /// Default selected organizations
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub default_value: Vec<Entity>,
     /// Available organizations that can be selected
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub entities: Vec<Entity>,
 }
 
@@ -746,8 +920,16 @@ pub struct GroupSelectFieldProperty {
     /// Whether the field is required
     pub required: bool,
     /// Default selected groups
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub default_value: Vec<Entity>,
     /// Available groups that can be selected
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub entities: Vec<Entity>,
 }
 
@@ -764,7 +946,8 @@ pub struct ReferenceTableFieldProperty {
     /// Whether to hide the field label
     pub no_label: bool,
     /// Configuration for the referenced table
-    pub reference_table: ReferenceTable,
+    /// None when the caller cannot access the related app.
+    pub reference_table: Option<ReferenceTable>,
 }
 
 /// Configuration for reference table relationships.
@@ -784,7 +967,7 @@ pub struct ReferenceTable {
     /// Sort order for the referenced records
     pub sort: Option<String>,
     /// Maximum number of records to display
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub size: Option<u64>,
 }
 
@@ -795,7 +978,7 @@ pub struct ReferenceTable {
 #[serde(rename_all = "camelCase")]
 pub struct RelatedApp {
     /// App ID of the related app
-    #[serde(with = "option_stringified")]
+    #[serde(default, with = "option_stringified")]
     pub app: Option<u64>,
     /// App code of the related app (alternative to app ID)
     pub code: Option<String>,
@@ -824,8 +1007,16 @@ pub struct LookupSetting {
     /// Key field in the related app used for lookup
     pub related_key_field: String,
     /// Field mappings between current app and related app
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub field_mappings: Vec<FieldMapping>,
     /// Fields displayed in the lookup picker
+    #[serde(
+        default,
+        deserialize_with = "crate::internal::serde_helper::empty_string_as_vec"
+    )]
     pub lookup_picker_fields: Vec<String>,
     /// Filter condition for lookup records
     pub filter_cond: Option<String>,
@@ -895,7 +1086,8 @@ pub struct LookupFieldProperty {
     /// Whether the field is required
     pub required: Option<bool>,
     /// Lookup configuration settings
-    pub lookup: LookupSetting,
+    /// None when the caller cannot access the related app.
+    pub lookup: Option<LookupSetting>,
 }
 
 impl Default for LookupFieldProperty {
@@ -906,7 +1098,7 @@ impl Default for LookupFieldProperty {
             label: String::default(),
             no_label: None,
             required: None,
-            lookup: LookupSetting::default(),
+            lookup: Some(LookupSetting::default()),
         }
     }
 }
@@ -938,6 +1130,7 @@ pub struct CategoryFieldProperty {
     /// Display label
     pub label: String,
     /// Whether the category field is enabled
+    #[serde(deserialize_with = "crate::internal::serde_helper::bool_or_string")]
     pub enabled: bool,
 }
 
@@ -952,6 +1145,7 @@ pub struct StatusFieldProperty {
     /// Display label
     pub label: String,
     /// Whether the status field is enabled
+    #[serde(deserialize_with = "crate::internal::serde_helper::bool_or_string")]
     pub enabled: bool,
 }
 
@@ -966,6 +1160,7 @@ pub struct StatusAssigneeFieldProperty {
     /// Display label
     pub label: String,
     /// Whether the assignee field is enabled
+    #[serde(deserialize_with = "crate::internal::serde_helper::bool_or_string")]
     pub enabled: bool,
 }
 
@@ -2872,7 +3067,7 @@ pub fn reference_table_field_property(
             code: code.into(),
             label: String::new(),
             no_label: false,
-            reference_table: ReferenceTable::default(),
+            reference_table: Some(ReferenceTable::default()),
         },
     }
 }
@@ -2898,7 +3093,7 @@ impl ReferenceTableFieldPropertyBuilder {
 
     /// Sets the configuration for the referenced table.
     pub fn reference_table(mut self, reference_table: ReferenceTable) -> Self {
-        self.property.reference_table = reference_table;
+        self.property.reference_table = Some(reference_table);
         self
     }
 
@@ -3491,5 +3686,129 @@ impl ModifierFieldPropertyBuilder {
 impl From<ModifierFieldPropertyBuilder> for ModifierFieldProperty {
     fn from(builder: ModifierFieldPropertyBuilder) -> Self {
         builder.build()
+    }
+}
+
+/// A partial field update. Unset properties are omitted from the request.
+/// `code` can rename the field; the request map key identifies the existing field.
+/// `default_value`, `reference_table` and `lookup` accept the field specific JSON
+/// shapes described in the official specification.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldPropertyUpdate {
+    #[serde(rename = "type")]
+    pub field_type: FieldType,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expression: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub no_label: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unique: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_now_value: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hide_expression: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digit: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open_group: Option<bool>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub max_value: Option<BigDecimal>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub min_value: Option<BigDecimal>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub max_length: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub min_length: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub thumbnail_size: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "option_stringified"
+    )]
+    pub display_scale: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_value: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub options: Option<BTreeMap<String, FieldOption>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub align: Option<Alignment>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<LinkProtocol>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<DisplayFormat>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit_position: Option<UnitPosition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entities: Option<Vec<Entity>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reference_table: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lookup: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fields: Option<BTreeMap<String, FieldPropertyUpdate>>,
+}
+
+impl FieldPropertyUpdate {
+    pub fn new(field_type: FieldType) -> Self {
+        Self {
+            field_type,
+            code: None,
+            label: None,
+            expression: None,
+            unit: None,
+            no_label: None,
+            required: None,
+            unique: None,
+            default_now_value: None,
+            hide_expression: None,
+            digit: None,
+            open_group: None,
+            max_value: None,
+            min_value: None,
+            max_length: None,
+            min_length: None,
+            thumbnail_size: None,
+            display_scale: None,
+            default_value: None,
+            options: None,
+            align: None,
+            protocol: None,
+            format: None,
+            unit_position: None,
+            entities: None,
+            reference_table: None,
+            lookup: None,
+            fields: None,
+        }
     }
 }

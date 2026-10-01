@@ -1,0 +1,83 @@
+{
+  "id": "1",
+  "name": "全体連絡スペース",
+  "defaultThread": "3",
+  "isPrivate": true,
+  "creator": {
+    "code": "tanaka",
+    "name": "田中太郎"
+  },
+  "modifier": {
+    "code": "tanaka",
+    "name": "田中太郎"
+  },
+  "memberCount": "10",
+  "coverType": "PRESET",
+  "coverKey": "GREEN",
+  "coverUrl": "https://*******/green.jpg",
+  "body": "<b>全体</b>のスペースです。",
+  "useMultiThread": true,
+  "showAnnouncement": true,
+  "showThreadList": true,
+  "showAppList": true,
+  "showMemberList": true,
+  "showRelatedLinkList": true,
+  "isGuest": false,
+  "fixedMember": false,
+  "attachedApps": [
+    {
+      "threadId": "3",
+      "appId": "1",
+      "code": "TASK",
+      "name": "タスク管理",
+      "description": "タスクを管理するアプリです。",
+      "createdAt": "2012-02-03T09:22:00Z",
+      "creator": {
+        "name": "佐藤昇",
+        "code": "sato"
+      },
+      "modifiedAt": "2012-04-15T10:08:00Z",
+      "modifier": {
+        "name": "佐藤昇",
+        "code": "sato"
+      }
+    },
+    {
+      "threadId": "3",
+      "appId": "10",
+      "code": "",
+      "name": "アンケートフォーム",
+      "description": "アンケートアプリです。",
+      "createdAt": "2012-02-03T09:22:00Z",
+      "creator": {
+        "name": "佐藤昇",
+        "code": "sato"
+      },
+      "modifiedAt": "2012-04-15T10:08:00Z",
+      "modifier": {
+        "name": "佐藤昇",
+        "code": "sato"
+      }
+    },
+    {
+      "threadId": "3",
+      "appId": "11",
+      "code": "",
+      "name": "日報",
+      "description": "日報アプリです。",
+      "createdAt": "2012-02-03T09:22:00Z",
+      "creator": {
+        "name": "加藤美咲",
+        "code": "kato"
+      },
+      "modifiedAt": "2012-04-15T10:08:00Z",
+      "modifier": {
+        "name": "加藤美咲",
+        "code": "kato"
+      }
+    }
+  ],
+  "permissions": {
+    "createApp": "EVERYONE"
+  }
+}

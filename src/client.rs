@@ -769,6 +769,20 @@ impl RequestBuilder {
         self
     }
 
+    pub fn preview(mut self, preview: bool) -> Self {
+        let path = self
+            .api_path
+            .strip_prefix("/v1/preview/")
+            .or_else(|| self.api_path.strip_prefix("/v1/"))
+            .expect("preview is only available for v1 app APIs");
+        self.api_path = if preview {
+            format!("/v1/preview/{path}")
+        } else {
+            format!("/v1/{path}")
+        };
+        self
+    }
+
     pub fn query_array<V: ToString>(mut self, key: &str, values: &[V]) -> Self {
         for (i, v) in values.iter().enumerate() {
             let name = format!("{key}[{i}]");

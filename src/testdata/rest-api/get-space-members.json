@@ -1,0 +1,35 @@
+{
+  "members": [
+    {
+      "entity": {
+        "type": "USER",
+        "code": "user1"
+      },
+      "isAdmin": false,
+      "isImplicit": true
+    },
+    {
+      "entity": {
+        "type": "USER",
+        "code": "user2"
+      },
+      "isAdmin": true,
+      "isImplicit": false
+    },
+    {
+      "entity": {
+        "type": "GROUP",
+        "code": "group1"
+      },
+      "isAdmin": false
+    },
+    {
+      "entity": {
+        "type": "ORGANIZATION",
+        "code": "org1"
+      },
+      "isAdmin": false,
+      "includeSubs": true
+    }
+  ]
+}

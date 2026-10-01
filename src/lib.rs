@@ -49,16 +49,23 @@
 //!
 //! ## Supported APIs
 //!
-//! The library currently supports the following Kintone REST API endpoints:
+//! The library supports all APIs in the official REST API list:
 //!
-//! - [`v1::record`]: Record management APIs
-//!     - [`v1::record::get_record`], [`v1::record::get_records`], [`v1::record::add_record`], [`v1::record::add_records`], [`v1::record::update_record`], [`v1::record::update_records`], [`v1::record::delete_records`], [`v1::record::bulk_request`], [`v1::record::update_assignees`], [`v1::record::update_status`], [`v1::record::update_statuses`], [`v1::record::get_comments`], [`v1::record::add_comment`], [`v1::record::delete_comment`], [`v1::record::create_cursor`], [`v1::record::get_records_by_cursor`], [`v1::record::delete_cursor`]
-//! - [`v1::file`]: File management APIs
-//!     - [`v1::file::upload`], [`v1::file::download`]
-//! - [`v1::space`]: Space management APIs
-//!     - [`v1::space::add_space`], [`v1::space::delete_space`], [`v1::space::add_thread`], [`v1::space::add_thread_comment`]
-//! - [`v1::app`]: App management APIs
-//!     - [`v1::app::add_app`], [`v1::app::settings::deploy_app`], [`v1::app::settings::get_app_deploy_status`], [`v1::app::form::add_form_field`]
+//! - [`v1::record`]: Records, cursors, comments, workflow, bulk requests and permission evaluation
+//! - [`v1::file`]: File uploads and downloads
+//! - [`v1::space`]: Spaces, members, threads, guests and usage statistics
+//! - [`v1::app`]: App information, admin notes and usage statistics
+//! - [`v1::app::form`]: Field properties, partial updates, layouts and legacy form design information
+//! - [`v1::app::view`] and [`v1::app::report`]: Views, graphs and periodic reports
+//! - [`v1::app::settings`]: General settings, workflow, customization, notifications, permissions, plugins, actions and deployment
+//! - [`v1::plugin`]: Plugin installation and management
+//! - [`v1::apis`]: API discovery and JSON Schema information
+//!
+//! App configuration getters default to the live environment and support `.preview(true)`.
+//! Most configuration updates target the preview environment; apply them with
+//! [`v1::app::settings::deploy_app`]. Permission updates support `.preview(true)`
+//! and default to the live environment. Optional update parameters are omitted
+//! until their setters are called.
 //!
 //! ### Builder Pattern and Method Chaining
 //!

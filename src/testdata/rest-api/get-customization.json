@@ -1,0 +1,40 @@
+{
+  "scope": "ALL",
+  "desktop": {
+    "js": [
+      {
+        "type": "URL",
+        "url": "https://sample.com/example.js"
+      },
+      {
+        "type": "FILE",
+        "file": {
+          "contentType": "application/javascript",
+          "fileKey": "20150519023802B3EB762E870645F889B22F9D4F1F3059023",
+          "name": "sample.js",
+          "size": "12345"
+        }
+      }
+    ],
+    "css": []
+  },
+  "mobile": {
+    "js": [
+      {
+        "type": "FILE",
+        "file": {
+          "contentType": "application/javascript",
+          "fileKey": "20140823043800E9F53A742F7F4416B6E47234DBD6C0D4025",
+          "name": "mobile.js",
+          "size": "12345"
+        }
+      },
+      {
+        "type": "URL",
+        "url": "https://sample.com/example-mobile.js"
+      }
+    ],
+    "css": []
+  },
+  "revision": "15"
+}

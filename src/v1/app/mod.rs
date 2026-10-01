@@ -40,7 +40,9 @@
 //! **Note**: Some app APIs like [`add_app`] require username/password authentication and cannot use API tokens.
 
 pub mod form;
+pub mod report;
 pub mod settings;
+pub mod view;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -49,6 +51,7 @@ use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
 use crate::internal::serde_helper::{option_stringified, stringified};
 use crate::model::User;
+use crate::model::app::statistics::AppStatistic;
 
 /// Creates a new app in the preview environment.
 ///
@@ -290,5 +293,161 @@ impl GetAppsRequest {
     /// A Result containing the GetAppsResponse with app information, or an ApiError.
     pub fn send(self, client: &KintoneClient) -> Result<GetAppsResponse, ApiError> {
         self.builder.call(client)
+    }
+}
+
+/// Get app.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app/>
+pub fn get_app(app_id: u64) -> GetAppRequest {
+    GetAppRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/app.json").query("id", app_id),
+    }
+}
+
+#[must_use]
+pub struct GetAppRequest {
+    builder: RequestBuilder,
+}
+
+impl GetAppRequest {
+    pub fn send(self, client: &KintoneClient) -> Result<GetAppResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+/// Information about a single app.
+pub type GetAppResponse = AppInfo;
+
+/// Get app statistics.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-apps-statistics/>
+/// Available with the kintone wide course only. Use a regular space client.
+pub fn get_app_statistics() -> GetAppStatisticsRequest {
+    GetAppStatisticsRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/apps/statistics.json"),
+    }
+}
+
+#[must_use]
+pub struct GetAppStatisticsRequest {
+    builder: RequestBuilder,
+}
+
+impl GetAppStatisticsRequest {
+    pub fn offset(mut self, offset: u64) -> Self {
+        self.builder = self.builder.query("offset", offset);
+        self
+    }
+
+    pub fn limit(mut self, limit: u64) -> Self {
+        self.builder = self.builder.query("limit", limit);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<GetAppStatisticsResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAppStatisticsResponse {
+    pub apps: Vec<AppStatistic>,
+}
+
+/// Get app admin notes.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app-admin-notes/>
+pub fn get_app_admin_notes(app_id: u64) -> GetAppAdminNotesRequest {
+    GetAppAdminNotesRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/app/adminNotes.json")
+            .query("app", app_id),
+    }
+}
+
+#[must_use]
+pub struct GetAppAdminNotesRequest {
+    builder: RequestBuilder,
+}
+
+impl GetAppAdminNotesRequest {
+    /// Selects the preview environment when true (live by default).
+    pub fn preview(mut self, preview: bool) -> Self {
+        self.builder = self.builder.preview(preview);
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<GetAppAdminNotesResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAppAdminNotesResponse {
+    pub content: String,
+    pub include_in_template_and_duplicates: bool,
+    #[serde(with = "stringified")]
+    pub revision: u64,
+}
+
+pub type UpdateAppAdminNotesResponse = settings::RevisionResponse;
+
+/// Update app admin notes.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/update-app-admin-notes/>
+pub fn update_app_admin_notes(app_id: u64) -> UpdateAppAdminNotesRequest {
+    UpdateAppAdminNotesRequest {
+        builder: RequestBuilder::new(http::Method::PUT, "/v1/preview/app/adminNotes.json"),
+        body: UpdateAppAdminNotesRequestBody {
+            app: app_id,
+            content: None,
+            include_in_template_and_duplicates: None,
+            revision: None,
+        },
+    }
+}
+
+#[must_use]
+pub struct UpdateAppAdminNotesRequest {
+    builder: RequestBuilder,
+    body: UpdateAppAdminNotesRequestBody,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateAppAdminNotesRequestBody {
+    app: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    include_in_template_and_duplicates: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    revision: Option<u64>,
+}
+
+impl UpdateAppAdminNotesRequest {
+    pub fn content(mut self, content: impl Into<String>) -> Self {
+        self.body.content = Some(content.into());
+        self
+    }
+
+    pub fn include_in_template_and_duplicates(
+        mut self,
+        include_in_template_and_duplicates: bool,
+    ) -> Self {
+        self.body.include_in_template_and_duplicates = Some(include_in_template_and_duplicates);
+        self
+    }
+
+    /// Sets the expected revision; None disables the revision check.
+    pub fn revision(mut self, revision: Option<u64>) -> Self {
+        self.body.revision = revision;
+        self
+    }
+
+    pub fn send(self, client: &KintoneClient) -> Result<UpdateAppAdminNotesResponse, ApiError> {
+        self.builder.send(client, self.body)
     }
 }

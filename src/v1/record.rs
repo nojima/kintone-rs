@@ -31,6 +31,8 @@
 //! - [`delete_cursor`] - Delete a cursor to free up resources
 
 use bigdecimal::BigDecimal;
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::client::{KintoneClient, RequestBuilder};
@@ -1760,4 +1762,64 @@ mod tests {
         );
         assert!(matches!(&results[1], BulkRequestResult::UpdateRecord(r) if r.revision == 3));
     }
+}
+
+/// Evaluate record permissions.
+///
+/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/records/evaluate-record-permissions/>
+pub fn evaluate_record_permissions(app_id: u64) -> EvaluateRecordPermissionsRequest {
+    EvaluateRecordPermissionsRequest {
+        builder: RequestBuilder::new(http::Method::GET, "/v1/records/acl/evaluate.json")
+            .query("app", app_id),
+    }
+}
+
+#[must_use]
+pub struct EvaluateRecordPermissionsRequest {
+    builder: RequestBuilder,
+}
+
+impl EvaluateRecordPermissionsRequest {
+    pub fn ids(mut self, values: impl IntoIterator<Item = u64>) -> Self {
+        let values: Vec<_> = values.into_iter().collect();
+        self.builder = self.builder.query_array("ids", &values);
+        self
+    }
+
+    pub fn send(
+        self,
+        client: &KintoneClient,
+    ) -> Result<EvaluateRecordPermissionsResponse, ApiError> {
+        self.builder.call(client)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluateRecordPermissionsResponse {
+    pub rights: Vec<EvaluatedRecordRight>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvaluatedRecordRight {
+    #[serde(with = "stringified")]
+    pub id: u64,
+    pub record: RecordPermission,
+    pub fields: HashMap<String, FieldPermission>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordPermission {
+    pub viewable: bool,
+    pub editable: bool,
+    pub deletable: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldPermission {
+    pub viewable: bool,
+    pub editable: bool,
 }

@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    {
+      "id": "djmhffjhfgmebgnmcggopedaofckljlj",
+      "name": "サンプルプラグイン",
+      "description": "プラグインの説明",
+      "isMarketPlugin": false,
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -69,16 +69,53 @@ export KINTONE_API_TOKEN=your-api-token
 cargo run --example get_record
 ```
 
+### App environments and partial updates
+
+App configuration getters use the live environment by default. Select the preview
+configuration with `.preview(true)`. Most configuration updates write to the preview
+environment and require `app::settings::deploy_app` to apply them. Permission updates
+support both environments and use the live environment by default.
+
+```rust
+let fields = kintone::v1::app::form::get_form_fields(app_id)
+    .preview(true)
+    .lang("ja")
+    .send(&client)?;
+
+let settings = kintone::v1::app::settings::get_general_settings(app_id)
+    .preview(true)
+    .send(&client)?;
+kintone::v1::app::settings::update_general_settings(app_id)
+    .enable_comments(false)
+    .revision(Some(settings.revision))
+    .send(&client)?;
+```
+
+Optional update properties are omitted until their setter is called. An explicitly
+empty collection clears the corresponding configuration. View, graph, action and
+permission collections replace their existing configuration as specified by kintone.
+For a partial form field update, use `model::app::field::FieldPropertyUpdate::new` and
+`app::form::update_form_fields(app_id).field(existing_code, update)`.
+Use `.raw_field(existing_code, json)` for field specific JSON values, including
+empty strings that clear numeric limits or display precision.
+
+`LookupFieldProperty::lookup` and `ReferenceTableFieldProperty::reference_table` are
+now `Option` values because kintone returns `null` when the related app is inaccessible.
+When constructing these structs directly, wrap the settings in `Some(...)`.
+The existing reference table builder still accepts `ReferenceTable`.
+
 ## API Support Status
 
 Implementation status of the [kintone REST APIs](https://cybozu.dev/ja/kintone/docs/rest-api/). Function paths are relative to `kintone::v1`.
 
-- ✅ Implemented: 26
-- ⚠️ Partially implemented: 1
-- ❌ Not implemented: 57
+- ✅ Implemented: 84
+- ⚠️ Partially implemented: 0
+- ❌ Not implemented: 0
 
 APIs that exist for both the live and the preview environment are listed by their live endpoint.
-Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::guest_space_id`.
+Guest endpoints documented by kintone are selected via `KintoneClientBuilder::guest_space_id`.
+Plugin management, API discovery, usage statistics, space templates, guest account management, and moving apps use a regular client.
+`space::update_guest_members` requires a client configured with the target guest space ID.
 
 ### Record
 
@@ -101,7 +138,7 @@ Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::g
 | ✅ | [Update Status](https://cybozu.dev/ja/id/ff1f30dda4461d5bb807af27/) | PUT | `/k/v1/record/status.json` | `record::update_status` |  |
 | ✅ | [Update Statuses](https://cybozu.dev/ja/id/044d255131483eaf4fe66756/) | PUT | `/k/v1/records/status.json` | `record::update_statuses` |  |
 | ✅ | [Bulk Request](https://cybozu.dev/ja/id/bc41b4cb11864e868abd2eb2/) | POST | `/k/v1/bulkRequest.json` | `record::bulk_request` |  |
-| ❌ | [Evaluate Record Permissions](https://cybozu.dev/ja/id/e5b4dc5768ba266a21dd2964/) | GET | `/k/v1/records/acl/evaluate.json` |  |  |
+| ✅ | [Evaluate Record Permissions](https://cybozu.dev/ja/id/e5b4dc5768ba266a21dd2964/) | GET | `/k/v1/records/acl/evaluate.json` | `record::evaluate_record_permissions` | |
 
 ### File
 
@@ -114,84 +151,84 @@ Guest spaces are supported for all implemented APIs via `KintoneClientBuilder::g
 
 | Status | API | Method | Endpoint | Function | Notes |
 |:---:|---|---|---|---|---|
-| ❌ | [Get App](https://cybozu.dev/ja/id/f9f95e788d8e6cdbc42da01f/) | GET | `/k/v1/app.json` |  |  |
+| ✅ | [Get App](https://cybozu.dev/ja/id/f9f95e788d8e6cdbc42da01f/) | GET | `/k/v1/app.json` | `app::get_app` | |
 | ✅ | [Get Apps](https://cybozu.dev/ja/id/bc9738cfc60c75502dedfc20/) | GET | `/k/v1/apps.json` | `app::get_apps` |  |
 | ✅ | [Add App (preview)](https://cybozu.dev/ja/id/be316bcfaa096d7943d4e669/) | POST | `/k/v1/preview/app.json` | `app::add_app` |  |
-| ❌ | [Get App Statistics](https://cybozu.dev/ja/id/87b9a4d7093e6c78b1dff270/) | GET | `/k/v1/apps/statistics.json` |  |  |
-| ❌ | [Get App Admin Notes](https://cybozu.dev/ja/id/6b336db6f0404cf2cb2a0056/) | GET | `/k/v1/app/adminNotes.json` |  |  |
-| ❌ | [Update App Admin Notes](https://cybozu.dev/ja/id/36e66a8eaed28aab195bcc45/) | PUT | `/k/v1/preview/app/adminNotes.json` |  |  |
-| ❌ | [Get Form Fields](https://cybozu.dev/ja/id/27655375153b121d98533774/) | GET | `/k/v1/app/form/fields.json` |  |  |
-| ⚠️ | [Add Form Fields](https://cybozu.dev/ja/id/cdeb42b35921e6d4f137208f/) | POST | `/k/v1/preview/app/form/fields.json` | `app::form::add_form_field` | Lookup fields and `FUNCTION` entities in default values are not supported |
-| ❌ | [Update Form Fields](https://cybozu.dev/ja/id/624e263fbf459af64cfb3d35/) | PUT | `/k/v1/preview/app/form/fields.json` |  |  |
-| ❌ | [Delete Form Fields](https://cybozu.dev/ja/id/7217d82119f8399506fb6f25/) | DELETE | `/k/v1/preview/app/form/fields.json` |  |  |
-| ❌ | [Get Form Layout](https://cybozu.dev/ja/id/c519d299340cf1606c0611cb/) | GET | `/k/v1/app/form/layout.json` |  |  |
-| ❌ | [Update Form Layout](https://cybozu.dev/ja/id/ab3a01794c08a2e60573e6ba/) | PUT | `/k/v1/preview/app/form/layout.json` |  |  |
-| ❌ | [Get Form Design Info](https://cybozu.dev/ja/id/2c5dd59423a6a3ba11dd063e/) | GET | `/k/v1/form.json` |  |  |
-| ❌ | [Get Views](https://cybozu.dev/ja/id/c4c5befe425032f6c36b9c4b/) | GET | `/k/v1/app/views.json` |  |  |
-| ❌ | [Update Views](https://cybozu.dev/ja/id/578dd5e90f674cd4e6075c17/) | PUT | `/k/v1/preview/app/views.json` |  |  |
-| ❌ | [Get Graphs](https://cybozu.dev/ja/id/33ebaf1dd8e1ec09c22aa938/) | GET | `/k/v1/app/reports.json` |  |  |
-| ❌ | [Update Graphs](https://cybozu.dev/ja/id/651618fce78670408b1931fb/) | PUT | `/k/v1/preview/app/reports.json` |  |  |
-| ❌ | [Get General Settings](https://cybozu.dev/ja/id/8728eba2a728ae1dd0af3fec/) | GET | `/k/v1/app/settings.json` |  |  |
-| ❌ | [Update General Settings](https://cybozu.dev/ja/id/65b118066af4efd01f103de5/) | PUT | `/k/v1/preview/app/settings.json` |  |  |
-| ❌ | [Get Process Management Settings](https://cybozu.dev/ja/id/b74914ae9d60fb454d48fb07/) | GET | `/k/v1/app/status.json` |  |  |
-| ❌ | [Update Process Management Settings](https://cybozu.dev/ja/id/3bcd41df582e8d4a8f5de017/) | PUT | `/k/v1/preview/app/status.json` |  |  |
+| ✅ | [Get App Statistics](https://cybozu.dev/ja/id/87b9a4d7093e6c78b1dff270/) | GET | `/k/v1/apps/statistics.json` | `app::get_app_statistics` | Wide course only |
+| ✅ | [Get App Admin Notes](https://cybozu.dev/ja/id/6b336db6f0404cf2cb2a0056/) | GET | `/k/v1/app/adminNotes.json` | `app::get_app_admin_notes` | |
+| ✅ | [Update App Admin Notes](https://cybozu.dev/ja/id/36e66a8eaed28aab195bcc45/) | PUT | `/k/v1/preview/app/adminNotes.json` | `app::update_app_admin_notes` | |
+| ✅ | [Get Form Fields](https://cybozu.dev/ja/id/27655375153b121d98533774/) | GET | `/k/v1/app/form/fields.json` | `app::form::get_form_fields` | |
+| ✅ | [Add Form Fields](https://cybozu.dev/ja/id/cdeb42b35921e6d4f137208f/) | POST | `/k/v1/preview/app/form/fields.json` | `app::form::add_form_field` |  |
+| ✅ | [Update Form Fields](https://cybozu.dev/ja/id/624e263fbf459af64cfb3d35/) | PUT | `/k/v1/preview/app/form/fields.json` | `app::form::update_form_fields` | |
+| ✅ | [Delete Form Fields](https://cybozu.dev/ja/id/7217d82119f8399506fb6f25/) | DELETE | `/k/v1/preview/app/form/fields.json` | `app::form::delete_form_fields` | |
+| ✅ | [Get Form Layout](https://cybozu.dev/ja/id/c519d299340cf1606c0611cb/) | GET | `/k/v1/app/form/layout.json` | `app::form::get_form_layout` | |
+| ✅ | [Update Form Layout](https://cybozu.dev/ja/id/ab3a01794c08a2e60573e6ba/) | PUT | `/k/v1/preview/app/form/layout.json` | `app::form::update_form_layout` | |
+| ✅ | [Get Form Design Info](https://cybozu.dev/ja/id/2c5dd59423a6a3ba11dd063e/) | GET | `/k/v1/form.json` | `app::form::get_form` | |
+| ✅ | [Get Views](https://cybozu.dev/ja/id/c4c5befe425032f6c36b9c4b/) | GET | `/k/v1/app/views.json` | `app::view::get_views` | |
+| ✅ | [Update Views](https://cybozu.dev/ja/id/578dd5e90f674cd4e6075c17/) | PUT | `/k/v1/preview/app/views.json` | `app::view::update_views` | |
+| ✅ | [Get Graphs](https://cybozu.dev/ja/id/33ebaf1dd8e1ec09c22aa938/) | GET | `/k/v1/app/reports.json` | `app::report::get_graph_settings` | |
+| ✅ | [Update Graphs](https://cybozu.dev/ja/id/651618fce78670408b1931fb/) | PUT | `/k/v1/preview/app/reports.json` | `app::report::update_graph_settings` | |
+| ✅ | [Get General Settings](https://cybozu.dev/ja/id/8728eba2a728ae1dd0af3fec/) | GET | `/k/v1/app/settings.json` | `app::settings::get_general_settings` | |
+| ✅ | [Update General Settings](https://cybozu.dev/ja/id/65b118066af4efd01f103de5/) | PUT | `/k/v1/preview/app/settings.json` | `app::settings::update_general_settings` | |
+| ✅ | [Get Process Management Settings](https://cybozu.dev/ja/id/b74914ae9d60fb454d48fb07/) | GET | `/k/v1/app/status.json` | `app::settings::get_process_management_settings` | |
+| ✅ | [Update Process Management Settings](https://cybozu.dev/ja/id/3bcd41df582e8d4a8f5de017/) | PUT | `/k/v1/preview/app/status.json` | `app::settings::update_process_management_settings` | |
 | ✅ | [Get App Deploy Status](https://cybozu.dev/ja/id/d87cdb0253f91784ecb74a09/) | GET | `/k/v1/preview/app/deploy.json` | `app::settings::get_app_deploy_status` |  |
 | ✅ | [Deploy App Settings](https://cybozu.dev/ja/id/11f6926af40fdc7907b1e3a3/) | POST | `/k/v1/preview/app/deploy.json` | `app::settings::deploy_app` |  |
-| ❌ | [Get App Plugins](https://cybozu.dev/ja/id/f6f52cc42fbddf4ec1a2d783/) | GET | `/k/v1/app/plugins.json` |  |  |
-| ❌ | [Add App Plugins](https://cybozu.dev/ja/id/43c9f463d7eab7285396f1a1/) | POST | `/k/v1/preview/app/plugins.json` |  |  |
-| ❌ | [Get JavaScript and CSS Customization Settings](https://cybozu.dev/ja/id/9b499a476dafed45a6f62dd3/) | GET | `/k/v1/app/customize.json` |  |  |
-| ❌ | [Update JavaScript and CSS Customization Settings](https://cybozu.dev/ja/id/f954b1b1daf7728c3db7f9a2/) | PUT | `/k/v1/preview/app/customize.json` |  |  |
-| ❌ | [Get General Notification Settings](https://cybozu.dev/ja/id/1b335d06a15cb14a63de6c31/) | GET | `/k/v1/app/notifications/general.json` |  |  |
-| ❌ | [Update General Notification Settings](https://cybozu.dev/ja/id/07dce8a40d8f19b443ece685/) | PUT | `/k/v1/preview/app/notifications/general.json` |  |  |
-| ❌ | [Get Per Record Notification Settings](https://cybozu.dev/ja/id/c97b592ff7123b33f612e511/) | GET | `/k/v1/app/notifications/perRecord.json` |  |  |
-| ❌ | [Update Per Record Notification Settings](https://cybozu.dev/ja/id/3897bdf9cc4e7e827ec144bd/) | PUT | `/k/v1/preview/app/notifications/perRecord.json` |  |  |
-| ❌ | [Get Reminder Notification Settings](https://cybozu.dev/ja/id/1d8e27cf54cafeea137c9c9a/) | GET | `/k/v1/app/notifications/reminder.json` |  |  |
-| ❌ | [Update Reminder Notification Settings](https://cybozu.dev/ja/id/40cd28137a44cc3967aafeb7/) | PUT | `/k/v1/preview/app/notifications/reminder.json` |  |  |
-| ❌ | [Get App Permissions](https://cybozu.dev/ja/id/44f492901695be0e04995639/) | GET | `/k/v1/app/acl.json` |  |  |
-| ❌ | [Update App Permissions](https://cybozu.dev/ja/id/44b696f92ed866eeaedbfda6/) | PUT | `/k/v1/app/acl.json` |  |  |
-| ❌ | [Get Record Permissions](https://cybozu.dev/ja/id/a477d376052721249caa89ac/) | GET | `/k/v1/record/acl.json` |  |  |
-| ❌ | [Update Record Permissions](https://cybozu.dev/ja/id/8146d61095ad5e89160e4483/) | PUT | `/k/v1/record/acl.json` |  |  |
-| ❌ | [Get Field Permissions](https://cybozu.dev/ja/id/b5b686dfcf2f8c131c28ed6a/) | GET | `/k/v1/field/acl.json` |  |  |
-| ❌ | [Update Field Permissions](https://cybozu.dev/ja/id/942e8542b200b829f8b3bac7/) | PUT | `/k/v1/field/acl.json` |  |  |
-| ❌ | [Get Action Settings](https://cybozu.dev/ja/id/f7d1613d42dd28f38e7d9ae9/) | GET | `/k/v1/app/actions.json` |  |  |
-| ❌ | [Update Action Settings](https://cybozu.dev/ja/id/1d8ac4b88d5a12468c0665f7/) | PUT | `/k/v1/preview/app/actions.json` |  |  |
-| ❌ | [Move App to Another Space](https://cybozu.dev/ja/id/ed4007715721805df315ed47/) | POST | `/k/v1/app/move.json` |  |  |
+| ✅ | [Get App Plugins](https://cybozu.dev/ja/id/f6f52cc42fbddf4ec1a2d783/) | GET | `/k/v1/app/plugins.json` | `app::settings::get_app_plugins` | |
+| ✅ | [Add App Plugins](https://cybozu.dev/ja/id/43c9f463d7eab7285396f1a1/) | POST | `/k/v1/preview/app/plugins.json` | `app::settings::add_app_plugins` | |
+| ✅ | [Get JavaScript and CSS Customization Settings](https://cybozu.dev/ja/id/9b499a476dafed45a6f62dd3/) | GET | `/k/v1/app/customize.json` | `app::settings::get_customization` | |
+| ✅ | [Update JavaScript and CSS Customization Settings](https://cybozu.dev/ja/id/f954b1b1daf7728c3db7f9a2/) | PUT | `/k/v1/preview/app/customize.json` | `app::settings::update_customization` | |
+| ✅ | [Get General Notification Settings](https://cybozu.dev/ja/id/1b335d06a15cb14a63de6c31/) | GET | `/k/v1/app/notifications/general.json` | `app::settings::get_general_notification_settings` | |
+| ✅ | [Update General Notification Settings](https://cybozu.dev/ja/id/07dce8a40d8f19b443ece685/) | PUT | `/k/v1/preview/app/notifications/general.json` | `app::settings::update_general_notification_settings` | |
+| ✅ | [Get Per Record Notification Settings](https://cybozu.dev/ja/id/c97b592ff7123b33f612e511/) | GET | `/k/v1/app/notifications/perRecord.json` | `app::settings::get_per_record_notification_settings` | |
+| ✅ | [Update Per Record Notification Settings](https://cybozu.dev/ja/id/3897bdf9cc4e7e827ec144bd/) | PUT | `/k/v1/preview/app/notifications/perRecord.json` | `app::settings::update_per_record_notification_settings` | |
+| ✅ | [Get Reminder Notification Settings](https://cybozu.dev/ja/id/1d8e27cf54cafeea137c9c9a/) | GET | `/k/v1/app/notifications/reminder.json` | `app::settings::get_reminder_notification_settings` | |
+| ✅ | [Update Reminder Notification Settings](https://cybozu.dev/ja/id/40cd28137a44cc3967aafeb7/) | PUT | `/k/v1/preview/app/notifications/reminder.json` | `app::settings::update_reminder_notification_settings` | |
+| ✅ | [Get App Permissions](https://cybozu.dev/ja/id/44f492901695be0e04995639/) | GET | `/k/v1/app/acl.json` | `app::settings::get_app_permissions` | |
+| ✅ | [Update App Permissions](https://cybozu.dev/ja/id/44b696f92ed866eeaedbfda6/) | PUT | `/k/v1/app/acl.json` | `app::settings::update_app_permissions` | |
+| ✅ | [Get Record Permissions](https://cybozu.dev/ja/id/a477d376052721249caa89ac/) | GET | `/k/v1/record/acl.json` | `app::settings::get_record_permissions` | |
+| ✅ | [Update Record Permissions](https://cybozu.dev/ja/id/8146d61095ad5e89160e4483/) | PUT | `/k/v1/record/acl.json` | `app::settings::update_record_permissions` | |
+| ✅ | [Get Field Permissions](https://cybozu.dev/ja/id/b5b686dfcf2f8c131c28ed6a/) | GET | `/k/v1/field/acl.json` | `app::settings::get_field_permissions` | |
+| ✅ | [Update Field Permissions](https://cybozu.dev/ja/id/942e8542b200b829f8b3bac7/) | PUT | `/k/v1/field/acl.json` | `app::settings::update_field_permissions` | |
+| ✅ | [Get Action Settings](https://cybozu.dev/ja/id/f7d1613d42dd28f38e7d9ae9/) | GET | `/k/v1/app/actions.json` | `app::settings::get_action_settings` | |
+| ✅ | [Update Action Settings](https://cybozu.dev/ja/id/1d8ac4b88d5a12468c0665f7/) | PUT | `/k/v1/preview/app/actions.json` | `app::settings::update_action_settings` | |
+| ✅ | [Move App to Another Space](https://cybozu.dev/ja/id/ed4007715721805df315ed47/) | POST | `/k/v1/app/move.json` | `app::settings::move_app` | |
 
 ### Space
 
 | Status | API | Method | Endpoint | Function | Notes |
 |:---:|---|---|---|---|---|
-| ❌ | [Get Space](https://cybozu.dev/ja/id/6e2a365943e303fbb30f01de/) | GET | `/k/v1/space.json` |  |  |
-| ❌ | [Update Space](https://cybozu.dev/ja/id/d85a81945868db8c288a3b11/) | PUT | `/k/v1/space.json` |  |  |
-| ❌ | [Add Space from Template](https://cybozu.dev/ja/id/d8ea4eaea0b2fc619ba7c782/) | POST | `/k/v1/template/space.json` |  | `space::add_space` uses the API Lab endpoint `POST /k/v1/space.json` instead |
+| ✅ | [Get Space](https://cybozu.dev/ja/id/6e2a365943e303fbb30f01de/) | GET | `/k/v1/space.json` | `space::get_space` | |
+| ✅ | [Update Space](https://cybozu.dev/ja/id/d85a81945868db8c288a3b11/) | PUT | `/k/v1/space.json` | `space::update_space` | |
+| ✅ | [Add Space from Template](https://cybozu.dev/ja/id/d8ea4eaea0b2fc619ba7c782/) | POST | `/k/v1/template/space.json` | `space::add_space_from_template` | |
 | ✅ | [Delete Space](https://cybozu.dev/ja/id/f64a35f9aad6459095e4dc17/) | DELETE | `/k/v1/space.json` | `space::delete_space` |  |
-| ❌ | [Update Space Body](https://cybozu.dev/ja/id/cf580126da2b465115ded1e6/) | PUT | `/k/v1/space/body.json` |  |  |
-| ❌ | [Get Space Members](https://cybozu.dev/ja/id/febe6f4eb7efa2f2c77f583d/) | GET | `/k/v1/space/members.json` |  |  |
-| ❌ | [Update Space Members](https://cybozu.dev/ja/id/9227d39612c7a78c9161ad53/) | PUT | `/k/v1/space/members.json` |  |  |
-| ❌ | [Get Space Statistics](https://cybozu.dev/ja/id/8d2d6e955eea07f32b8af62d/) | GET | `/k/v1/space/statistics.json` |  |  |
+| ✅ | [Update Space Body](https://cybozu.dev/ja/id/cf580126da2b465115ded1e6/) | PUT | `/k/v1/space/body.json` | `space::update_space_body` | |
+| ✅ | [Get Space Members](https://cybozu.dev/ja/id/febe6f4eb7efa2f2c77f583d/) | GET | `/k/v1/space/members.json` | `space::get_space_members` | |
+| ✅ | [Update Space Members](https://cybozu.dev/ja/id/9227d39612c7a78c9161ad53/) | PUT | `/k/v1/space/members.json` | `space::update_space_members` | |
+| ✅ | [Get Space Statistics](https://cybozu.dev/ja/id/8d2d6e955eea07f32b8af62d/) | GET | `/k/v1/spaces/statistics.json` | `space::get_space_statistics` | Wide course only |
 | ✅ | [Add Thread](https://cybozu.dev/ja/id/24a2ad8d0fb574f3617e1b92/) | POST | `/k/v1/space/thread.json` | `space::add_thread` |  |
-| ❌ | [Update Thread](https://cybozu.dev/ja/id/030c46e9b685a5eee19637f0/) | PUT | `/k/v1/space/thread.json` |  |  |
+| ✅ | [Update Thread](https://cybozu.dev/ja/id/030c46e9b685a5eee19637f0/) | PUT | `/k/v1/space/thread.json` | `space::update_thread` | |
 | ✅ | [Add Thread Comment](https://cybozu.dev/ja/id/bcacb3ceff7039b39222ebb4/) | POST | `/k/v1/space/thread/comment.json` | `space::add_thread_comment` |  |
-| ❌ | [Add Guest Users](https://cybozu.dev/ja/id/29318cb3da48dfeb065b884d/) | POST | `/k/v1/guests.json` |  |  |
-| ❌ | [Delete Guest Users](https://cybozu.dev/ja/id/943e420d94eb3d018df68d28/) | DELETE | `/k/v1/guests.json` |  |  |
-| ❌ | [Update Guest Members](https://cybozu.dev/ja/id/712234897391d75133c3d464/) | PUT | `/k/guest/{GUEST_SPACE_ID}/v1/space/guests.json` |  |  |
+| ✅ | [Add Guest Users](https://cybozu.dev/ja/id/29318cb3da48dfeb065b884d/) | POST | `/k/v1/guests.json` | `space::add_guest_users` | |
+| ✅ | [Delete Guest Users](https://cybozu.dev/ja/id/943e420d94eb3d018df68d28/) | DELETE | `/k/v1/guests.json` | `space::delete_guest_users` | |
+| ✅ | [Update Guest Members](https://cybozu.dev/ja/id/712234897391d75133c3d464/) | PUT | `/k/guest/{GUEST_SPACE_ID}/v1/space/guests.json` | `space::update_guest_members` | |
 
 ### Plugin
 
 | Status | API | Method | Endpoint | Function | Notes |
 |:---:|---|---|---|---|---|
-| ❌ | [Get Installed Plugins](https://cybozu.dev/ja/id/ace5777d9375efed42500278/) | GET | `/k/v1/plugins.json` |  |  |
-| ❌ | [Get Required Plugins](https://cybozu.dev/ja/id/56524ae67a377d756e329bd2/) | GET | `/k/v1/plugins/required.json` |  |  |
-| ❌ | [Get Apps Using a Plugin](https://cybozu.dev/ja/id/d756f228bad9ca044866aed0/) | GET | `/k/v1/plugin/apps.json` |  |  |
-| ❌ | [Import Plugin](https://cybozu.dev/ja/id/6806ccee84420bfaf17ae74f/) | POST | `/k/v1/plugin.json` |  |  |
-| ❌ | [Update Plugin](https://cybozu.dev/ja/id/4c0e93986f6a7c08033d874f/) | PUT | `/k/v1/plugin.json` |  |  |
-| ❌ | [Uninstall Plugin](https://cybozu.dev/ja/id/8c2031cc1081afd160007699/) | DELETE | `/k/v1/plugin.json` |  |  |
+| ✅ | [Get Installed Plugins](https://cybozu.dev/ja/id/ace5777d9375efed42500278/) | GET | `/k/v1/plugins.json` | `plugin::get_plugins` | |
+| ✅ | [Get Required Plugins](https://cybozu.dev/ja/id/56524ae67a377d756e329bd2/) | GET | `/k/v1/plugins/required.json` | `plugin::get_required_plugins` | |
+| ✅ | [Get Apps Using a Plugin](https://cybozu.dev/ja/id/d756f228bad9ca044866aed0/) | GET | `/k/v1/plugin/apps.json` | `plugin::get_plugin_apps` | |
+| ✅ | [Import Plugin](https://cybozu.dev/ja/id/6806ccee84420bfaf17ae74f/) | POST | `/k/v1/plugin.json` | `plugin::add_plugin` | |
+| ✅ | [Update Plugin](https://cybozu.dev/ja/id/4c0e93986f6a7c08033d874f/) | PUT | `/k/v1/plugin.json` | `plugin::update_plugin` | |
+| ✅ | [Uninstall Plugin](https://cybozu.dev/ja/id/8c2031cc1081afd160007699/) | DELETE | `/k/v1/plugin.json` | `plugin::delete_plugin` | |
 
 ### API Info
 
 | Status | API | Method | Endpoint | Function | Notes |
 |:---:|---|---|---|---|---|
-| ❌ | [Get API List](https://cybozu.dev/ja/id/b9eb79547d5b2eb184d56b7f/) | GET | `/k/v1/apis.json` |  |  |
-| ❌ | [Get API Schema](https://cybozu.dev/ja/id/0e51c5da54396a7a916f10b5/) | GET | `/k/v1/apis/*.json` |  |  |
+| ✅ | [Get API List](https://cybozu.dev/ja/id/b9eb79547d5b2eb184d56b7f/) | GET | `/k/v1/apis.json` | `apis::get_apis` | |
+| ✅ | [Get API Schema](https://cybozu.dev/ja/id/0e51c5da54396a7a916f10b5/) | GET | `/k/v1/apis/*.json` | `apis::get_api_schema` | |
 
 Additionally, `space::add_space` implements the experimental [API Lab](https://cybozu.dev/ja/kintone/docs/api-lab/rest-api/spaces/add-space-by-name/) endpoint `POST /k/v1/space.json`, which is not part of the official API list.

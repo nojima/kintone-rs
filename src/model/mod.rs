@@ -32,6 +32,7 @@ use serde::{Deserialize, Serialize};
 use crate::internal::serde_helper::option_stringified;
 
 pub mod app;
+pub mod plugin;
 pub mod record;
 pub mod space;
 
@@ -58,6 +59,7 @@ pub enum EntityType {
     GROUP,
     /// Represents an organizational unit
     ORGANIZATION,
+    FUNCTION,
 }
 
 /// Represents a generic entity in Kintone's user management system.
@@ -224,9 +226,15 @@ pub struct Organization {
 #[serde(rename_all = "camelCase")]
 pub struct FileBody {
     pub file_key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(with = "option_stringified")]
+    #[serde(
+        default,
+        with = "option_stringified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub size: Option<usize>,
 }
 

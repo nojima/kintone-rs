@@ -1,0 +1,42 @@
+{
+  "notifications": [
+    {
+      "timing": {
+        "code": "作成日時",
+        "daysLater": "1",
+        "hoursLater": "2"
+      },
+      "filterCond": "ユーザー選択_0 in (\"user1\")",
+      "title": "リマインドです",
+      "targets": [
+        {
+          "entity": {
+            "type": "USER",
+            "code": "user1"
+          },
+          "includeSubs": false
+        }
+      ]
+    },
+    {
+      "timing": {
+        "code": "作成日付",
+        "daysLater": "-3",
+        "time": "08:30"
+      },
+      "filterCond": "ユーザー選択_0 in (\"user1\")",
+      "title": "リマインドです",
+      "targets": [
+        {
+          "entity": {
+            "type": "USER",
+            "code": "user1"
+          },
+          "includeSubs": false
+        }
+      ]
+    }
+  ],
+  "timezone": "Asia/Tokyo",
+  "revision": "2"
+}

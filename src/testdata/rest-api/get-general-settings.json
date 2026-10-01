@@ -1,0 +1,25 @@
+{
+  "name": "案件管理",
+  "description": "営業部の案件管理に使用します。",
+  "icon": {
+    "type": "PRESET",
+    "key": "APP60"
+  },
+  "theme": "WHITE",
+  "titleField": {
+    "selectionMode": "MANUAL",
+    "code": "文字列1行_0"
+  },
+  "enableThumbnails": true,
+  "enableBulkDeletion": false,
+  "enableComments": true,
+  "enableDuplicateRecord": true,
+  "enableInlineRecordEditing": true,
+  "numberPrecision": {
+    "digits": "16",
+    "decimalPlaces": "4",
+    "roundingMode": "HALF_EVEN"
+  },
+  "firstMonthOfFiscalYear": "4",
+  "revision": "24"
+}
