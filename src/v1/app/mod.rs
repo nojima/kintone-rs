@@ -1,19 +1,26 @@
 //! # Kintone App API
 //!
 //! This module provides functions for interacting with Kintone's app-related REST API endpoints.
-//! It includes operations for creating and managing apps in the preview environment.
+//! It includes operations for retrieving app information and managing settings in the preview environment.
 //!
 //! ## Available Operations
 //!
 //! ### App Management
 //! - [`add_app`] - Create a new app in the preview environment
+//! - [`get_app`] - Retrieve information about a single app
 //! - [`get_apps`] - Retrieve information about multiple apps
+//! - [`get_app_statistics`] - Retrieve app usage statistics (wide course)
+//! - [`get_app_admin_notes`] - Retrieve administrator notes
+//! - [`update_app_admin_notes`] - Update administrator notes in the preview environment
 //!
 //! ### Settings Management
-//! - [`settings::deploy_app`] - Deploy app settings from preview to production environment
+//! - [`settings::deploy_app`] - Deploy preview settings to the production environment
+//! - [`settings`] - Manage general settings, workflows, notifications, permissions and plugins
 //!
-//! ### Form Management
-//! - [`form::add_form_field`] - Add fields to an app's form in the preview environment
+//! ### Form and View Management
+//! - [`form`] - Manage form fields and layouts
+//! - [`view`] - Manage list, calendar and custom views
+//! - [`report`] - Manage graphs and periodic reports
 //!
 //! ## Usage Pattern
 //!
@@ -296,9 +303,30 @@ impl GetAppsRequest {
     }
 }
 
-/// Get app.
+/// Retrieves information about a single Kintone app.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app/>
+/// This function creates a request to get the name, description, ownership and space information of
+/// the specified app.
+///
+/// **Required Permissions:** This API requires record viewing or record creation permissions.
+///
+/// # Arguments
+///
+/// * `app_id` - The ID of the Kintone app
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::app::get_app(123).send(&client)?;
+/// println!("App: {} (ID: {})", response.name, response.app_id);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app/>
 pub fn get_app(app_id: u64) -> GetAppRequest {
     GetAppRequest {
         builder: RequestBuilder::new(http::Method::GET, "/v1/app.json").query("id", app_id),
@@ -311,6 +339,15 @@ pub struct GetAppRequest {
 }
 
 impl GetAppRequest {
+    /// Sends the request to retrieve information about a single Kintone app.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`GetAppResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// This API requires record viewing or record creation permissions.
     pub fn send(self, client: &KintoneClient) -> Result<GetAppResponse, ApiError> {
         self.builder.call(client)
     }
@@ -319,10 +356,39 @@ impl GetAppRequest {
 /// Information about a single app.
 pub type GetAppResponse = AppInfo;
 
-/// Get app statistics.
+/// Retrieves usage statistics for Kintone apps.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-apps-statistics/>
-/// Available with the kintone wide course only. Use a regular space client.
+/// This function creates a request to get record counts, storage usage and other statistics for
+/// apps the authenticated user can manage. Results can be paginated.
+///
+/// **Note**: This API is available only on the kintone wide course.
+///
+/// **Required Permissions:** This API requires app management permissions. Use username/password
+/// authentication; API tokens cannot be used.
+///
+/// # Optional Parameters
+///
+/// * `offset` - Sets the number of results to skip (default: 0)
+/// * `limit` - Sets the maximum number of results to retrieve (1-100, default: 100)
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::app::get_app_statistics()
+///     .offset(0)
+///     .limit(50)
+///     .send(&client)?;
+/// for app in response.apps {
+///     println!("{}: {} records, {} bytes", app.name, app.record_count, app.storage_usage);
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-apps-statistics/>
 pub fn get_app_statistics() -> GetAppStatisticsRequest {
     GetAppStatisticsRequest {
         builder: RequestBuilder::new(http::Method::GET, "/v1/apps/statistics.json"),
@@ -335,16 +401,28 @@ pub struct GetAppStatisticsRequest {
 }
 
 impl GetAppStatisticsRequest {
+    /// Sets the number of results to skip (default: 0).
     pub fn offset(mut self, offset: u64) -> Self {
         self.builder = self.builder.query("offset", offset);
         self
     }
 
+    /// Sets the maximum number of results to retrieve (1-100, default: 100).
     pub fn limit(mut self, limit: u64) -> Self {
         self.builder = self.builder.query("limit", limit);
         self
     }
 
+    /// Sends the request to retrieve usage statistics for Kintone apps.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`GetAppStatisticsResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// This API requires app management permissions. Use username/password authentication; API tokens
+    /// cannot be used.
     pub fn send(self, client: &KintoneClient) -> Result<GetAppStatisticsResponse, ApiError> {
         self.builder.call(client)
     }
@@ -356,9 +434,36 @@ pub struct GetAppStatisticsResponse {
     pub apps: Vec<AppStatistic>,
 }
 
-/// Get app admin notes.
+/// Retrieves the administrator notes for a Kintone app.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app-admin-notes/>
+/// This function creates a request to get the administrator notes and whether they are included
+/// when copying the app or creating a template.
+///
+/// **Required Permissions:** This API requires app management permissions.
+///
+/// # Arguments
+///
+/// * `app_id` - The ID of the Kintone app
+///
+/// # Optional Parameters
+///
+/// * `preview` - Selects preview settings when true, or live settings when false (default: false)
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::app::get_app_admin_notes(123)
+///     .preview(true)
+///     .send(&client)?;
+/// println!("Administrator notes: {}", response.content);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/get-app-admin-notes/>
 pub fn get_app_admin_notes(app_id: u64) -> GetAppAdminNotesRequest {
     GetAppAdminNotesRequest {
         builder: RequestBuilder::new(http::Method::GET, "/v1/app/adminNotes.json")
@@ -372,12 +477,24 @@ pub struct GetAppAdminNotesRequest {
 }
 
 impl GetAppAdminNotesRequest {
-    /// Selects the preview environment when true (live by default).
+    /// Selects whether to use the preview environment.
+    ///
+    /// Use `true` for preview settings or `false` for live settings.
+    /// The live environment is selected by default.
     pub fn preview(mut self, preview: bool) -> Self {
         self.builder = self.builder.preview(preview);
         self
     }
 
+    /// Sends the request to retrieve the administrator notes for a Kintone app.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`GetAppAdminNotesResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// This API requires app management permissions.
     pub fn send(self, client: &KintoneClient) -> Result<GetAppAdminNotesResponse, ApiError> {
         self.builder.call(client)
     }
@@ -394,9 +511,43 @@ pub struct GetAppAdminNotesResponse {
 
 pub type UpdateAppAdminNotesResponse = settings::RevisionResponse;
 
-/// Update app admin notes.
+/// Updates an app's administrator notes in the preview environment.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apps/update-app-admin-notes/>
+/// This function creates a request to update the notes and their inclusion in app copies and
+/// templates. Only explicitly supplied properties are updated.
+///
+/// **Important**: Changes are made in the preview environment. To apply them to the
+/// production environment, use [`crate::v1::app::settings::deploy_app`].
+///
+/// **Required Permissions:** This API requires app management permissions.
+///
+/// # Arguments
+///
+/// * `app_id` - The ID of the Kintone app
+///
+/// # Optional Parameters
+///
+/// * `content` - Sets the administrator notes as an HTML string
+/// * `include_in_template_and_duplicates` - Sets whether administrator notes are included in app copies and templates
+/// * `revision` - Expected settings revision; `None` or omission skips revision validation
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::app::update_app_admin_notes(123)
+///     .content("<p>Contact the sales team before editing this app.</p>")
+///     .include_in_template_and_duplicates(false)
+///     .revision(Some(5))
+///     .send(&client)?;
+/// println!("Updated notes, new revision: {}", response.revision);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apps/update-app-admin-notes/>
 pub fn update_app_admin_notes(app_id: u64) -> UpdateAppAdminNotesRequest {
     UpdateAppAdminNotesRequest {
         builder: RequestBuilder::new(http::Method::PUT, "/v1/preview/app/adminNotes.json"),
@@ -428,11 +579,13 @@ struct UpdateAppAdminNotesRequestBody {
 }
 
 impl UpdateAppAdminNotesRequest {
+    /// Sets the administrator notes as an HTML string.
     pub fn content(mut self, content: impl Into<String>) -> Self {
         self.body.content = Some(content.into());
         self
     }
 
+    /// Sets whether administrator notes are included in app copies and templates.
     pub fn include_in_template_and_duplicates(
         mut self,
         include_in_template_and_duplicates: bool,
@@ -441,12 +594,24 @@ impl UpdateAppAdminNotesRequest {
         self
     }
 
-    /// Sets the expected revision; None disables the revision check.
+    /// Sets the expected revision number for validation.
+    ///
+    /// If provided and the actual revision does not match, the request fails.
+    /// Use `None` or omit this call to skip revision validation.
     pub fn revision(mut self, revision: Option<u64>) -> Self {
         self.body.revision = revision;
         self
     }
 
+    /// Sends the request to update an app's administrator notes in the preview environment.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`UpdateAppAdminNotesResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// This API requires app management permissions.
     pub fn send(self, client: &KintoneClient) -> Result<UpdateAppAdminNotesResponse, ApiError> {
         self.builder.send(client, self.body)
     }

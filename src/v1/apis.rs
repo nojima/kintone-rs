@@ -1,4 +1,28 @@
-//! API discovery and schema information. Use a regular space client.
+//! # Kintone API Discovery
+//!
+//! This module provides functions for discovering Kintone REST APIs and retrieving their request
+//! and response schemas.
+//!
+//! ## Available Operations
+//!
+//! - [`get_apis`] - Retrieve API IDs and schema links
+//! - [`get_api_schema`] - Retrieve a specific API schema
+//!
+//! ## Usage Pattern
+//!
+//! All functions in this module follow the builder pattern:
+//!
+//! ```no_run
+//! # use kintone::client::{Auth, KintoneClient};
+//! # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+//! let response = kintone::v1::apis::get_api_schema("records/get")
+//!     .send(&client)?;
+//! println!("{} {}", response.http_method, response.path);
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! **Note**: API discovery uses a regular space client. The API specification does not require access
+//! permissions or authentication.
 
 use std::collections::HashMap;
 
@@ -6,9 +30,30 @@ use serde::Deserialize;
 
 use crate::client::{KintoneClient, RequestBuilder};
 use crate::error::ApiError;
-/// Get apis.
+
+/// Retrieves the available Kintone REST API definitions.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apis/get-apis/>
+/// This function creates a request to discover API IDs and their schema links. An API ID from the
+/// response can be passed to [`get_api_schema`].
+///
+/// **Required Permissions:** The API specification does not require authentication or access
+/// permissions.
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::apis::get_apis().send(&client)?;
+/// for (id, api) in response.apis {
+///     println!("{}: {}", id, api.link);
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apis/get-apis/>
 pub fn get_apis() -> GetApisRequest {
     GetApisRequest {
         builder: RequestBuilder::new(http::Method::GET, "/v1/apis.json"),
@@ -21,6 +66,15 @@ pub struct GetApisRequest {
 }
 
 impl GetApisRequest {
+    /// Sends the request to retrieve the available Kintone REST API definitions.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`GetApisResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// The API specification does not require authentication or access permissions.
     pub fn send(self, client: &KintoneClient) -> Result<GetApisResponse, ApiError> {
         self.builder.call(client)
     }
@@ -39,8 +93,32 @@ pub struct ApiLink {
     pub link: String,
 }
 
-/// Retrieves a schema by API ID, e.g. `record/get` from `get_apis`.
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/apis/get-api-schema/>
+/// Retrieves the schema of a Kintone REST API.
+///
+/// This function creates a request to get an API's HTTP method, path, request schema and response
+/// schema. Use an API ID returned by [`get_apis`], such as `records/get`.
+///
+/// **Required Permissions:** The API specification does not require authentication or access
+/// permissions.
+///
+/// # Arguments
+///
+/// * `api_id` - The API ID returned by `get_apis`, such as `records/get`
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::apis::get_api_schema("records/get").send(&client)?;
+/// println!("{} {}", response.http_method, response.path);
+/// println!("Request schema: {}", response.request);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/apis/get-api-schema/>
 pub fn get_api_schema(api_id: impl AsRef<str>) -> GetApiSchemaRequest {
     let path = api_id
         .as_ref()
@@ -62,6 +140,15 @@ pub struct GetApiSchemaRequest {
 }
 
 impl GetApiSchemaRequest {
+    /// Sends the request to retrieve the schema of a Kintone REST API.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`GetApiSchemaResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// The API specification does not require authentication or access permissions.
     pub fn send(self, client: &KintoneClient) -> Result<GetApiSchemaResponse, ApiError> {
         self.builder.call(client)
     }

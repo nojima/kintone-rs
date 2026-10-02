@@ -15,6 +15,9 @@
 //! - [`delete_records`] - Delete multiple records at once
 //! - [`bulk_request`] - Execute multiple API operations atomically
 //!
+//! ### Access Permissions
+//! - [`evaluate_record_permissions`] - Evaluate permissions for records and fields
+//!
 //! ### Comment Operations
 //! - [`get_comments`] - Retrieve comments for a record
 //! - [`add_comment`] - Add a new comment to a record
@@ -1764,9 +1767,36 @@ mod tests {
     }
 }
 
-/// Evaluate record permissions.
+/// Evaluates the current user's permissions for specific records.
 ///
-/// Reference: <https://cybozu.dev/ja/kintone/docs/rest-api/records/evaluate-record-permissions/>
+/// This function creates a request to get the effective viewing, editing and deletion permissions
+/// for records and their fields. Supply record IDs with the `ids()` method.
+///
+/// **Required Permissions:** This API requires record viewing or record creation permissions. Use
+/// username/password authentication; API tokens cannot be used.
+///
+/// # Arguments
+///
+/// * `app_id` - The ID of the Kintone app
+/// * `ids` - Record IDs to evaluate (up to 100), supplied with `ids()`
+///
+/// # Example
+///
+/// ```no_run
+/// # use kintone::client::{Auth, KintoneClient};
+/// # let client = KintoneClient::new("https://example.cybozu.com", Auth::password("user".to_owned(), "pass".to_owned()));
+/// let response = kintone::v1::record::evaluate_record_permissions(123)
+///     .ids([1, 2])
+///     .send(&client)?;
+/// for right in response.rights {
+///     println!("Record {} is editable: {}", right.id, right.record.editable);
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Reference
+///
+/// <https://cybozu.dev/ja/kintone/docs/rest-api/records/evaluate-record-permissions/>
 pub fn evaluate_record_permissions(app_id: u64) -> EvaluateRecordPermissionsRequest {
     EvaluateRecordPermissionsRequest {
         builder: RequestBuilder::new(http::Method::GET, "/v1/records/acl/evaluate.json")
@@ -1780,12 +1810,23 @@ pub struct EvaluateRecordPermissionsRequest {
 }
 
 impl EvaluateRecordPermissionsRequest {
+    /// Sets the record IDs to evaluate (up to 100 IDs).
     pub fn ids(mut self, values: impl IntoIterator<Item = u64>) -> Self {
         let values: Vec<_> = values.into_iter().collect();
         self.builder = self.builder.query_array("ids", &values);
         self
     }
 
+    /// Sends the request to evaluate the current user's permissions for specific records.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the [`EvaluateRecordPermissionsResponse`], or an [`ApiError`].
+    ///
+    /// # Authentication
+    ///
+    /// This API requires record viewing or record creation permissions. Use username/password
+    /// authentication; API tokens cannot be used.
     pub fn send(
         self,
         client: &KintoneClient,
